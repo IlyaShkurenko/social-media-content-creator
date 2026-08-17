@@ -8,8 +8,9 @@ This subtree owns measurable experiments for the final MP4 produced by MoneyPrin
 2. Run `make evaluate EXPERIMENT=experiments/<current-baseline>` to confirm that the current evaluator is reproducible.
 3. Create exactly one sequential experiment with `make experiment SLUG=<short-name> HYPOTHESIS="<one falsifiable claim>"`.
 4. Change one coherent variable, generate or select the declared artifact, and evaluate the same fixed scenario.
-5. Keep product-code changes only when the primary metric improves and every required constraint is verified. Until the pending ASR and visual-safe-area checks are implemented, improvements are provisional and require human review.
-6. If an experiment fails or regresses, revert its product-code changes but retain the experiment README, metrics, and failure evidence. Never reuse an experiment number.
+5. Keep product-code changes only when the primary metric improves and every required constraint is verified. Until pending automated checks are implemented, improvements are provisional and require explicit human review before publication.
+6. After a successful experiment, or after the user explicitly accepts a provisional improvement, run the normal repository validation, update the experiment decision, commit the implementation and tracked experiment evidence together, and push the current branch to `origin` before starting another experiment.
+7. If an experiment fails or regresses, revert its product-code changes but retain and commit the experiment README, metrics, and useful failure evidence. Never reuse an experiment number. Do not push reverted product code as an improvement.
 
 ## Evaluator integrity
 

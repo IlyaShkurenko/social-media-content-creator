@@ -169,6 +169,8 @@
     "You can download the generated video from the following links": "Скачать созданное видео можно по ссылкам ниже",
     "Pexels API Key": "API-ключ Pexels ([получить API-ключ](https://www.pexels.com/api/))",
     "Pixabay API Key": "API-ключ Pixabay ([получить API-ключ](https://pixabay.com/api/docs/#api_search_videos))",
+    "Runway API Key": "API-ключ Runway ([создать секрет](https://dev.runwayml.com/))",
+    "Runway API Key Help": "Используется только опциональным mixed-media pipeline. Платная генерация всё равно требует явного подтверждения CLI и проходит через общий лимит бюджета.",
     "Basic Settings": "**Основные настройки** (:blue[нажмите, чтобы раскрыть])",
     "Language": "Язык",
     "LLM Provider": "Провайдер LLM",

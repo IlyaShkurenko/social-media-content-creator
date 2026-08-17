@@ -174,6 +174,8 @@
     "Language": "Ngôn Ngữ",
     "Pexels API Key": "Khóa API Pexels ([Lấy Khóa API](https://www.pexels.com/api/))",
     "Pixabay API Key": "Khóa API Pixabay ([Lấy Khóa API](https://pixabay.com/api/docs/#api_search_videos))",
+    "Runway API Key": "Runway API Key ([Create secret](https://dev.runwayml.com/))",
+    "Runway API Key Help": "Used only by the opt-in mixed-media pipeline. Paid generation still requires an explicit budget-gated CLI confirmation.",
     "LLM Provider": "Nhà Cung Cấp LLM",
     "Recommended": "Được đề xuất",
     "llm_provider_label.moonshot": "Kimi / Moonshot AI (đề xuất)",

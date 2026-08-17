@@ -172,6 +172,8 @@
     "You can download the generated video from the following links": "Anda dapat mengunduh video yang dihasilkan dari tautan berikut",
     "Pexels API Key": "Kunci API Pexels ([Dapatkan Kunci API](https://www.pexels.com/api/))",
     "Pixabay API Key": "Kunci API Pixabay ([Dapatkan Kunci API](https://pixabay.com/api/docs/#api_search_videos))",
+    "Runway API Key": "Runway API Key ([Create secret](https://dev.runwayml.com/))",
+    "Runway API Key Help": "Used only by the opt-in mixed-media pipeline. Paid generation still requires an explicit budget-gated CLI confirmation.",
     "Basic Settings": "**Pengaturan Dasar** (:blue[Klik untuk memperluas])",
     "Language": "Bahasa",
     "LLM Provider": "Penyedia LLM",

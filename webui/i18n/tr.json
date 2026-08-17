@@ -170,6 +170,8 @@
     "You can download the generated video from the following links": "Oluşturulan videoyu aşağıdaki bağlantılardan indirebilirsiniz",
     "Pexels API Key": "Pexels API Anahtarı ([API Anahtarı Al](https://www.pexels.com/api/))",
     "Pixabay API Key": "Pixabay API Anahtarı ([API Anahtarı Al](https://pixabay.com/api/docs/#api_search_videos))",
+    "Runway API Key": "Runway API Key ([Create secret](https://dev.runwayml.com/))",
+    "Runway API Key Help": "Used only by the opt-in mixed-media pipeline. Paid generation still requires an explicit budget-gated CLI confirmation.",
     "Basic Settings": "**Temel Ayarlar** (:blue[Genişletmek için tıklayın])",
     "Language": "Dil",
     "LLM Provider": "LLM Sağlayıcı",

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import subprocess
@@ -10,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 
-EVALUATOR_VERSION = "0.1.0"
+EVALUATOR_VERSION = "0.3.0"
 LOOP_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = LOOP_ROOT.parents[1]
 
@@ -213,6 +214,61 @@ def parse_srt_text(path: Path) -> str:
     return " ".join(lines)
 
 
+def pipeline_record_metrics(
+    record: dict[str, Any] | None,
+) -> tuple[dict[str, float | None], dict[str, str]]:
+    """Extract cost/latency evidence without inventing unavailable values."""
+
+    record = record or {}
+    result: dict[str, float | None] = {
+        "generation_latency_seconds": None,
+        "estimated_cost_usd": None,
+    }
+    reasons: dict[str, str] = {}
+    cost = record.get("actual_paid_cost_usd")
+    if isinstance(cost, (int, float)) and not isinstance(cost, bool) and cost >= 0:
+        result["estimated_cost_usd"] = float(cost)
+    else:
+        reasons["estimated_cost_usd"] = (
+            "the source task did not record provider cost"
+        )
+
+    latency = record.get("generation_latency_seconds")
+    if (
+        isinstance(latency, (int, float))
+        and not isinstance(latency, bool)
+        and latency >= 0
+    ):
+        result["generation_latency_seconds"] = float(latency)
+    else:
+        reasons["generation_latency_seconds"] = (
+            "the source task did not record paid-provider generation latency"
+        )
+    return result, reasons
+
+
+def pipeline_constraint_evidence(
+    record: dict[str, Any] | None,
+) -> tuple[dict[str, bool], dict[str, str]]:
+    record = record or {}
+    safe_area = record.get("subtitle_safe_area_pass")
+    if isinstance(safe_area, bool):
+        return {"subtitle_safe_area_pass": safe_area}, {}
+    return {}, {
+        "subtitle_safe_area_pass": (
+            "the source task did not record deterministic subtitle geometry"
+        )
+    }
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def duration_from_probe(probe: dict[str, Any]) -> float:
     format_duration = probe.get("format", {}).get("duration")
     if format_duration not in {None, "N/A"}:
@@ -227,12 +283,48 @@ def duration_from_probe(probe: dict[str, Any]) -> float:
     return max(durations)
 
 
-def evaluate(scenario_path: Path, output_dir: Path, video_override: str | None = None) -> dict[str, Any]:
+def evaluate(
+    scenario_path: Path,
+    output_dir: Path,
+    video_override: str | None = None,
+    observations_override: str | None = None,
+    pipeline_record_override: str | None = None,
+    subtitle_override: str | None = None,
+) -> dict[str, Any]:
     scenario = json.loads(scenario_path.read_text(encoding="utf-8"))
     video_value = video_override or scenario["artifact"]["video"]
     video_path = resolve_repo_path(video_value, "video")
     if not video_path.is_file():
         raise FileNotFoundError(f"video artifact does not exist: {video_path}")
+    artifact_sha256 = sha256_file(video_path)
+
+    if observations_override:
+        raw_observations_path = Path(observations_override)
+        observations_path = (
+            raw_observations_path
+            if raw_observations_path.is_absolute()
+            else LOOP_ROOT / raw_observations_path
+        )
+        observations_path = ensure_within(
+            observations_path,
+            LOOP_ROOT,
+            "observations",
+        )
+        observations_contract = json.loads(
+            observations_path.read_text(encoding="utf-8")
+        )
+    else:
+        observations_path = scenario_path
+        observations_contract = scenario["observations"]
+    if observations_contract.get("scenario_id", scenario["id"]) != scenario["id"]:
+        raise ValueError("observations do not belong to the evaluated scenario")
+    if observations_contract.get("mode") == "human_fixture":
+        reviewed_hash = observations_contract.get("artifact_sha256")
+        if reviewed_hash != artifact_sha256:
+            raise ValueError(
+                "human_fixture observations do not match the evaluated artifact SHA-256; "
+                "review this artifact and provide a matching observations file"
+            )
 
     output_dir.mkdir(parents=True, exist_ok=True)
     artifacts_dir = output_dir / "artifacts"
@@ -260,19 +352,33 @@ def evaluate(scenario_path: Path, output_dir: Path, video_override: str | None =
     decode_success, decode_error = full_decode_succeeds(video_path)
     black_segments = detect_black_segments(video_path)
     storyboard = expected["storyboard"]
-    observations = scenario["observations"]["scenes"]
+    observations = observations_contract["scenes"]
     alignment = calculate_tag_metrics(storyboard, observations)
     frame_evidence = extract_frames(video_path, storyboard, artifacts_dir / "frames")
 
     subtitle_metric: dict[str, float | int] | None = None
-    subtitle_path_value = scenario.get("artifact", {}).get("subtitle")
-    record_path_value = scenario.get("artifact", {}).get("pipeline_record")
-    if subtitle_path_value and record_path_value:
-        subtitle_path = resolve_repo_path(subtitle_path_value, "subtitle")
+    pipeline_record: dict[str, Any] | None = None
+    subtitle_path_value = subtitle_override or scenario.get("artifact", {}).get(
+        "subtitle"
+    )
+    record_path_value = pipeline_record_override or scenario.get("artifact", {}).get(
+        "pipeline_record"
+    )
+    if record_path_value:
         record_path = resolve_repo_path(record_path_value, "pipeline record")
-        if subtitle_path.is_file() and record_path.is_file():
-            record = json.loads(record_path.read_text(encoding="utf-8"))
-            subtitle_metric = token_f1(record.get("script", ""), parse_srt_text(subtitle_path))
+        if record_path.is_file():
+            pipeline_record = json.loads(record_path.read_text(encoding="utf-8"))
+    if subtitle_path_value and pipeline_record is not None:
+        subtitle_path = resolve_repo_path(subtitle_path_value, "subtitle")
+        if subtitle_path.is_file():
+            subtitle_metric = token_f1(
+                pipeline_record.get("script", ""),
+                parse_srt_text(subtitle_path),
+            )
+    record_metrics, record_metric_reasons = pipeline_record_metrics(pipeline_record)
+    evidence_constraints, evidence_pending = pipeline_constraint_evidence(
+        pipeline_record
+    )
 
     enforced_constraints = {
         "render_success": decode_success,
@@ -281,11 +387,17 @@ def evaluate(scenario_path: Path, output_dir: Path, video_override: str | None =
         "duration_pass": duration_pass,
         "no_sustained_black_segments": len(black_segments) == 0,
         "all_evidence_frames_extracted": all(item["extracted"] for item in frame_evidence),
+        **evidence_constraints,
     }
+    brand_assets_required = bool(expected.get("brand_assets_required", False))
     pending_constraints = {
         "voiceover_wer_pass": "timestamped ASR is not enabled in evaluator v0",
-        "subtitle_safe_area_pass": "frame-level subtitle box detection is not enabled in evaluator v0",
-        "brand_asset_fidelity_pass": "the controlled stock baseline does not require a TICT brand asset",
+        **evidence_pending,
+        "brand_asset_fidelity_pass": (
+            "brand assets are required but the fidelity judge is not enabled"
+            if brand_assets_required
+            else "the scenario does not require a brand asset"
+        ),
     }
 
     metrics = {
@@ -293,7 +405,7 @@ def evaluate(scenario_path: Path, output_dir: Path, video_override: str | None =
         "evaluator_version": EVALUATOR_VERSION,
         "generated_at": utc_now(),
         "scenario_id": scenario["id"],
-        "observation_mode": scenario["observations"]["mode"],
+        "observation_mode": observations_contract["mode"],
         "artifact": {
             "video": str(video_path.relative_to(REPO_ROOT)),
             "duration_seconds": round(duration, 3),
@@ -302,6 +414,7 @@ def evaluate(scenario_path: Path, output_dir: Path, video_override: str | None =
             "fps": parse_rate(video_stream.get("avg_frame_rate")),
             "video_codec": video_stream.get("codec_name"),
             "audio_codec": audio_stream.get("codec_name") if audio_stream else None,
+            "sha256": artifact_sha256,
         },
         "primary": {"name": "timeline_alignment_f1", "value": alignment["f1"]},
         "metrics": {
@@ -319,8 +432,10 @@ def evaluate(scenario_path: Path, output_dir: Path, video_override: str | None =
             "voiceover_wer": None,
             "word_timing_mae_ms": None,
             "shot_boundary_mae_ms": None,
-            "generation_latency_seconds": None,
-            "estimated_cost_usd": None,
+            "generation_latency_seconds": record_metrics[
+                "generation_latency_seconds"
+            ],
+            "estimated_cost_usd": record_metrics["estimated_cost_usd"],
             "cost_per_accepted_video_usd": None,
         },
         "constraints": {
@@ -334,16 +449,20 @@ def evaluate(scenario_path: Path, output_dir: Path, video_override: str | None =
             "black_segments": black_segments,
             "decode_error": decode_error or None,
             "subtitle_token_comparison": subtitle_metric,
+            "observations_source": str(observations_path.relative_to(LOOP_ROOT)),
         },
         "unavailable_metric_reasons": {
             "visual_judge_win_rate": "pairwise visual judge is not enabled in evaluator v0",
-            "brand_asset_fidelity": "scenario has no required brand asset",
+            "brand_asset_fidelity": (
+                "brand fidelity judge is not enabled"
+                if brand_assets_required
+                else "scenario has no required brand asset"
+            ),
             "voiceover_wer": "timestamped ASR is not enabled in evaluator v0",
             "word_timing_mae_ms": "word-level ASR alignment is not enabled in evaluator v0",
             "shot_boundary_mae_ms": "automatic scene-boundary comparison is not enabled in evaluator v0",
-            "generation_latency_seconds": "the source task did not record generation timing",
-            "estimated_cost_usd": "the source task did not record provider cost",
             "cost_per_accepted_video_usd": "cost and acceptance are unavailable",
+            **record_metric_reasons,
         },
     }
     return metrics
@@ -373,6 +492,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--scenario", required=True, help="Scenario JSON path")
     parser.add_argument("--output", required=True, help="Experiment output directory inside the loop root")
     parser.add_argument("--video", help="Optional video path override inside the repository")
+    parser.add_argument(
+        "--observations",
+        help="Artifact-specific observation JSON inside the feedback-loop root",
+    )
+    parser.add_argument("--pipeline-record")
+    parser.add_argument("--subtitle")
     return parser.parse_args()
 
 
@@ -383,7 +508,14 @@ def main() -> int:
     scenario_path = ensure_within(scenario_path, LOOP_ROOT, "scenario")
     output_dir = resolve_output_path(args.output)
     output_dir.mkdir(parents=True, exist_ok=True)
-    metrics = evaluate(scenario_path, output_dir, args.video)
+    metrics = evaluate(
+        scenario_path,
+        output_dir,
+        args.video,
+        args.observations,
+        args.pipeline_record,
+        args.subtitle,
+    )
     (output_dir / "metrics.json").write_text(json.dumps(metrics, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     write_summary(metrics, output_dir)
     print(json.dumps({"output": str(output_dir), "primary": metrics["primary"], "constraints": metrics["constraints"]}, indent=2))

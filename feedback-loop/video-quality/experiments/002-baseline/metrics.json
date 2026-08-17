@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "evaluator_version": "0.2.0",
+  "generated_at": "2026-08-17T16:13:08.465607+00:00",
+  "scenario_id": "mixed-media-stock-baseline-001",
+  "observation_mode": "human_fixture",
+  "artifact": {
+    "video": "feedback-loop/video-quality/.state/prepared/mixed-media-first-slice-001/renders/stock-baseline/final.mp4",
+    "duration_seconds": 15.0,
+    "width": 720,
+    "height": 1280,
+    "fps": 30.0,
+    "video_codec": "h264",
+    "audio_codec": "aac"
+  },
+  "primary": {
+    "name": "timeline_alignment_f1",
+    "value": 0.761905
+  },
+  "metrics": {
+    "timeline_alignment_precision": 0.727273,
+    "timeline_alignment_recall": 0.8,
+    "timeline_alignment_f1": 0.761905,
+    "timeline_alignment_counts": {
+      "true_positive": 8,
+      "false_positive": 3,
+      "false_negative": 2
+    },
+    "subtitle_text_token_f1": 1.0,
+    "visual_judge_win_rate": null,
+    "brand_asset_fidelity": null,
+    "voiceover_wer": null,
+    "word_timing_mae_ms": null,
+    "shot_boundary_mae_ms": null,
+    "generation_latency_seconds": null,
+    "estimated_cost_usd": 0.0,
+    "cost_per_accepted_video_usd": null
+  },
+  "constraints": {
+    "enforced": {
+      "render_success": true,
+      "audio_present": true,
+      "aspect_ratio_pass": true,
+      "duration_pass": true,
+      "no_sustained_black_segments": true,
+      "all_evidence_frames_extracted": true
+    },
+    "all_enforced_pass": true,
+    "pending": {
+      "voiceover_wer_pass": "timestamped ASR is not enabled in evaluator v0",
+      "subtitle_safe_area_pass": "frame-level subtitle box detection is not enabled in evaluator v0",
+      "brand_asset_fidelity_pass": "brand assets are required but the fidelity judge is not enabled"
+    },
+    "all_goal_constraints_verified": false
+  },
+  "evidence": {
+    "frames": [
+      {
+        "scene_id": "hook",
+        "timestamp_seconds": 2.5,
+        "path": "artifacts/frames/01-hook.jpg",
+        "extracted": true
+      },
+      {
+        "scene_id": "product_demo",
+        "timestamp_seconds": 8.0,
+        "path": "artifacts/frames/02-product_demo.jpg",
+        "extracted": true
+      },
+      {
+        "scene_id": "cta",
+        "timestamp_seconds": 13.0,
+        "path": "artifacts/frames/03-cta.jpg",
+        "extracted": true
+      }
+    ],
+    "black_segments": [],
+    "decode_error": null,
+    "subtitle_token_comparison": {
+      "reference_tokens": 28,
+      "candidate_tokens": 28,
+      "matching_tokens": 28,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    }
+  },
+  "unavailable_metric_reasons": {
+    "visual_judge_win_rate": "pairwise visual judge is not enabled in evaluator v0",
+    "brand_asset_fidelity": "brand fidelity judge is not enabled",
+    "voiceover_wer": "timestamped ASR is not enabled in evaluator v0",
+    "word_timing_mae_ms": "word-level ASR alignment is not enabled in evaluator v0",
+    "shot_boundary_mae_ms": "automatic scene-boundary comparison is not enabled in evaluator v0",
+    "cost_per_accepted_video_usd": "cost and acceptance are unavailable",
+    "generation_latency_seconds": "the source task did not record paid-provider generation latency"
+  }
+}

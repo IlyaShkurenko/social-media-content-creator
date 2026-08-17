@@ -12,6 +12,7 @@ from typing import Any
 
 
 LOOP_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = LOOP_ROOT.parents[1]
 EXPERIMENTS_ROOT = LOOP_ROOT / "experiments"
 
 
@@ -34,15 +35,28 @@ def next_experiment_id() -> int:
     return max(ids, default=0) + 1
 
 
-def latest_prior_metrics(current: Path) -> dict[str, Any] | None:
-    candidates = []
+def latest_comparable_metrics(
+    current: Path,
+    *,
+    scenario_id: str,
+    evaluator_version: str | None,
+) -> dict[str, Any] | None:
+    candidates: list[tuple[int, dict[str, Any]]] = []
     for path in EXPERIMENTS_ROOT.glob("[0-9][0-9][0-9]-*/metrics.json"):
-        if path.parent != current:
-            candidates.append(path)
+        if path.parent == current:
+            continue
+        metrics = json.loads(path.read_text(encoding="utf-8"))
+        if metrics.get("scenario_id") != scenario_id:
+            continue
+        if (
+            evaluator_version is not None
+            and metrics.get("evaluator_version") != evaluator_version
+        ):
+            continue
+        candidates.append((int(path.parent.name[:3]), metrics))
     if not candidates:
         return None
-    latest = max(candidates, key=lambda path: int(path.parent.name[:3]))
-    return json.loads(latest.read_text(encoding="utf-8"))
+    return max(candidates, key=lambda item: item[0])[1]
 
 
 def write_readme(
@@ -121,6 +135,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--hypothesis", default="Current controlled artifact establishes evaluator-v0 behavior.")
     parser.add_argument("--scenario", required=True)
     parser.add_argument("--video")
+    parser.add_argument("--observations")
+    parser.add_argument("--pipeline-record")
+    parser.add_argument("--subtitle")
     return parser.parse_args()
 
 
@@ -148,10 +165,63 @@ def main() -> int:
         str(output_dir),
     ]
     if args.video:
-        command.extend(["--video", args.video])
+        video_raw = Path(args.video)
+        video = (video_raw if video_raw.is_absolute() else REPO_ROOT / video_raw).resolve()
+        if not video.is_file() or REPO_ROOT.resolve() not in video.parents:
+            raise ValueError(f"video must be a file inside {REPO_ROOT}: {video}")
+        video_snapshot = output_dir / "artifacts" / f"video{video.suffix.lower()}"
+        video_snapshot.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(video, video_snapshot)
+        command.extend(["--video", str(video_snapshot)])
+    if args.observations:
+        observations_raw = Path(args.observations)
+        observations = (
+            observations_raw
+            if observations_raw.is_absolute()
+            else LOOP_ROOT / observations_raw
+        ).resolve()
+        if (
+            not observations.is_file()
+            or LOOP_ROOT.resolve() not in observations.parents
+        ):
+            raise ValueError(
+                f"observations must be a file inside {LOOP_ROOT}: {observations}"
+            )
+        observations_snapshot = output_dir / "observations.json"
+        shutil.copy2(observations, observations_snapshot)
+        command.extend(["--observations", str(observations_snapshot)])
+    if args.pipeline_record:
+        record_raw = Path(args.pipeline_record)
+        record = (
+            record_raw if record_raw.is_absolute() else REPO_ROOT / record_raw
+        ).resolve()
+        if not record.is_file() or REPO_ROOT.resolve() not in record.parents:
+            raise ValueError(
+                f"pipeline record must be a file inside {REPO_ROOT}: {record}"
+            )
+        record_snapshot = output_dir / "pipeline-record.json"
+        shutil.copy2(record, record_snapshot)
+        command.extend(["--pipeline-record", str(record_snapshot)])
+    if args.subtitle:
+        subtitle_raw = Path(args.subtitle)
+        subtitle = (
+            subtitle_raw if subtitle_raw.is_absolute() else REPO_ROOT / subtitle_raw
+        ).resolve()
+        if not subtitle.is_file() or REPO_ROOT.resolve() not in subtitle.parents:
+            raise ValueError(
+                f"subtitle must be a file inside {REPO_ROOT}: {subtitle}"
+            )
+        subtitle_snapshot = output_dir / "subtitle.srt"
+        shutil.copy2(subtitle, subtitle_snapshot)
+        command.extend(["--subtitle", str(subtitle_snapshot)])
     result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", errors="replace")
-    previous = latest_prior_metrics(output_dir)
     if result.returncode != 0:
+        scenario_payload = json.loads(scenario_snapshot.read_text(encoding="utf-8"))
+        previous = latest_comparable_metrics(
+            output_dir,
+            scenario_id=scenario_payload["id"],
+            evaluator_version=None,
+        )
         error = result.stderr.strip() or result.stdout.strip() or f"exit code {result.returncode}"
         (output_dir / "evaluator.stderr.log").write_text(error + "\n", encoding="utf-8")
         write_readme(
@@ -167,6 +237,11 @@ def main() -> int:
         return result.returncode
 
     metrics = json.loads((output_dir / "metrics.json").read_text(encoding="utf-8"))
+    previous = latest_comparable_metrics(
+        output_dir,
+        scenario_id=metrics["scenario_id"],
+        evaluator_version=metrics["evaluator_version"],
+    )
     write_readme(
         output_dir,
         kind=args.kind,

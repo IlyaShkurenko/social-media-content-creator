@@ -1,0 +1,11 @@
+1
+00:00:00,000 --> 00:00:05,000
+Planning a trip should not feel like another job.
+
+2
+00:00:05,000 --> 00:00:11,000
+TICT turns every booking, place, and next step into one clear trip plan.
+
+3
+00:00:11,000 --> 00:00:15,000
+Plan less. Travel more with TICT.

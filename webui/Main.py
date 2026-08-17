@@ -2197,6 +2197,15 @@ def _render_settings_dialog():
             )
             _save_material_api_keys("coverr_api_keys", coverr_api_key)
 
+            runway_api_key = st.text_input(
+                tr("Runway API Key"),
+                value=str(config.app.get("runway_api_key", "") or ""),
+                type="password",
+                key="runway_api_key_input",
+                help=tr("Runway API Key Help"),
+            )
+            _set_runtime_config("app", "runway_api_key", runway_api_key.strip())
+
     _save_runtime_config()
 
 

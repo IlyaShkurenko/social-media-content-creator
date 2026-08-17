@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "scenario_id": "mixed-media-stock-baseline-001",
+  "mode": "human_fixture",
+  "artifact_sha256": "311e13b0fbc7e0e990b516e18128d1f14ebba1415d48a8b17c941fb4a213f4a6",
+  "reviewed_at": "2026-08-17",
+  "review_protocol": "One midpoint frame per scene, inspected from the rendered MP4; only literal visible evidence is tagged.",
+  "scenes": [
+    {
+      "scene_id": "hook",
+      "observed_tags": [
+        "traveller_visible",
+        "phone_visible",
+        "luggage_visible"
+      ],
+      "notes": "The hook source is controlled and unchanged: a seated traveller looks at a phone beside luggage. Airport identity and planning stress remain too ambiguous to award."
+    },
+    {
+      "scene_id": "product_demo",
+      "observed_tags": [
+        "approved_tict_ui_visible",
+        "trip_plan_visible",
+        "product_text_legible"
+      ],
+      "notes": "The exact exported trip overview is fully visible and legible. The phone was scaled to reserve a separate lower caption zone, so the subtitle no longer covers the product UI."
+    },
+    {
+      "scene_id": "cta",
+      "observed_tags": [
+        "approved_logo_visible",
+        "approved_mascot_visible",
+        "single_cta_visible"
+      ],
+      "notes": "Logo, mascot, CTA text, and one button are unobscured. The redundant narration subtitle is deterministically suppressed for this scene."
+    }
+  ]
+}

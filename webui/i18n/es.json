@@ -172,6 +172,8 @@
     "You can download the generated video from the following links": "Puedes descargar el vídeo generado desde los siguientes enlaces",
     "Pexels API Key": "Pexels API Key ([Obtener API Key](https://www.pexels.com/api/))",
     "Pixabay API Key": "Pixabay API Key ([Obtener API Key](https://pixabay.com/api/docs/#api_search_videos))",
+    "Runway API Key": "Runway API Key ([Create secret](https://dev.runwayml.com/))",
+    "Runway API Key Help": "Used only by the opt-in mixed-media pipeline. Paid generation still requires an explicit budget-gated CLI confirmation.",
     "Basic Settings": "**Configuración básica** (:blue[Haz clic para expandir])",
     "Language": "Idioma",
     "LLM Provider": "Proveedor LLM",

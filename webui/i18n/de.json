@@ -177,6 +177,8 @@
     "Language": "Sprache",
     "Pexels API Key": "Pexels API-Schlüssel ([API-Schlüssel abrufen](https://www.pexels.com/api/))",
     "Pixabay API Key": "Pixabay API-Schlüssel ([API-Schlüssel abrufen](https://pixabay.com/api/docs/#api_search_videos))",
+    "Runway API Key": "Runway API Key ([Create secret](https://dev.runwayml.com/))",
+    "Runway API Key Help": "Used only by the opt-in mixed-media pipeline. Paid generation still requires an explicit budget-gated CLI confirmation.",
     "LLM Provider": "KI-Modellanbieter",
     "Recommended": "empfohlen",
     "llm_provider_label.moonshot": "Kimi / Moonshot AI (empfohlen)",

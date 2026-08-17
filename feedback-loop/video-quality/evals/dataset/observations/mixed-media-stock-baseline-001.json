@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "scenario_id": "mixed-media-stock-baseline-001",
+  "mode": "human_fixture",
+  "artifact_sha256": "862fc7d827e0807459bda082159a8c3dc9ad2e05ac2067addc80c1cfedd35699",
+  "reviewed_at": "2026-08-17",
+  "review_protocol": "One midpoint frame per scene, inspected from the rendered MP4; only literal visible evidence is tagged.",
+  "scenes": [
+    {
+      "scene_id": "hook",
+      "observed_tags": [
+        "traveller_visible",
+        "phone_visible",
+        "luggage_visible"
+      ],
+      "notes": "A seated traveller looks at a phone beside luggage. The location resembles a waiting area but airport identity and planning stress are not literal enough to award those tags."
+    },
+    {
+      "scene_id": "product_demo",
+      "observed_tags": [
+        "approved_tict_ui_visible",
+        "trip_plan_visible",
+        "product_text_legible",
+        "subtitle_obscures_ui"
+      ],
+      "notes": "The exact exported trip overview is recognizable and mostly legible, but the large narration subtitle covers a material part of the screen."
+    },
+    {
+      "scene_id": "cta",
+      "observed_tags": [
+        "approved_logo_visible",
+        "approved_mascot_visible",
+        "single_cta_visible",
+        "duplicate_text_visible"
+      ],
+      "notes": "Logo, mascot, and one button are visible. Narration subtitles duplicate the deterministic CTA text and partially cover the mascot area."
+    }
+  ]
+}

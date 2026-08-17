@@ -34,6 +34,15 @@ Unavailable metrics must be emitted as `null` with a reason, never silently omit
 - Repository and evaluator tests pass.
 - Paid generation is disabled unless explicitly authorized, and any authorized live run stays inside its recorded budget.
 
+## Current authorized iteration budget
+
+- Scope ID: `mixed-media-iteration-001`.
+- Shared paid-call ceiling: **$10.00 USD** (`10_000_000` micro-USD) for the whole iteration, not per generation.
+- The durable ledger is `feedback-loop/video-quality/.state/mixed-media-iteration-001.sqlite3`.
+- Every paid request must reserve its fail-closed estimated cost before submission. An accepted provider job remains charged even when the creative is rejected.
+- Dry runs, local rendering, FFmpeg evaluation, and stock-provider searches do not consume this paid-call budget. Any paid planner, TTS, vision judge, or generated-media call introduced later must use this same scope.
+- No automatic top-up, implicit resubmission, or budget reset is allowed.
+
 ## Comparison policy
 
 Use the same scenario, input artifact contract, evaluator version, and observation mode for direct comparisons. Keep a candidate automatically only if the primary metric improves and all required constraints are verified. If some required checks are still pending, the result is `provisional_requires_review` even when the primary score improves.

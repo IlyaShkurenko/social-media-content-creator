@@ -49,6 +49,15 @@ pixabay_api_keys = []
 # Register at https://coverr.co/developers?ctx=header_navigation
 coverr_api_keys = []
 
+# Runway is used only by the opt-in mixed-media advertising pipeline. A paid
+# task is never submitted by the normal WebUI video flow or by a dry run.
+# Create a secret at https://dev.runwayml.com/ and either set it here or export
+# RUNWAYML_API_SECRET. The feedback loop enforces its own durable USD cap.
+runway_api_key = ""
+runway_base_url = "https://api.dev.runwayml.com"
+runway_api_version = "2024-11-06"
+runway_model = "gen4.5"
+
 # Optional TwelveLabs integration for semantic material ranking and video QA.
 # Install the optional dependency with: uv sync --extra twelvelabs
 # Create an API key at https://playground.twelvelabs.io/

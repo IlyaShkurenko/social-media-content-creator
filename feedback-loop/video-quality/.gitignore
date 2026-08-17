@@ -2,3 +2,4 @@ experiments/*/artifacts/
 experiments/*/evaluator.stderr.log
 __pycache__/
 *.pyc
+.state/

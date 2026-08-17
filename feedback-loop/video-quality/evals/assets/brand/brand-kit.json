@@ -38,10 +38,11 @@
     "logo_svg": "tict-logo.svg",
     "mascot_variants": ["tict-mascot-1.png", "tict-mascot-2.png"],
     "product_screens": [
-      "screens/01-five-apps.png",
-      "screens/02-ai-planner.png",
-      "screens/03-navigator.png",
-      "screens/04-edit-trip.png"
+      "screens/Home_Screen.png",
+      "screens/AI_Assistant_Chat_Screen_Bigger_Vertical_Size.png",
+      "screens/AI_Assistant_Chat_Screen_Phone_Size.png",
+      "screens/Plan_Overview_Screen.png",
+      "screens/Plan_By_Days_Screen_Huge_Verical_Size.png"
     ]
   },
   "usage_contract": {

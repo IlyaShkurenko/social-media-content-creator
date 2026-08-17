@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "id": "mixed-media-stock-baseline-001",
+  "title": "TICT mixed-media stock hook baseline",
+  "purpose": "Establish the first controlled 15-second mixed-media baseline before replacing only the hook with Runway generation.",
+  "artifact": {
+    "video": "feedback-loop/video-quality/.state/prepared/mixed-media-first-slice-001/renders/stock-baseline/final.mp4",
+    "pipeline_record": "feedback-loop/video-quality/.state/prepared/mixed-media-first-slice-001/run-summary.json",
+    "subtitle": "feedback-loop/video-quality/.state/prepared/mixed-media-first-slice-001/renders/stock-baseline/storyboard.srt"
+  },
+  "expected": {
+    "aspect_ratio": "9:16",
+    "duration_seconds": {
+      "min": 14.9,
+      "max": 15.1
+    },
+    "audio_required": true,
+    "brand_assets_required": true,
+    "storyboard": [
+      {
+        "id": "hook",
+        "start_seconds": 0.0,
+        "end_seconds": 5.0,
+        "description": "A traveller in an airport visibly struggles with fragmented planning on a phone.",
+        "expected_tags": [
+          "traveller_visible",
+          "phone_visible",
+          "airport_visible",
+          "planning_stress_visible"
+        ]
+      },
+      {
+        "id": "product_demo",
+        "start_seconds": 5.0,
+        "end_seconds": 11.0,
+        "description": "The exact approved TICT trip overview is shown legibly.",
+        "expected_tags": [
+          "approved_tict_ui_visible",
+          "trip_plan_visible",
+          "product_text_legible"
+        ]
+      },
+      {
+        "id": "cta",
+        "start_seconds": 11.0,
+        "end_seconds": 15.0,
+        "description": "The approved logo and mascot support one clear call to action.",
+        "expected_tags": [
+          "approved_logo_visible",
+          "approved_mascot_visible",
+          "single_cta_visible"
+        ]
+      }
+    ]
+  },
+  "observations": {
+    "mode": "human_fixture",
+    "reviewed_at": "2026-08-17",
+    "review_protocol": "One midpoint frame per scene, inspected from the rendered MP4; only literal visible evidence is tagged.",
+    "scenes": [
+      {
+        "scene_id": "hook",
+        "observed_tags": [
+          "traveller_visible",
+          "phone_visible",
+          "luggage_visible"
+        ],
+        "notes": "A seated traveller looks at a phone beside luggage. The location resembles a waiting area but airport identity and planning stress are not literal enough to award those tags."
+      },
+      {
+        "scene_id": "product_demo",
+        "observed_tags": [
+          "approved_tict_ui_visible",
+          "trip_plan_visible",
+          "product_text_legible",
+          "subtitle_obscures_ui"
+        ],
+        "notes": "The exact exported trip overview is recognizable and mostly legible, but the large narration subtitle covers a material part of the screen."
+      },
+      {
+        "scene_id": "cta",
+        "observed_tags": [
+          "approved_logo_visible",
+          "approved_mascot_visible",
+          "single_cta_visible",
+          "duplicate_text_visible"
+        ],
+        "notes": "Logo, mascot, and one button are visible. Narration subtitles duplicate the deterministic CTA text and partially cover the mascot area."
+      }
+    ]
+  }
+}

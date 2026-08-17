@@ -1,0 +1,88 @@
+from __future__ import annotations
+
+import tempfile
+import unittest
+from pathlib import Path
+
+from evals.evaluate import (
+    calculate_tag_metrics,
+    parse_srt_text,
+    pipeline_record_metrics,
+    pipeline_constraint_evidence,
+    token_f1,
+)
+
+
+class TagMetricTests(unittest.TestCase):
+    def test_scene_identity_is_part_of_alignment(self) -> None:
+        storyboard = [
+            {"id": "a", "expected_tags": ["phone"]},
+            {"id": "b", "expected_tags": ["office"]},
+        ]
+        observations = [
+            {"scene_id": "a", "observed_tags": ["office"]},
+            {"scene_id": "b", "observed_tags": ["phone"]},
+        ]
+
+        result = calculate_tag_metrics(storyboard, observations)
+
+        self.assertEqual(result["true_positive"], 0)
+        self.assertEqual(result["false_positive"], 2)
+        self.assertEqual(result["false_negative"], 2)
+        self.assertEqual(result["f1"], 0.0)
+
+    def test_partial_match(self) -> None:
+        storyboard = [{"id": "a", "expected_tags": ["office", "computer"]}]
+        observations = [{"scene_id": "a", "observed_tags": ["computer", "keyboard"]}]
+
+        result = calculate_tag_metrics(storyboard, observations)
+
+        self.assertEqual(result["true_positive"], 1)
+        self.assertEqual(result["f1"], 0.5)
+
+
+class TranscriptMetricTests(unittest.TestCase):
+    def test_token_f1_is_case_insensitive(self) -> None:
+        result = token_f1("Hello world", "hello WORLD")
+        self.assertEqual(result["f1"], 1.0)
+
+    def test_parse_srt_ignores_sequence_and_timestamps(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "sample.srt"
+            path.write_text("1\n00:00:00,000 --> 00:00:01,000\nHello\n\n2\n00:00:01,000 --> 00:00:02,000\nworld\n", encoding="utf-8")
+            self.assertEqual(parse_srt_text(path), "Hello world")
+
+
+class PipelineRecordMetricTests(unittest.TestCase):
+    def test_zero_cost_is_available_evidence(self) -> None:
+        metrics, reasons = pipeline_record_metrics(
+            {"actual_paid_cost_usd": 0.0, "generation_latency_seconds": None}
+        )
+        self.assertEqual(metrics["estimated_cost_usd"], 0.0)
+        self.assertNotIn("estimated_cost_usd", reasons)
+        self.assertIsNone(metrics["generation_latency_seconds"])
+        self.assertIn("generation_latency_seconds", reasons)
+
+    def test_runway_latency_and_cost_are_extracted(self) -> None:
+        metrics, reasons = pipeline_record_metrics(
+            {"actual_paid_cost_usd": 0.6, "generation_latency_seconds": 42.25}
+        )
+        self.assertEqual(metrics["estimated_cost_usd"], 0.6)
+        self.assertEqual(metrics["generation_latency_seconds"], 42.25)
+        self.assertEqual(reasons, {})
+
+    def test_recorded_subtitle_safe_area_becomes_enforced_evidence(self) -> None:
+        enforced, pending = pipeline_constraint_evidence(
+            {"subtitle_safe_area_pass": True}
+        )
+        self.assertTrue(enforced["subtitle_safe_area_pass"])
+        self.assertNotIn("subtitle_safe_area_pass", pending)
+
+    def test_missing_subtitle_geometry_remains_pending(self) -> None:
+        enforced, pending = pipeline_constraint_evidence({})
+        self.assertNotIn("subtitle_safe_area_pass", enforced)
+        self.assertIn("subtitle_safe_area_pass", pending)
+
+
+if __name__ == "__main__":
+    unittest.main()

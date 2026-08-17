@@ -1,0 +1,103 @@
+{
+  "schema_version": "1.0",
+  "storyboard_id": "mixed-media-first-slice-001",
+  "content_language": "en-US",
+  "aspect_ratio": "9:16",
+  "target_duration_seconds": 15,
+  "hypothesis": "Showing trip-planning stress before a real TICT trip plan makes the product benefit immediately understandable.",
+  "scenes": [
+    {
+      "scene_id": "hook",
+      "start_seconds": 0,
+      "end_seconds": 5,
+      "purpose": "hook",
+      "visual_intent": {
+        "setting": "a bright international airport departure hall",
+        "subject_action": "a solo traveller switches between several planning tabs on a phone and visibly feels overwhelmed",
+        "camera": "natural handheld push-in, authentic travel-ad cinematography"
+      },
+      "media_plan": {
+        "base": {
+          "kind": "stock",
+          "intent": "overwhelmed solo traveller planning on phone in airport"
+        },
+        "overlays": []
+      },
+      "voiceover": "Planning a trip should not feel like another job.",
+      "onscreen_text": "Too much planning?",
+      "expected_evidence": [
+        "traveller_visible",
+        "phone_visible",
+        "airport_visible",
+        "planning_stress_visible"
+      ]
+    },
+    {
+      "scene_id": "product_demo",
+      "start_seconds": 5,
+      "end_seconds": 11,
+      "purpose": "product_demo",
+      "visual_intent": {
+        "setting": "a deterministic TICT product demonstration",
+        "subject_action": "the approved trip overview screen moves into view and remains legible",
+        "camera": "slow controlled push toward the exact application capture"
+      },
+      "media_plan": {
+        "base": {
+          "kind": "solid_or_graphic",
+          "intent": "TICT warm brand background"
+        },
+        "overlays": [
+          {
+            "kind": "product_capture",
+            "asset_id": "screens/Plan_Overview_Screen.png",
+            "placement": "centered_phone"
+          }
+        ]
+      },
+      "voiceover": "TICT turns every booking, place, and next step into one clear trip plan.",
+      "onscreen_text": "Your whole trip. One plan.",
+      "expected_evidence": [
+        "approved_tict_ui_visible",
+        "trip_plan_visible",
+        "product_text_legible"
+      ]
+    },
+    {
+      "scene_id": "cta",
+      "start_seconds": 11,
+      "end_seconds": 15,
+      "purpose": "cta",
+      "visual_intent": {
+        "setting": "a deterministic TICT brand end card",
+        "subject_action": "the approved mascot and logo appear beside one call to action",
+        "camera": "static end card with a subtle local push-in"
+      },
+      "media_plan": {
+        "base": {
+          "kind": "solid_or_graphic",
+          "intent": "TICT warm brand background"
+        },
+        "overlays": [
+          {
+            "kind": "brand_asset",
+            "asset_id": "tict-logo.png",
+            "placement": "upper_center"
+          },
+          {
+            "kind": "brand_asset",
+            "asset_id": "tict-mascot-1.png",
+            "placement": "center"
+          }
+        ]
+      },
+      "voiceover": "Plan less. Travel more with TICT.",
+      "onscreen_text": "Plan less. Travel more.",
+      "expected_evidence": [
+        "approved_logo_visible",
+        "approved_mascot_visible",
+        "single_cta_visible"
+      ]
+    }
+  ]
+}
