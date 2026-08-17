@@ -31,6 +31,16 @@ The primary metric improved by `0.110276` and all currently automated hard
 constraints pass. Publication still awaits explicit user review because ASR
 WER and automated brand-fidelity checks are not yet implemented.
 
+## Manual disposition
+
+`kept_after_user_review`
+
+On 2026-08-17 the user accepted the generated non-product phone screen as
+correct for this hook: the scene describes planning frustration before the
+tict product demonstration, so it must not be judged as approved product UI.
+The accepted follow-up requirement is to make screen intent explicit in each
+storyboard scene and evaluate the rendered result against that intent.
+
 ## Notes
 
 The v0 human observation fixture is reproducible but does not replace automated vision/ASR evaluation. Pending required constraints block automatic acceptance.
