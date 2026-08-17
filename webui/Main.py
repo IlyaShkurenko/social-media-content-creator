@@ -169,6 +169,22 @@ def _save_runtime_config():
     return saved
 
 
+_GEMINI_API_KEY_WIDGETS = (
+    "gemini_api_key_input",
+    "gemini_material_api_key_input",
+    "gemini_tts_api_key_input",
+)
+
+
+def _sync_gemini_api_key_inputs(source_widget_key):
+    """Keep every UI entry point for the shared Gemini credential consistent."""
+    api_key = str(st.session_state.get(source_widget_key, "") or "").strip()
+    for widget_key in _GEMINI_API_KEY_WIDGETS:
+        if widget_key != source_widget_key and widget_key in st.session_state:
+            st.session_state[widget_key] = api_key
+    _set_runtime_config("app", "gemini_api_key", api_key)
+
+
 def _run_llm_read_operation(operation_name, operation):
     """
     使用稳定的当前 LLM 配置执行只读请求，并避免等待视频生成任务。
@@ -2042,11 +2058,18 @@ def _render_settings_dialog():
 
             st_llm_api_key = llm_api_key
             if llm_provider_spec.show_api_key:
+                api_key_input_options = {}
+                if llm_provider == "gemini":
+                    api_key_input_options = {
+                        "on_change": _sync_gemini_api_key_inputs,
+                        "args": ("gemini_api_key_input",),
+                    }
                 st_llm_api_key = llm_form_panel.text_input(
                     tr("API Key"),
                     value=llm_api_key,
                     type="password",
                     key=f"{llm_provider}_api_key_input",
+                    **api_key_input_options,
                 )
 
             st_llm_base_url = llm_base_url
@@ -2205,6 +2228,19 @@ def _render_settings_dialog():
                 help=tr("Runway API Key Help"),
             )
             _set_runtime_config("app", "runway_api_key", runway_api_key.strip())
+
+            # The video-quality evaluator uses the same Gemini credential as the
+            # existing Gemini LLM and TTS integrations. Exposing it here lets a
+            # user configure the evaluator without changing their primary LLM.
+            gemini_api_key = st.text_input(
+                tr("Gemini API Key"),
+                value=str(config.app.get("gemini_api_key", "") or ""),
+                type="password",
+                key="gemini_material_api_key_input",
+                on_change=_sync_gemini_api_key_inputs,
+                args=("gemini_material_api_key_input",),
+            )
+            _set_runtime_config("app", "gemini_api_key", gemini_api_key.strip())
 
     _save_runtime_config()
 
@@ -3615,6 +3651,8 @@ def _render_audio_settings(panel, params):
                     value=config.app.get("gemini_api_key", ""),
                     type="password",
                     key="gemini_tts_api_key_input",
+                    on_change=_sync_gemini_api_key_inputs,
+                    args=("gemini_tts_api_key_input",),
                 )
                 _set_runtime_config("app", "gemini_api_key", gemini_tts_api_key)
 
