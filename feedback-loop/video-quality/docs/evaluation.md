@@ -51,10 +51,32 @@ Run from `feedback-loop/video-quality`:
 make verify
 make baseline
 make evaluate EXPERIMENT=experiments/008-baseline
-make experiment SLUG=ordered-materials HYPOTHESIS="Ordered semantic retrieval improves scene alignment"
+make experiment-start \
+  BASELINE=experiments/008-baseline \
+  SLUG=ordered-materials \
+  PROBLEM="The product reveal is visually disconnected from the hook" \
+  HYPOTHESIS="A semantic bridge improves scene alignment" \
+  CHANGE="Change only the transition into the product demonstration" \
+  EXPECTED="Increase timeline_alignment_f1 without constraint regressions"
+
+make experiment-evaluate \
+  EXPERIMENT=experiments/009-ordered-materials \
+  VIDEO=path/to/candidate.mp4 \
+  OBSERVATIONS=evals/dataset/observations/candidate.json
+
+make experiment-finish \
+  EXPERIMENT=experiments/009-ordered-materials \
+  DECISION=keep \
+  HUMAN_REVIEW=YES \
+  REVIEWER=user \
+  LEARNING="The bridge improved alignment and passed visual review"
 ```
 
-`make baseline` and `make experiment` always allocate the next numeric experiment directory after validating every input path. Successful records track only `README.md`, `metrics.json`, and a content-addressed `inputs.json`; failed evaluation also retains `evaluator.stderr.log`. Video snapshots and extracted frames stay under ignored `artifacts/`. `make evaluate` verifies the referenced hashes, reconstructs sanitized inline inputs under ignored `.state/replay/`, and refreshes metrics without creating a new experiment identity. Historical experiment layouts remain untouched.
+`experiment-start` requires a clean worktree. It re-evaluates the selected baseline under ignored state, verifies metric equality, and then allocates the next identity. The resulting `inputs.json` schema v2 freezes the baseline hash, starting git revision, observed problem, hypothesis, planned change, expected impact, scenario hash, and plan hash before candidate code or metrics exist.
+
+`experiment-evaluate` refuses a changed plan, scenario, or baseline. It appends sanitized candidate inputs, evaluator results, candidate revision, and worktree-diff hash to the same identity. `experiment-finish` enforces keep/revert policy and records learning; it deliberately does not run git revert, commit, or push.
+
+Successful records track only `README.md`, `metrics.json`, and `inputs.json`; failed evaluation also retains `evaluator.stderr.log`. Video snapshots and extracted frames stay under ignored `artifacts/`. `make evaluate` verifies hashes and metric reproducibility without mutating the historical record. Historical experiment layouts remain supported and untouched.
 
 ## tict brand fixture
 

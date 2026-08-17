@@ -5,12 +5,12 @@ This subtree owns measurable experiments for the final MP4 produced by MoneyPrin
 ## Required experiment protocol
 
 1. Read `goal.md`, `docs/evaluation.md`, and the latest experiment README before changing product code.
-2. Run `make evaluate EXPERIMENT=experiments/<current-baseline>` to confirm that the current evaluator is reproducible.
-3. Create exactly one sequential experiment with `make experiment SLUG=<short-name> HYPOTHESIS="<one falsifiable claim>"`.
-4. Change one coherent variable, generate or select the declared artifact, and evaluate the same fixed scenario.
-5. Keep product-code changes only when the primary metric improves and every required constraint is verified. Until pending automated checks are implemented, improvements are provisional and require explicit human review before publication.
-6. After a successful experiment, or after the user explicitly accepts a provisional improvement, run the normal repository validation, update the experiment decision, commit the implementation and tracked experiment evidence together, and push the current branch to `origin` before starting another experiment.
-7. If an experiment fails or regresses, revert its product-code changes but retain and commit the experiment README, metrics, and useful failure evidence. Never reuse an experiment number. Do not push reverted product code as an improvement.
+2. From a clean worktree, run `make experiment-start BASELINE=experiments/<current-baseline> SLUG=<short-name> PROBLEM="..." HYPOTHESIS="<one falsifiable claim>" CHANGE="<one coherent variable>" EXPECTED="<metric expectation>"`. This command reproduces the baseline and freezes the plan before candidate code changes.
+3. Inspect previous experiment history, then implement only the frozen planned change. Do not edit the plan to fit the result.
+4. Generate or select the declared artifact and run `make experiment-evaluate EXPERIMENT=experiments/<current-experiment> ...` against the frozen scenario and baseline.
+5. Run `make experiment-finish EXPERIMENT=... DECISION=keep|revert LEARNING="..."`. A provisional keep additionally requires `HUMAN_REVIEW=YES REVIEWER=user` after explicit user review.
+6. Keep product-code changes only when the primary metric improves and every required constraint is verified, or when the user explicitly accepts a provisional improvement. After a keep, run normal repository validation, commit the implementation and tracked experiment evidence together, and push the current branch to `origin` before starting another experiment.
+7. After `revert`, revert the candidate implementation but retain and commit the finalized experiment README, metrics, and useful failure evidence. Never reuse an experiment number. Do not push reverted product code as an improvement.
 
 ## Evaluator integrity
 
@@ -24,6 +24,8 @@ This subtree owns measurable experiments for the final MP4 produced by MoneyPrin
 ## Stable commands
 
 - `make baseline` creates the next immutable baseline experiment.
-- `make experiment SLUG=... HYPOTHESIS="..."` creates and evaluates the next experiment against the fixed scenario.
-- `make evaluate EXPERIMENT=experiments/NNN-name` reproduces one existing experiment.
+- `make experiment-start ...` reproduces the selected baseline and creates the next planned experiment without candidate metrics. `make experiment` is an alias.
+- `make experiment-evaluate EXPERIMENT=experiments/NNN-name ...` evaluates the candidate under the frozen plan.
+- `make experiment-finish EXPERIMENT=... DECISION=... LEARNING="..."` records the final disposition without automatically changing git state.
+- `make evaluate EXPERIMENT=experiments/NNN-name` reproduces one existing experiment under ignored state and verifies that its metrics did not drift.
 - `make verify` validates evaluator code and fixtures without paid API calls.

@@ -4,7 +4,7 @@ Build an autonomous, reproducible production loop that turns a tict advertising 
 
 ## Primary metric
 
-Maximize `timeline_alignment_f1`: micro-averaged F1 over `(scene_id, expected_visual_tag)` pairs compared with the visual observations for the same scene. The fixed evaluator-v0 fixture is human-labelled; the target architecture replaces it with a versioned vision judge without changing the metric contract.
+Maximize `timeline_alignment_f1`: micro-averaged F1 over `(scene_id, expected_visual_tag)` pairs compared with the visual observations for the same scene. The current fixed fixture is human-labelled; the target architecture replaces it with a versioned vision judge without changing the metric contract.
 
 The first trustworthy automated baseline will set the numeric target. Until then, improvement is continuous: a candidate must beat the latest comparable baseline.
 

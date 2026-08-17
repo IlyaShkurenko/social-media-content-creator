@@ -28,4 +28,4 @@ An RFC is required before implementation when the proposal is architectural or c
 
 Subjective video quality is evaluated by the measurable experiment loop, not expressed as vague Gherkin. BDD is appropriate for deterministic decisions around that loop, such as whether a candidate may be accepted automatically.
 
-The next planned product change—mixed-media advertising generation with a Runway provider—must begin with an RFC and a feature contract before production implementation.
+The existing mixed-media/Runway architecture is governed by RFC-0001. Future architectural changes—such as a new generation provider, orchestration model, or persistence boundary—must update or add an RFC before their dependent feature contracts and implementation. Routine experiment hypotheses remain in their staged experiment records and do not require an RFC.

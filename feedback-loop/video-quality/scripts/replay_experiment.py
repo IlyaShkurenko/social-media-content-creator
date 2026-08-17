@@ -35,7 +35,18 @@ def parse_args() -> argparse.Namespace:
         description="Replay a compact video-quality experiment"
     )
     parser.add_argument("--experiment", required=True)
+    parser.add_argument(
+        "--verify-only",
+        action="store_true",
+        help="re-evaluate under ignored state and compare without mutating the record",
+    )
     return parser.parse_args()
+
+
+def comparable_metrics(metrics: dict) -> dict:
+    comparable = dict(metrics)
+    comparable.pop("generated_at", None)
+    return comparable
 
 
 def main() -> int:
@@ -50,31 +61,40 @@ def main() -> int:
         raise ValueError(f"experiment must stay inside {LOOP_ROOT}: {experiment}")
     manifest = json.loads((experiment / "inputs.json").read_text(encoding="utf-8"))
     scenario = verified_path(LOOP_ROOT, manifest["scenario"])
-    video_entry = manifest["video"]
+    candidate = manifest.get("candidate", manifest)
+    if not candidate.get("video"):
+        raise ValueError("planned experiment has no candidate artifact to replay")
+    video_entry = candidate["video"]
     video = (REPO_ROOT / video_entry["snapshot_path"]).resolve()
     if REPO_ROOT.resolve() not in video.parents or not video.is_file():
         raise ValueError(f"missing ignored video snapshot: {video}")
     if sha256_file(video) != video_entry["source_sha256"]:
         raise ValueError(f"video snapshot hash changed: {video}")
 
+    output_dir = (
+        LOOP_ROOT / ".state" / "replay-check" / experiment.name
+        if args.verify_only
+        else experiment
+    )
+    output_dir.mkdir(parents=True, exist_ok=True)
     command = [
         sys.executable,
         str(LOOP_ROOT / "evals" / "evaluate.py"),
         "--scenario",
         str(scenario),
         "--output",
-        str(experiment),
+        str(output_dir),
         "--video",
         str(video),
     ]
-    observations_entry = manifest.get("observations")
+    observations_entry = candidate.get("observations")
     if observations_entry:
         observations = verified_path(LOOP_ROOT, observations_entry)
         command.extend(["--observations", str(observations)])
 
     replay_dir = LOOP_ROOT / ".state" / "replay" / experiment.name
     replay_dir.mkdir(parents=True, exist_ok=True)
-    record_entry = manifest.get("pipeline_record")
+    record_entry = candidate.get("pipeline_record")
     if record_entry:
         record = replay_dir / "pipeline-record.json"
         record.write_text(
@@ -82,7 +102,7 @@ def main() -> int:
             encoding="utf-8",
         )
         command.extend(["--pipeline-record", str(record)])
-    subtitle_entry = manifest.get("subtitle")
+    subtitle_entry = candidate.get("subtitle")
     if subtitle_entry:
         subtitle = replay_dir / "subtitle.srt"
         subtitle.write_text(subtitle_entry["content"], encoding="utf-8")
@@ -99,7 +119,19 @@ def main() -> int:
     if result.returncode != 0:
         print(result.stderr or result.stdout, file=sys.stderr)
         return result.returncode
-    (experiment / "summary.md").unlink(missing_ok=True)
+    (output_dir / "summary.md").unlink(missing_ok=True)
+    if args.verify_only:
+        stored_metrics_path = experiment / "metrics.json"
+        replayed_metrics_path = output_dir / "metrics.json"
+        if not stored_metrics_path.is_file():
+            raise ValueError(f"experiment has no stored metrics: {experiment}")
+        stored = json.loads(stored_metrics_path.read_text(encoding="utf-8"))
+        replayed = json.loads(replayed_metrics_path.read_text(encoding="utf-8"))
+        if comparable_metrics(stored) != comparable_metrics(replayed):
+            raise ValueError("replayed metrics differ from the stored experiment")
+        print(f"verified={experiment.relative_to(LOOP_ROOT)}")
+        print(f"primary={stored['primary']['value']}")
+        return 0
     print(result.stdout.strip())
     return 0
 

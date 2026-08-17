@@ -46,6 +46,10 @@ The evaluator MUST report exact-case canonical brand spelling independently from
 
 New experiment directories SHOULD contain only the human decision record, machine metrics, one content-addressed input manifest, and useful failure logs. Unchanged shared fixtures MAY be referenced by repository path plus SHA-256 instead of copied. Large MP4s and decoded frames remain ignored artifacts. The stable evaluate command MUST verify referenced hashes and MUST retain enough sanitized inputs to reproduce the decision without storing credentials or signed provider URLs. Existing historical experiment directories remain immutable.
 
+### EVAL-3.2 — Staged experiment lifecycle
+
+A product experiment MUST move through explicit `planned`, `evaluated`, and final `kept` or `reverted` states. `experiment-start` MUST reproduce and freeze a comparable baseline before allocating the next identity, and MUST record the observed problem, falsifiable engineering hypothesis, one coherent planned change, expected metric impact, starting revision, and baseline evidence before candidate code or metrics are introduced. `experiment-evaluate` MUST add candidate inputs and results to that same identity without rewriting the frozen plan. `experiment-finish` MUST record learning and a final decision; it MUST reject `keep` when the primary metric did not improve, and MUST require explicit human-review evidence before keeping a provisional result. Final git revert, validation, commit, and push remain deliberate agent actions governed by the scoped experiment protocol.
+
 ## Executable coverage
 
-`test/bdd/features/video_quality_acceptance.feature` covers the high-value acceptance boundary in EVAL-1.2, EVAL-1.3, and EVAL-2.4. Lower-level evaluator output, exact brand spelling, metric calculations, hash verification, and compact-record serialization remain covered by ordinary evaluator tests.
+`test/bdd/features/video_quality_acceptance.feature` covers the high-value acceptance boundary in EVAL-1.2, EVAL-1.3, EVAL-2.4, and the pre-change plan freeze in EVAL-3.2. Lower-level evaluator output, exact brand spelling, metric calculations, lifecycle transitions, hash verification, and compact-record serialization remain covered by ordinary evaluator tests.

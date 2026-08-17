@@ -18,3 +18,9 @@ Feature: Video-quality experiment acceptance
     And the observed screen is generic and does not claim tict identity
     When screen-policy compliance is calculated
     Then the scene screen policy passes
+
+  Scenario: [EVAL-3.2] An experiment plan is frozen before candidate evaluation
+    Given a reproduced comparable baseline
+    When a new experiment is started with a problem, hypothesis, change, and expected impact
+    Then the experiment is planned without candidate metrics
+    And its engineering hypothesis and baseline evidence are frozen

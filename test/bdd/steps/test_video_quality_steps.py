@@ -165,3 +165,54 @@ def calculate_screen_compliance(
 def screen_policy_passes(screen_result: dict[str, Any]) -> None:
     assert screen_result["compliance"] == 1.0
     assert screen_result["failures"] == []
+
+
+@given("a reproduced comparable baseline", target_fixture="baseline_evidence")
+def reproduced_baseline() -> dict[str, Any]:
+    return {
+        "experiment": "experiments/008-baseline",
+        "metrics_sha256": "a" * 64,
+        "metrics": {
+            "scenario_id": "mixed-media-stock-baseline-001",
+            "evaluator_version": "0.4.0",
+            "primary": {
+                "name": "timeline_alignment_f1",
+                "value": 0.952381,
+            },
+        },
+    }
+
+
+@when(
+    "a new experiment is started with a problem, hypothesis, change, and expected impact",
+    target_fixture="planned_experiment",
+)
+def start_planned_experiment(baseline_evidence: dict[str, Any]) -> dict[str, Any]:
+    return EXPERIMENT_MODULE.build_started_manifest(
+        scenario={"path": "evals/dataset/scenario.json", "sha256": "b" * 64},
+        baseline=baseline_evidence,
+        observed_problem="The product reveal begins too abruptly.",
+        hypothesis="A short visual bridge will improve scene alignment.",
+        planned_change="Add one local transition before the product capture.",
+        expected_metric_impact="Increase timeline_alignment_f1 without regressions.",
+        start_revision="c94f01e",
+        started_at="2026-08-17T18:00:00+00:00",
+    )
+
+
+@then("the experiment is planned without candidate metrics")
+def plan_precedes_metrics(planned_experiment: dict[str, Any]) -> None:
+    assert planned_experiment["lifecycle"]["status"] == "planned"
+    assert "candidate" not in planned_experiment
+    assert "metrics" not in planned_experiment
+
+
+@then("its engineering hypothesis and baseline evidence are frozen")
+def plan_and_baseline_are_frozen(planned_experiment: dict[str, Any]) -> None:
+    assert planned_experiment["plan"]["hypothesis"].startswith(
+        "A short visual bridge"
+    )
+    assert planned_experiment["baseline"]["experiment"] == (
+        "experiments/008-baseline"
+    )
+    assert planned_experiment["baseline"]["primary"]["value"] == 0.952381

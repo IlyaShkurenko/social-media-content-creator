@@ -4,23 +4,41 @@ LOOP_ROOT := $(abspath .)
 REPO_ROOT := $(abspath ../..)
 PYTHON := $(REPO_ROOT)/.venv/bin/python
 SCENARIO ?= evals/dataset/coverr-controlled-smoke-001.json
+EXPERIMENT_SCENARIO ?= evals/dataset/mixed-media-stock-baseline-001.json
+BASELINE ?= experiments/008-baseline
 MIXED_STORYBOARD ?= evals/dataset/mixed-media-first-slice-001.json
 MIXED_OUTPUT ?= .state/prepared/mixed-media-first-slice-001
 
-.PHONY: baseline experiment evaluate verify mixed-prepare mixed-render-stock mixed-rerender-runway mixed-runway
+.PHONY: baseline experiment experiment-start experiment-evaluate experiment-finish evaluate verify mixed-prepare mixed-render-stock mixed-rerender-runway mixed-runway
 
 baseline:
 	$(PYTHON) scripts/run_experiment.py --kind baseline --slug baseline --scenario $(SCENARIO) $(if $(VIDEO),--video "$(VIDEO)",) $(if $(OBSERVATIONS),--observations "$(OBSERVATIONS)",) $(if $(PIPELINE_RECORD),--pipeline-record "$(PIPELINE_RECORD)",) $(if $(SUBTITLE),--subtitle "$(SUBTITLE)",)
 
-experiment:
+experiment: experiment-start
+
+experiment-start:
 	@test -n "$(SLUG)" || (echo "SLUG is required" >&2; exit 2)
+	@test -n "$(PROBLEM)" || (echo "PROBLEM is required" >&2; exit 2)
 	@test -n "$(HYPOTHESIS)" || (echo "HYPOTHESIS is required" >&2; exit 2)
-	$(PYTHON) scripts/run_experiment.py --kind experiment --slug "$(SLUG)" --hypothesis "$(HYPOTHESIS)" --scenario $(SCENARIO) $(if $(VIDEO),--video "$(VIDEO)",) $(if $(OBSERVATIONS),--observations "$(OBSERVATIONS)",) $(if $(PIPELINE_RECORD),--pipeline-record "$(PIPELINE_RECORD)",) $(if $(SUBTITLE),--subtitle "$(SUBTITLE)",)
+	@test -n "$(CHANGE)" || (echo "CHANGE is required" >&2; exit 2)
+	@test -n "$(EXPECTED)" || (echo "EXPECTED is required" >&2; exit 2)
+	@test -n "$(BASELINE)" || (echo "BASELINE is required" >&2; exit 2)
+	$(PYTHON) scripts/run_experiment.py --kind experiment --phase start --slug "$(SLUG)" --scenario "$(EXPERIMENT_SCENARIO)" --baseline "$(BASELINE)" --problem "$(PROBLEM)" --hypothesis "$(HYPOTHESIS)" --planned-change "$(CHANGE)" --expected-impact "$(EXPECTED)"
+
+experiment-evaluate:
+	@test -n "$(EXPERIMENT)" || (echo "EXPERIMENT is required" >&2; exit 2)
+	$(PYTHON) scripts/run_experiment.py --kind experiment --phase evaluate --experiment "$(EXPERIMENT)" $(if $(VIDEO),--video "$(VIDEO)",) $(if $(OBSERVATIONS),--observations "$(OBSERVATIONS)",) $(if $(PIPELINE_RECORD),--pipeline-record "$(PIPELINE_RECORD)",) $(if $(SUBTITLE),--subtitle "$(SUBTITLE)",)
+
+experiment-finish:
+	@test -n "$(EXPERIMENT)" || (echo "EXPERIMENT is required" >&2; exit 2)
+	@test -n "$(DECISION)" || (echo "DECISION=keep or DECISION=revert is required" >&2; exit 2)
+	@test -n "$(LEARNING)" || (echo "LEARNING is required" >&2; exit 2)
+	$(PYTHON) scripts/run_experiment.py --kind experiment --phase finish --experiment "$(EXPERIMENT)" --decision "$(DECISION)" --learning "$(LEARNING)" $(if $(HUMAN_REVIEW),--human-review "$(HUMAN_REVIEW)",) $(if $(REVIEWER),--reviewer "$(REVIEWER)",)
 
 evaluate:
 	@test -n "$(EXPERIMENT)" || (echo "EXPERIMENT is required" >&2; exit 2)
 	@if test -f "$(EXPERIMENT)/inputs.json"; then \
-		$(PYTHON) scripts/replay_experiment.py --experiment "$(EXPERIMENT)"; \
+		$(PYTHON) scripts/replay_experiment.py --experiment "$(EXPERIMENT)" --verify-only; \
 	else \
 		$(PYTHON) evals/evaluate.py --scenario "$(EXPERIMENT)/scenario.json" --output "$(EXPERIMENT)" $(if $(VIDEO),--video "$(VIDEO)",) $(if $(OBSERVATIONS),--observations "$(OBSERVATIONS)",) $(if $(PIPELINE_RECORD),--pipeline-record "$(PIPELINE_RECORD)",) $(if $(SUBTITLE),--subtitle "$(SUBTITLE)",); \
 	fi

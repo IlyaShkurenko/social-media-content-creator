@@ -18,4 +18,6 @@ See `feedback-loop/video-quality/goal.md` and `feedback-loop/video-quality/docs/
 
 New experiment directories are intentionally compact: tracked decision notes, metrics, one content-addressed input manifest, and a failure log only when needed. Large video/frame artifacts remain local and ignored; replay validates their hashes and preserves the evidence needed to diagnose failures.
 
+Product experiments use a staged lifecycle. `experiment-start` reproduces and freezes a baseline plus the pre-change engineering hypothesis; `experiment-evaluate` attaches the candidate and metrics without changing that plan; `experiment-finish` records keep/revert learning and requires explicit review evidence for provisional results. Git revert, validation, commit, and push remain deliberate post-decision actions.
+
 The acceptance-decision contract is specified in `docs/specs/video-quality-feedback-loop.md` and its selected executable behavior is covered by `test/bdd/features/video_quality_acceptance.feature`.
