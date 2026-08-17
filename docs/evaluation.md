@@ -15,3 +15,5 @@ make evaluate EXPERIMENT=experiments/001-baseline
 ```
 
 See `feedback-loop/video-quality/goal.md` and `feedback-loop/video-quality/docs/evaluation.md` for metric contracts and experiment rules.
+
+The acceptance-decision contract is specified in `docs/specs/video-quality-feedback-loop.md` and its selected executable behavior is covered by `test/bdd/features/video_quality_acceptance.feature`.

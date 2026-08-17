@@ -41,6 +41,19 @@ Live provider tests are skipped by default. To run tests that may call external
 TTS or LLM services, set `MPT_RUN_INTEGRATION_TESTS=1` and provide the required
 provider credentials.
 
+### Behavior specifications
+
+Selected externally meaningful behavior is specified with pytest-bdd. Run it
+through the stable project command:
+
+```bash
+make test-bdd
+```
+
+Feature files live in `test/bdd/features/`, step definitions in
+`test/bdd/steps/`, and every scenario name starts with its contract requirement
+ID. See `docs/testing/bdd.md` for the intentionally narrow BDD scope.
+
 ## Adding New Tests
 
 To add tests for other components, follow these guidelines:

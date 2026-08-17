@@ -29,6 +29,7 @@ Generated state and artifacts live under `storage/`. The API mounts task artifac
 
 ## Related context
 
+- [Specification process](spec-process.md)
 - [Video pipeline](video-pipeline.md)
 - [External integrations](integrations.md)
 - [Runtime and validation](runtime.md)

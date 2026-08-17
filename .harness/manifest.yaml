@@ -4,7 +4,8 @@ mode: project
 modules:
   base-harness: enabled
   context-graph: enabled
-  spec-driven: disabled
+  spec-driven: enabled
+  bdd: enabled
   feedback-loop: enabled
   agent-runtime: disabled
   shared-knowledge: disabled
@@ -12,3 +13,8 @@ modules:
 context:
   current: ./docs
   retrieval: mq
+
+bdd:
+  framework: pytest-bdd
+  command: make test-bdd
+  features: ./test/bdd/features
