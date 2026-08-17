@@ -12,3 +12,9 @@ Feature: Video-quality experiment acceptance
     And all required goal constraints are verified
     When the experiment decision is recorded
     Then the decision keeps the candidate
+
+  Scenario: [EVAL-2.4] A generic screen is judged against the declared scene policy
+    Given a scene declares a non-product contextual screen
+    And the observed screen is generic and does not claim tict identity
+    When screen-policy compliance is calculated
+    Then the scene screen policy passes

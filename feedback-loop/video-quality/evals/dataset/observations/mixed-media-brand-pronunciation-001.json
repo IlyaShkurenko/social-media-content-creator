@@ -2,24 +2,26 @@
   "schema_version": 1,
   "scenario_id": "mixed-media-stock-baseline-001",
   "mode": "human_fixture",
-  "artifact_sha256": "311e13b0fbc7e0e990b516e18128d1f14ebba1415d48a8b17c941fb4a213f4a6",
+  "artifact_sha256": "374c1f46abb453836fbaf1895ca61ae28e9a730cd5f1c4358ba6657163824568",
   "reviewed_at": "2026-08-17",
-  "review_protocol": "One midpoint frame per scene, inspected from the rendered MP4; only literal visible evidence is tagged.",
+  "review_protocol": "Visual evidence is unchanged from the accepted Runway hook; exact midpoint frames and the prior nine-frame contact sheet were inspected. This artifact changes canonical subtitle casing and the TTS synthesis input while preserving the visual track.",
   "scenes": [
     {
       "scene_id": "hook",
       "observed_tags": [
         "traveller_visible",
         "phone_visible",
+        "airport_visible",
+        "planning_stress_visible",
         "luggage_visible"
       ],
       "screen_observation": {
-        "screen_class": "screen_not_visible",
+        "screen_class": "generic_non_product",
         "evidence_timestamp_seconds": 2.5,
         "claims_tict_identity": false,
         "approved_asset_match": false
       },
-      "notes": "The hook source is controlled and unchanged: a seated traveller looks at a phone beside luggage. Airport identity and planning stress remain too ambiguous to award."
+      "notes": "The accepted hook shows planning frustration before the product reveal. Its generic phone screen is compliant with non_product_context and does not claim tict identity."
     },
     {
       "scene_id": "product_demo",
@@ -34,7 +36,7 @@
         "claims_tict_identity": true,
         "approved_asset_match": true
       },
-      "notes": "The exact exported trip overview is fully visible and legible. The phone was scaled to reserve a separate lower caption zone, so the subtitle no longer covers the product UI."
+      "notes": "The exact approved trip overview remains fully visible and legible. The subtitle now uses canonical lowercase tict."
     },
     {
       "scene_id": "cta",
@@ -49,7 +51,7 @@
         "claims_tict_identity": false,
         "approved_asset_match": false
       },
-      "notes": "Logo, mascot, CTA text, and one button are unobscured. The redundant narration subtitle is deterministically suppressed for this scene."
+      "notes": "The approved logo, mascot, and single CTA remain unchanged. CTA subtitle suppression remains active."
     }
   ]
 }

@@ -49,8 +49,14 @@ Create exactly one {brief.target_duration_seconds}-second {brief.aspect_ratio} s
 Use exactly three ordered scenes: a 0-5 second hook, a 5-11 second product_demo,
 and an 11-{brief.target_duration_seconds} second CTA. Describe concrete settings,
 subject actions, camera behavior, voiceover, on-screen text, expected visual evidence,
-and a layered media plan. Product captures, logos, and mascots must reference only
+an explicit screen_content_policy, and a layered media plan. Use approved_product_ui
+only with an approved product_capture, non_product_context for a generic pre-product
+screen, screen_hidden when the display must face away, and unconstrained when no
+device screen matters. Product captures, logos, and mascots must reference only
 the approved asset IDs. Do not ask a generative model to redraw readable application UI.
+Use canonical lowercase "tict" in all visible copy and narration text. Declare the
+brand pronunciation canonical="tict", spoken_alias="tickt", ipa="tɪkt" so speech
+providers pronounce /tɪkt/ without changing subtitles.
 Do not invent another hypothesis or paraphrase the supplied hypothesis.
 
 Return raw JSON only: no explanation and no Markdown except one optional JSON code fence.

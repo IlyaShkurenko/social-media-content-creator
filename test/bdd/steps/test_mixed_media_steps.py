@@ -8,6 +8,8 @@ from pytest_bdd import given, scenarios, then, when
 
 from app.services.creative.budget import BudgetExceededError, IterationBudgetLedger
 from app.services.creative.compiler import compile_comparison_plans
+from app.services.creative.narration import build_narration_plan
+from app.services.creative.pipeline import build_runway_request
 from app.services.creative.storyboard import (
     StoryboardValidationError,
     resolve_narration_voice,
@@ -236,3 +238,88 @@ def reservation_is_rejected(
     snapshot = budget_ledger.snapshot()
     assert snapshot.charged_microusd == 9_800_000
     assert snapshot.reserved_microusd == 0
+
+
+def storyboard_payload_v11() -> dict[str, Any]:
+    payload = storyboard_payload()
+    payload["schema_version"] = "1.1"
+    payload["brand_pronunciations"] = [
+        {
+            "canonical": "tict",
+            "spoken_alias": "tickt",
+            "ipa": "tɪkt",
+        }
+    ]
+    payload["scenes"][0]["visual_intent"]["screen_content_policy"] = (
+        "non_product_context"
+    )
+    payload["scenes"][1]["visual_intent"]["screen_content_policy"] = (
+        "approved_product_ui"
+    )
+    payload["scenes"][2]["visual_intent"]["screen_content_policy"] = (
+        "unconstrained"
+    )
+    payload["scenes"][1]["voiceover"] = (
+        "tict turns every booking into one clear trip plan."
+    )
+    payload["scenes"][2]["voiceover"] = "Plan less. Travel more with tict."
+    return payload
+
+
+@given(
+    "a hook storyboard declaring a non-product contextual screen",
+    target_fixture="screen_storyboard_input",
+)
+def non_product_screen_storyboard() -> dict[str, Any]:
+    return storyboard_payload_v11()
+
+
+@when("the Runway hook request is compiled")
+def compile_runway_hook_request(
+    screen_storyboard_input: dict[str, Any],
+    scenario_context: dict[str, Any],
+) -> None:
+    storyboard = validate_storyboard(screen_storyboard_input)
+    scenario_context["runway_request"] = build_runway_request(storyboard)
+
+
+@then("the generated hook may show a generic phone screen")
+def generic_phone_screen_is_allowed(scenario_context: dict[str, Any]) -> None:
+    prompt = scenario_context["runway_request"].prompt_text.lower()
+    assert "generic non-product phone interface may be visible" in prompt
+
+
+@then("the generated hook must not claim that screen is tict UI")
+def product_identity_is_forbidden(scenario_context: dict[str, Any]) -> None:
+    prompt = scenario_context["runway_request"].prompt_text.lower()
+    assert "must not resemble tict" in prompt
+
+
+@given(
+    "a storyboard with lowercase tict copy and its tickt pronunciation",
+    target_fixture="brand_storyboard_input",
+)
+def lowercase_brand_storyboard() -> dict[str, Any]:
+    return storyboard_payload_v11()
+
+
+@when("narration settings are resolved from the storyboard")
+def resolve_storyboard_narration(
+    brand_storyboard_input: dict[str, Any],
+    scenario_context: dict[str, Any],
+) -> None:
+    storyboard = validate_storyboard(brand_storyboard_input)
+    scenario_context["narration_plan"] = build_narration_plan(storyboard)
+
+
+@then("the subtitle narration retains lowercase tict")
+def subtitle_retains_canonical_brand(scenario_context: dict[str, Any]) -> None:
+    plan = scenario_context["narration_plan"]
+    assert "tict" in plan.scenes[1].display_text
+    assert "tickt" not in plan.scenes[1].display_text
+
+
+@then("the synthesis narration uses the tickt pronunciation")
+def synthesis_uses_brand_pronunciation(scenario_context: dict[str, Any]) -> None:
+    plan = scenario_context["narration_plan"]
+    assert "tickt" in plan.scenes[1].spoken_text

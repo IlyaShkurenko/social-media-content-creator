@@ -41,12 +41,31 @@ def build_runway_request(storyboard: Storyboard) -> RunwayVideoRequest:
     storyboard = validate_storyboard(storyboard)
     plans = compile_comparison_plans(storyboard)
     hook = plans["runway-candidate"].scenes[0]
+    policy = hook.visual_intent.screen_content_policy or "unconstrained"
+    screen_instruction = {
+        "approved_product_ui": (
+            "Do not invent application UI; keep the device display blank or "
+            "occluded so the approved product capture can be composited locally."
+        ),
+        "non_product_context": (
+            "A generic non-product phone interface may be visible when required "
+            "by the action. It must not resemble tict, claim tict identity, or "
+            "contain readable text."
+        ),
+        "screen_hidden": (
+            "Keep every device screen facing away from the camera or fully hidden."
+        ),
+        "unconstrained": (
+            "Any incidental device screen must not claim tict identity."
+        ),
+    }[policy]
     prompt = (
         f"{hook.visual_intent.setting}. "
         f"{hook.visual_intent.subject_action}. "
         f"Camera: {hook.visual_intent.camera}. "
         "Photorealistic, authentic premium travel advertisement, natural human motion. "
-        "No readable text, logos, application UI, watermarks, or subtitles."
+        f"{screen_instruction} "
+        "No logos, watermarks, or subtitles."
     )
     base = hook.media_plan.base
     return RunwayVideoRequest(

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import shutil
@@ -18,6 +19,48 @@ EXPERIMENTS_ROOT = LOOP_ROOT / "experiments"
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _relative(path: Path, root: Path, label: str) -> str:
+    try:
+        return str(path.resolve().relative_to(root.resolve()))
+    except ValueError as exc:
+        raise ValueError(f"{label} must stay inside {root}: {path}") from exc
+
+
+def _sanitize_record(value: Any, *, key: str = "") -> Any:
+    sensitive_fragments = (
+        "api_key",
+        "authorization",
+        "secret",
+        "signed_url",
+        "output_url",
+    )
+    if any(fragment in key.lower() for fragment in sensitive_fragments):
+        return "[redacted]"
+    if isinstance(value, dict):
+        return {
+            str(item_key): _sanitize_record(item_value, key=str(item_key))
+            for item_key, item_value in value.items()
+        }
+    if isinstance(value, list):
+        return [_sanitize_record(item, key=key) for item in value]
+    if isinstance(value, str):
+        candidate = Path(value)
+        if candidate.is_absolute():
+            try:
+                return f"<repo>/{candidate.relative_to(REPO_ROOT.resolve())}"
+            except ValueError:
+                return value
+    return value
 
 
 def safe_slug(value: str) -> str:
@@ -121,7 +164,7 @@ def write_readme(
             "",
             "## Notes",
             "",
-            "The v0 human observation fixture is reproducible but does not replace automated vision/ASR evaluation. Pending required constraints block automatic acceptance.",
+            "The structured human observation fixture is reproducible but does not replace automated vision/ASR evaluation. Pending required constraints block automatic acceptance.",
             "",
         ]
     )
@@ -132,7 +175,10 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Allocate and run a sequential video-quality experiment")
     parser.add_argument("--kind", choices=("baseline", "experiment"), required=True)
     parser.add_argument("--slug", required=True)
-    parser.add_argument("--hypothesis", default="Current controlled artifact establishes evaluator-v0 behavior.")
+    parser.add_argument(
+        "--hypothesis",
+        default="Current controlled artifact establishes the active evaluator behavior.",
+    )
     parser.add_argument("--scenario", required=True)
     parser.add_argument("--video")
     parser.add_argument("--observations")
@@ -150,29 +196,14 @@ def main() -> int:
     if not scenario.is_file() or LOOP_ROOT.resolve() not in scenario.parents:
         raise ValueError(f"scenario must be a file inside {LOOP_ROOT}: {scenario}")
 
-    experiment_id = next_experiment_id()
-    output_dir = EXPERIMENTS_ROOT / f"{experiment_id:03d}-{safe_slug(args.slug)}"
-    output_dir.mkdir(parents=False, exist_ok=False)
-    scenario_snapshot = output_dir / "scenario.json"
-    shutil.copy2(scenario, scenario_snapshot)
+    scenario_payload = json.loads(scenario.read_text(encoding="utf-8"))
 
-    command = [
-        sys.executable,
-        str(LOOP_ROOT / "evals" / "evaluate.py"),
-        "--scenario",
-        str(scenario_snapshot),
-        "--output",
-        str(output_dir),
-    ]
-    if args.video:
-        video_raw = Path(args.video)
-        video = (video_raw if video_raw.is_absolute() else REPO_ROOT / video_raw).resolve()
-        if not video.is_file() or REPO_ROOT.resolve() not in video.parents:
-            raise ValueError(f"video must be a file inside {REPO_ROOT}: {video}")
-        video_snapshot = output_dir / "artifacts" / f"video{video.suffix.lower()}"
-        video_snapshot.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(video, video_snapshot)
-        command.extend(["--video", str(video_snapshot)])
+    video_raw = Path(args.video or scenario_payload["artifact"]["video"])
+    video = (video_raw if video_raw.is_absolute() else REPO_ROOT / video_raw).resolve()
+    if not video.is_file() or REPO_ROOT.resolve() not in video.parents:
+        raise ValueError(f"video must be a file inside {REPO_ROOT}: {video}")
+
+    observations = None
     if args.observations:
         observations_raw = Path(args.observations)
         observations = (
@@ -187,9 +218,8 @@ def main() -> int:
             raise ValueError(
                 f"observations must be a file inside {LOOP_ROOT}: {observations}"
             )
-        observations_snapshot = output_dir / "observations.json"
-        shutil.copy2(observations, observations_snapshot)
-        command.extend(["--observations", str(observations_snapshot)])
+
+    record = None
     if args.pipeline_record:
         record_raw = Path(args.pipeline_record)
         record = (
@@ -199,9 +229,8 @@ def main() -> int:
             raise ValueError(
                 f"pipeline record must be a file inside {REPO_ROOT}: {record}"
             )
-        record_snapshot = output_dir / "pipeline-record.json"
-        shutil.copy2(record, record_snapshot)
-        command.extend(["--pipeline-record", str(record_snapshot)])
+
+    subtitle = None
     if args.subtitle:
         subtitle_raw = Path(args.subtitle)
         subtitle = (
@@ -211,12 +240,70 @@ def main() -> int:
             raise ValueError(
                 f"subtitle must be a file inside {REPO_ROOT}: {subtitle}"
             )
-        subtitle_snapshot = output_dir / "subtitle.srt"
-        shutil.copy2(subtitle, subtitle_snapshot)
-        command.extend(["--subtitle", str(subtitle_snapshot)])
+
+    experiment_id = next_experiment_id()
+    output_dir = EXPERIMENTS_ROOT / f"{experiment_id:03d}-{safe_slug(args.slug)}"
+    output_dir.mkdir(parents=False, exist_ok=False)
+    video_snapshot = output_dir / "artifacts" / f"video{video.suffix.lower()}"
+    video_snapshot.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(video, video_snapshot)
+
+    input_manifest: dict[str, Any] = {
+        "schema_version": 1,
+        "scenario": {
+            "path": _relative(scenario, LOOP_ROOT, "scenario"),
+            "sha256": sha256_file(scenario),
+        },
+        "video": {
+            "source_path": _relative(video, REPO_ROOT, "video"),
+            "source_sha256": sha256_file(video),
+            "snapshot_path": _relative(video_snapshot, REPO_ROOT, "video snapshot"),
+        },
+        "observations": None,
+        "pipeline_record": None,
+        "subtitle": None,
+    }
+    if observations is not None:
+        input_manifest["observations"] = {
+            "path": _relative(observations, LOOP_ROOT, "observations"),
+            "sha256": sha256_file(observations),
+        }
+    if record is not None:
+        input_manifest["pipeline_record"] = {
+            "source_path": _relative(record, REPO_ROOT, "pipeline record"),
+            "source_sha256": sha256_file(record),
+            "content": _sanitize_record(
+                json.loads(record.read_text(encoding="utf-8"))
+            ),
+        }
+    if subtitle is not None:
+        input_manifest["subtitle"] = {
+            "source_path": _relative(subtitle, REPO_ROOT, "subtitle"),
+            "source_sha256": sha256_file(subtitle),
+            "content": subtitle.read_text(encoding="utf-8"),
+        }
+    (output_dir / "inputs.json").write_text(
+        json.dumps(input_manifest, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+
+    command = [
+        sys.executable,
+        str(LOOP_ROOT / "evals" / "evaluate.py"),
+        "--scenario",
+        str(scenario),
+        "--output",
+        str(output_dir),
+    ]
+    command.extend(["--video", str(video_snapshot)])
+    if observations is not None:
+        command.extend(["--observations", str(observations)])
+    if record is not None:
+        command.extend(["--pipeline-record", str(record)])
+    if subtitle is not None:
+        command.extend(["--subtitle", str(subtitle)])
     result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", errors="replace")
     if result.returncode != 0:
-        scenario_payload = json.loads(scenario_snapshot.read_text(encoding="utf-8"))
         previous = latest_comparable_metrics(
             output_dir,
             scenario_id=scenario_payload["id"],
@@ -228,7 +315,7 @@ def main() -> int:
             output_dir,
             kind=args.kind,
             hypothesis=args.hypothesis,
-            scenario=scenario_snapshot,
+            scenario=scenario,
             metrics=None,
             previous=previous,
             error=error,
@@ -246,10 +333,11 @@ def main() -> int:
         output_dir,
         kind=args.kind,
         hypothesis=args.hypothesis,
-        scenario=scenario_snapshot,
+        scenario=scenario,
         metrics=metrics,
         previous=previous,
     )
+    (output_dir / "summary.md").unlink(missing_ok=True)
     print(result.stdout.strip())
     print(f"experiment={output_dir.relative_to(LOOP_ROOT)}")
     return 0

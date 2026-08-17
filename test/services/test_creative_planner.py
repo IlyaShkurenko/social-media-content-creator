@@ -22,14 +22,14 @@ FIXTURE = (
 
 def brief() -> StoryboardBrief:
     return StoryboardBrief(
-        product_name="TICT",
+        product_name="tict",
         audience="independent travellers overwhelmed by fragmented planning",
         hypothesis=(
-            "Showing trip-planning stress before a real TICT trip plan makes "
+            "Showing trip-planning stress before a real tict trip plan makes "
             "the product benefit immediately understandable."
         ),
         product_facts=[
-            "TICT creates one trip plan from bookings, places, and next steps."
+            "tict creates one trip plan from bookings, places, and next steps."
         ],
         available_asset_ids=[
             "screens/Plan_Overview_Screen.png",
@@ -46,6 +46,8 @@ def test_story_1_4_prompt_keeps_user_hypothesis_and_english_contract() -> None:
     assert "15" in prompt
     assert "raw JSON" in prompt
     assert "Do not invent another hypothesis" in prompt
+    assert 'canonical lowercase "tict"' in prompt
+    assert "screen_content_policy" in prompt
 
 
 def test_adpipe_1_1_planner_returns_typed_storyboard_from_llm_json() -> None:

@@ -27,15 +27,20 @@ def test_story_1_3_narration_plan_is_english_despite_russian_interface() -> None
     assert plan.settings.content_language == "en-US"
     assert plan.settings.voice_name == "en-US-JennyNeural-Female"
     assert [item.duration_seconds for item in plan.scenes] == [5, 6, 4]
+    assert "tict" in plan.scenes[1].display_text
+    assert "tickt" in plan.scenes[1].spoken_text
+    assert "tict" in plan.scenes[2].display_text
+    assert "tickt" in plan.scenes[2].spoken_text
 
 
 def test_story_1_1_scene_audio_is_padded_to_exact_storyboard_timing(
     tmp_path: Path,
 ) -> None:
     requested_voices: list[str] = []
+    synthesized_texts: list[str] = []
 
     def fake_synthesizer(text: str, voice_name: str, output_path: Path) -> bool:
-        del text
+        synthesized_texts.append(text)
         requested_voices.append(voice_name)
         subprocess.run(
             [
@@ -80,4 +85,10 @@ def test_story_1_1_scene_audio_is_padded_to_exact_storyboard_timing(
     )
     assert 14.9 <= float(probe.stdout.strip()) <= 15.1
     assert requested_voices == ["en-US-JennyNeural-Female"] * 3
+    assert "tickt" in synthesized_texts[1]
+    assert "tickt" in synthesized_texts[2]
+    assert all("TICT" not in text for text in synthesized_texts)
     assert artifacts.subtitle_path.is_file()
+    subtitle_text = artifacts.subtitle_path.read_text(encoding="utf-8")
+    assert "tict" in subtitle_text
+    assert "tickt" not in subtitle_text

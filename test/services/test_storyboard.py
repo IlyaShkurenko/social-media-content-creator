@@ -8,6 +8,7 @@ import pytest
 from app.services.creative.compiler import compile_comparison_plans
 from app.services.creative.storyboard import (
     StoryboardValidationError,
+    apply_brand_pronunciations,
     parse_storyboard_json,
     resolve_managed_asset,
     resolve_narration_voice,
@@ -169,3 +170,58 @@ def test_adpipe_1_2_comparison_changes_only_hook_base() -> None:
     assert baseline.scenes[1:] == candidate.scenes[1:]
     assert baseline.narration_script == candidate.narration_script
     assert baseline.storyboard_fingerprint == candidate.storyboard_fingerprint
+
+
+def test_story_1_5_v11_requires_explicit_screen_policy() -> None:
+    payload = valid_payload()
+    payload["schema_version"] = "1.1"
+    with pytest.raises(StoryboardValidationError, match="screen_content_policy"):
+        validate_storyboard(payload)
+
+
+def test_brand_1_5_approved_ui_requires_product_capture() -> None:
+    payload = valid_payload()
+    payload["schema_version"] = "1.1"
+    for scene in payload["scenes"]:
+        scene["visual_intent"]["screen_content_policy"] = "unconstrained"
+    payload["scenes"][0]["visual_intent"]["screen_content_policy"] = (
+        "approved_product_ui"
+    )
+    with pytest.raises(StoryboardValidationError, match="product_capture"):
+        validate_storyboard(payload)
+
+
+def test_brand_1_4_canonical_copy_and_spoken_alias_are_separate() -> None:
+    payload = valid_payload()
+    payload["schema_version"] = "1.1"
+    payload["brand_pronunciations"] = [
+        {"canonical": "tict", "spoken_alias": "tickt", "ipa": "tɪkt"}
+    ]
+    for scene in payload["scenes"]:
+        scene["visual_intent"]["screen_content_policy"] = "unconstrained"
+    payload["scenes"][1]["visual_intent"]["screen_content_policy"] = (
+        "approved_product_ui"
+    )
+    payload["scenes"][1]["voiceover"] = "tict keeps the trip in one place."
+    storyboard = validate_storyboard(payload)
+    assert storyboard.scenes[1].voiceover == "tict keeps the trip in one place."
+    assert apply_brand_pronunciations(
+        storyboard,
+        storyboard.scenes[1].voiceover,
+    ) == "tickt keeps the trip in one place."
+
+
+def test_brand_1_4_uppercase_visible_brand_copy_is_rejected() -> None:
+    payload = valid_payload()
+    payload["schema_version"] = "1.1"
+    payload["brand_pronunciations"] = [
+        {"canonical": "tict", "spoken_alias": "tickt", "ipa": "tɪkt"}
+    ]
+    for scene in payload["scenes"]:
+        scene["visual_intent"]["screen_content_policy"] = "unconstrained"
+    payload["scenes"][1]["visual_intent"]["screen_content_policy"] = (
+        "approved_product_ui"
+    )
+    payload["scenes"][1]["voiceover"] = "TICT keeps the trip in one place."
+    with pytest.raises(StoryboardValidationError, match="canonical lowercase"):
+        validate_storyboard(payload)

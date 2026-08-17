@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Literal
 
@@ -19,6 +20,18 @@ class VisualIntent(CreativeModel):
     setting: str = Field(min_length=1)
     subject_action: str = Field(min_length=1)
     camera: str = Field(min_length=1)
+    screen_content_policy: Literal[
+        "approved_product_ui",
+        "non_product_context",
+        "screen_hidden",
+        "unconstrained",
+    ] | None = None
+
+
+class BrandPronunciation(CreativeModel):
+    canonical: str = Field(min_length=1)
+    spoken_alias: str = Field(min_length=1)
+    ipa: str = Field(min_length=1)
 
 
 class MediaLayer(CreativeModel):
@@ -59,12 +72,13 @@ class StoryboardScene(CreativeModel):
 
 
 class Storyboard(CreativeModel):
-    schema_version: Literal["1.0"]
+    schema_version: Literal["1.0", "1.1"]
     storyboard_id: str = Field(min_length=1)
     content_language: str = Field(min_length=1)
     aspect_ratio: str = Field(min_length=1)
     target_duration_seconds: float = Field(gt=0)
     hypothesis: str = Field(min_length=1)
+    brand_pronunciations: list[BrandPronunciation] = Field(default_factory=list)
     scenes: list[StoryboardScene] = Field(min_length=1)
 
 
@@ -98,6 +112,26 @@ def validate_storyboard(payload: Storyboard | dict) -> Storyboard:
         )
 
     seen_scene_ids: set[str] = set()
+    seen_pronunciations: set[str] = set()
+    for pronunciation in storyboard.brand_pronunciations:
+        canonical = pronunciation.canonical
+        if canonical != canonical.lower():
+            raise StoryboardValidationError(
+                f"canonical brand spelling must be lowercase: {canonical!r}"
+            )
+        if canonical in seen_pronunciations:
+            raise StoryboardValidationError(
+                f"duplicate brand pronunciation {canonical!r} is not allowed"
+            )
+        seen_pronunciations.add(canonical)
+        if canonical == "tict" and (
+            pronunciation.spoken_alias.lower() != "tickt"
+            or pronunciation.ipa.strip("/") != "tɪkt"
+        ):
+            raise StoryboardValidationError(
+                "tict narration must declare spoken alias 'tickt' and IPA 'tɪkt'"
+            )
+
     previous_end = 0.0
     for index, scene in enumerate(storyboard.scenes):
         if scene.scene_id in seen_scene_ids:
@@ -120,9 +154,53 @@ def validate_storyboard(payload: Storyboard | dict) -> Storyboard:
             raise StoryboardValidationError(
                 f"scene {scene.scene_id!r} exceeds the target duration"
             )
+        if storyboard.schema_version == "1.1":
+            policy = scene.visual_intent.screen_content_policy
+            if policy is None:
+                raise StoryboardValidationError(
+                    f"scene {scene.scene_id!r} must declare screen_content_policy"
+                )
+            layers = [scene.media_plan.base, *scene.media_plan.overlays]
+            has_product_capture = any(
+                layer.kind == "product_capture" for layer in layers
+            )
+            if policy == "approved_product_ui" and not has_product_capture:
+                raise StoryboardValidationError(
+                    f"scene {scene.scene_id!r} requires an approved product_capture"
+                )
+            if has_product_capture and policy != "approved_product_ui":
+                raise StoryboardValidationError(
+                    f"scene {scene.scene_id!r} with product_capture must declare "
+                    "approved_product_ui"
+                )
+            for pronunciation in storyboard.brand_pronunciations:
+                for copy in (scene.voiceover, scene.onscreen_text):
+                    matches = re.findall(
+                        rf"(?<!\w){re.escape(pronunciation.canonical)}(?!\w)",
+                        copy,
+                        flags=re.IGNORECASE,
+                    )
+                    if any(match != pronunciation.canonical for match in matches):
+                        raise StoryboardValidationError(
+                            "visible brand copy must use canonical lowercase "
+                            f"{pronunciation.canonical!r}"
+                        )
         previous_end = scene.end_seconds
 
     return storyboard
+
+
+def apply_brand_pronunciations(storyboard: Storyboard, text: str) -> str:
+    """Convert canonical display copy to provider-friendly spoken aliases."""
+
+    result = text
+    for pronunciation in storyboard.brand_pronunciations:
+        result = re.sub(
+            rf"(?<!\w){re.escape(pronunciation.canonical)}(?!\w)",
+            pronunciation.spoken_alias,
+            result,
+        )
+    return result
 
 
 def parse_storyboard_json(raw: str) -> Storyboard:

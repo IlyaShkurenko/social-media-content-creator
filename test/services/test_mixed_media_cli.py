@@ -45,3 +45,27 @@ def test_runway_1_2_cli_requires_explicit_paid_confirmation(tmp_path: Path) -> N
     )
     assert result.returncode != 0
     assert "--confirm-paid YES" in result.stderr
+
+
+def test_runway_1_5_rerender_requires_existing_provider_provenance(
+    tmp_path: Path,
+) -> None:
+    result = subprocess.run(
+        [
+            str(REPO_ROOT / ".venv/bin/python"),
+            str(SCRIPT),
+            "--output",
+            str(tmp_path / "prepared"),
+            "--hook-video",
+            str(tmp_path / "already-generated.mp4"),
+            "--variant-id",
+            "runway-candidate",
+            "--narrate",
+        ],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode != 0
+    assert "existing paid run-summary.json" in result.stderr

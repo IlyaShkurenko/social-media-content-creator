@@ -43,10 +43,12 @@ def test_adpipe_1_3_prepare_run_resolves_assets_and_writes_reproducible_plans(
     assert request_payload["duration_seconds"] == 5
 
 
-def test_runway_1_1_prompt_describes_action_and_excludes_generated_ui() -> None:
+def test_story_1_5_runway_prompt_respects_non_product_screen_policy() -> None:
     request = build_runway_request(storyboard())
     assert "switches between several planning tabs" in request.prompt_text
-    assert "No readable text, logos, application UI" in request.prompt_text
+    assert "generic non-product phone interface may be visible" in request.prompt_text
+    assert "must not resemble tict" in request.prompt_text
+    assert "No logos, watermarks, or subtitles" in request.prompt_text
     assert request.ratio == "720:1280"
 
 

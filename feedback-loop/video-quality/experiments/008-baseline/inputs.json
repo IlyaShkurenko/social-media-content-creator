@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "scenario": {
+    "path": "evals/dataset/mixed-media-stock-baseline-001.json",
+    "sha256": "2c66b606c90eaaa3db9d550aeed3672b595da86d9812b547b969ac151e5b21da"
+  },
+  "video": {
+    "source_path": "feedback-loop/video-quality/.state/prepared/mixed-media-first-slice-001/renders/runway-candidate/final.mp4",
+    "source_sha256": "374c1f46abb453836fbaf1895ca61ae28e9a730cd5f1c4358ba6657163824568",
+    "snapshot_path": "feedback-loop/video-quality/experiments/008-baseline/artifacts/video.mp4"
+  },
+  "observations": {
+    "path": "evals/dataset/observations/mixed-media-brand-pronunciation-001.json",
+    "sha256": "c0d7d0122684f807537c4bda617cc9fcaf6137fb6e68ba07f638f2b1297d766c"
+  },
+  "pipeline_record": {
+    "source_path": "feedback-loop/video-quality/.state/prepared/mixed-media-first-slice-001/run-summary.json",
+    "source_sha256": "31aae5818fe061e4f316dee5c3e65e896ed787fd8efe33fd0f0497452ef4c89e",
+    "content": {
+      "storyboard_id": "mixed-media-first-slice-001",
+      "output_dir": "<repo>/feedback-loop/video-quality/.state/prepared/mixed-media-first-slice-001",
+      "paid_submission": false,
+      "iteration_budget_usd": 10.0,
+      "actual_paid_cost_usd": 0.6,
+      "generation_latency_seconds": 158.877,
+      "estimated_runway_cost_usd": 0.6,
+      "rendered_video": "<repo>/feedback-loop/video-quality/.state/prepared/mixed-media-first-slice-001/renders/runway-candidate/final.mp4",
+      "script": "Planning a trip should not feel like another job. tict turns every booking, place, and next step into one clear trip plan. Plan less. Travel more with tict.",
+      "brand_pronunciations": [
+        {
+          "canonical": "tict",
+          "spoken_alias": "tickt",
+          "ipa": "tɪkt"
+        }
+      ],
+      "runway_job_id": "e1ba2784-8506-4ae0-995f-7b03611f31e8",
+      "charged_microusd": 600000,
+      "remaining_microusd": 9400000,
+      "source_paid_submission": true,
+      "rerender_incremental_cost_usd": 0.0,
+      "narration_voice": "en-US-JennyNeural-Female",
+      "synthesis_script": "Planning a trip should not feel like another job. tickt turns every booking, place, and next step into one clear trip plan. Plan less. Travel more with tickt.",
+      "subtitle_path": "<repo>/feedback-loop/video-quality/.state/prepared/mixed-media-first-slice-001/renders/runway-candidate/storyboard.srt",
+      "subtitle_layout_path": "<repo>/feedback-loop/video-quality/.state/prepared/mixed-media-first-slice-001/renders/runway-candidate/subtitle-layout.json",
+      "subtitle_safe_area_pass": true,
+      "variant_id": "runway-candidate"
+    }
+  },
+  "subtitle": {
+    "source_path": "feedback-loop/video-quality/.state/prepared/mixed-media-first-slice-001/renders/runway-candidate/storyboard.srt",
+    "source_sha256": "14c77bf5e5d4c223df295df3180773845f3040e41450b10214fc93319bf8d2dd",
+    "content": "1\n00:00:00,000 --> 00:00:05,000\nPlanning a trip should not feel like another job.\n\n2\n00:00:05,000 --> 00:00:11,000\ntict turns every booking, place, and next step into one clear trip plan.\n\n3\n00:00:11,000 --> 00:00:15,000\nPlan less. Travel more with tict.\n"
+  }
+}

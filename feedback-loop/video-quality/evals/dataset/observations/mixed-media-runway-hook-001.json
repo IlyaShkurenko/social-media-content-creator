@@ -15,6 +15,12 @@
         "planning_stress_visible",
         "luggage_visible"
       ],
+      "screen_observation": {
+        "screen_class": "generic_non_product",
+        "evidence_timestamp_seconds": 2.5,
+        "claims_tict_identity": false,
+        "approved_asset_match": false
+      },
       "notes": "The generated hook clearly shows a traveller using a phone in an airport with a visibly furrowed, overwhelmed expression. A rolling suitcase is also visible and is retained as an extra literal tag."
     },
     {
@@ -24,6 +30,12 @@
         "trip_plan_visible",
         "product_text_legible"
       ],
+      "screen_observation": {
+        "screen_class": "approved_tict_ui",
+        "evidence_timestamp_seconds": 8.0,
+        "claims_tict_identity": true,
+        "approved_asset_match": true
+      },
       "notes": "The exact approved trip overview remains fully visible and legible in the deterministic product scene, with the subtitle in its separate safe zone."
     },
     {
@@ -33,6 +45,12 @@
         "approved_mascot_visible",
         "single_cta_visible"
       ],
+      "screen_observation": {
+        "screen_class": "none",
+        "evidence_timestamp_seconds": 13.0,
+        "claims_tict_identity": false,
+        "approved_asset_match": false
+      },
       "notes": "The deterministic CTA preserves the approved logo and mascot, one clear CTA, and no duplicate narration subtitle."
     }
   ]

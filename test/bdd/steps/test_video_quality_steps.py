@@ -16,6 +16,13 @@ EXPERIMENT_SCRIPT = (
     / "scripts"
     / "run_experiment.py"
 )
+EVALUATOR_SCRIPT = (
+    REPOSITORY_ROOT
+    / "feedback-loop"
+    / "video-quality"
+    / "evals"
+    / "evaluate.py"
+)
 
 
 def load_experiment_module() -> ModuleType:
@@ -31,6 +38,21 @@ def load_experiment_module() -> ModuleType:
 
 
 EXPERIMENT_MODULE = load_experiment_module()
+
+
+def load_evaluator_module() -> ModuleType:
+    module_spec = importlib.util.spec_from_file_location(
+        "video_quality_evaluator",
+        EVALUATOR_SCRIPT,
+    )
+    if module_spec is None or module_spec.loader is None:
+        raise RuntimeError(f"cannot load evaluator module: {EVALUATOR_SCRIPT}")
+    module = importlib.util.module_from_spec(module_spec)
+    module_spec.loader.exec_module(module)
+    return module
+
+
+EVALUATOR_MODULE = load_evaluator_module()
 scenarios("../features/video_quality_acceptance.feature")
 
 
@@ -97,3 +119,49 @@ def decision_requires_review(decision_document: str) -> None:
 @then("the decision keeps the candidate")
 def decision_keeps_candidate(decision_document: str) -> None:
     assert "\n`keep`\n" in decision_document
+
+
+@given(
+    "a scene declares a non-product contextual screen",
+    target_fixture="screen_policy_case",
+)
+def non_product_screen_policy_case() -> dict[str, Any]:
+    return {
+        "storyboard": [
+            {
+                "id": "hook",
+                "screen_content_policy": "non_product_context",
+            }
+        ],
+        "observations": [],
+    }
+
+
+@given("the observed screen is generic and does not claim tict identity")
+def observe_generic_screen(screen_policy_case: dict[str, Any]) -> None:
+    screen_policy_case["observations"] = [
+        {
+            "scene_id": "hook",
+            "screen_observation": {
+                "screen_class": "generic_non_product",
+                "evidence_timestamp_seconds": 2.5,
+                "claims_tict_identity": False,
+            },
+        }
+    ]
+
+
+@when("screen-policy compliance is calculated", target_fixture="screen_result")
+def calculate_screen_compliance(
+    screen_policy_case: dict[str, Any],
+) -> dict[str, Any]:
+    return EVALUATOR_MODULE.calculate_screen_policy_metrics(
+        screen_policy_case["storyboard"],
+        screen_policy_case["observations"],
+    )
+
+
+@then("the scene screen policy passes")
+def screen_policy_passes(screen_result: dict[str, Any]) -> None:
+    assert screen_result["compliance"] == 1.0
+    assert screen_result["failures"] == []

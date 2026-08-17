@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 
-EVALUATOR_VERSION = "0.3.0"
+EVALUATOR_VERSION = "0.4.0"
 LOOP_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = LOOP_ROOT.parents[1]
 
@@ -176,6 +176,117 @@ def calculate_tag_metrics(
     }
 
 
+def calculate_screen_policy_metrics(
+    storyboard: list[dict[str, Any]],
+    observations: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Judge observed device screens against explicit per-scene intent."""
+
+    observed_by_scene = {item["scene_id"]: item for item in observations}
+    evidence: list[dict[str, Any]] = []
+    failures: list[dict[str, Any]] = []
+    pending = 0
+    passed = 0
+    evaluated = 0
+    for scene in storyboard:
+        scene_id = scene["id"]
+        policy = scene.get("screen_content_policy") or scene.get(
+            "visual_intent", {}
+        ).get("screen_content_policy")
+        if not policy:
+            continue
+        observation = observed_by_scene.get(scene_id, {}).get("screen_observation")
+        if policy == "unconstrained":
+            result = {
+                "scene_id": scene_id,
+                "declared_policy": policy,
+                "status": "pass",
+                "reason": "the scene declares no device-screen constraint",
+                "evidence_timestamp_seconds": (
+                    observation or {}
+                ).get("evidence_timestamp_seconds"),
+            }
+            evidence.append(result)
+            evaluated += 1
+            passed += 1
+            continue
+        if not isinstance(observation, dict):
+            pending += 1
+            evidence.append(
+                {
+                    "scene_id": scene_id,
+                    "declared_policy": policy,
+                    "status": "pending",
+                    "reason": "no structured screen observation is available",
+                    "evidence_timestamp_seconds": None,
+                }
+            )
+            continue
+
+        screen_class = observation.get("screen_class")
+        claims_tict = bool(observation.get("claims_tict_identity", False))
+        approved_match = bool(observation.get("approved_asset_match", False))
+        if policy == "non_product_context":
+            compliant = screen_class in {
+                "generic_non_product",
+                "screen_not_visible",
+                "none",
+            } and not claims_tict
+            reason = (
+                "generic or hidden non-product screen does not claim tict identity"
+                if compliant
+                else "observed screen conflicts with non-product context"
+            )
+        elif policy == "approved_product_ui":
+            compliant = (
+                screen_class == "approved_tict_ui"
+                and claims_tict
+                and approved_match
+            )
+            reason = (
+                "observed screen matches the approved tict product capture"
+                if compliant
+                else "approved tict UI was required but exact asset evidence failed"
+            )
+        elif policy == "screen_hidden":
+            compliant = screen_class in {"screen_not_visible", "none"}
+            reason = (
+                "device screen is not visible"
+                if compliant
+                else "a device screen is visible despite screen_hidden policy"
+            )
+        else:
+            raise ValueError(f"unknown screen_content_policy: {policy!r}")
+
+        result = {
+            "scene_id": scene_id,
+            "declared_policy": policy,
+            "observed_screen_class": screen_class,
+            "status": "pass" if compliant else "fail",
+            "reason": reason,
+            "evidence_timestamp_seconds": observation.get(
+                "evidence_timestamp_seconds"
+            ),
+        }
+        evidence.append(result)
+        evaluated += 1
+        if compliant:
+            passed += 1
+        else:
+            failures.append(result)
+
+    compliance = round(passed / evaluated, 6) if evaluated else None
+    return {
+        "compliance": compliance,
+        "evaluated_scenes": evaluated,
+        "passed_scenes": passed,
+        "failed_scenes": len(failures),
+        "pending_scenes": pending,
+        "failures": failures,
+        "evidence": evidence,
+    }
+
+
 def tokenize(value: str) -> list[str]:
     return re.findall(r"[\w]+(?:[-’'][\w]+)*", value.lower(), flags=re.UNICODE)
 
@@ -200,6 +311,34 @@ def token_f1(reference: str, candidate: str) -> dict[str, float | int]:
         "precision": round(precision, 6),
         "recall": round(recall, 6),
         "f1": round(f1, 6),
+    }
+
+
+def exact_brand_text_match(
+    reference: str,
+    candidate: str,
+    *,
+    canonical: str = "tict",
+) -> dict[str, Any]:
+    """Measure canonical brand casing independently from token similarity."""
+
+    pattern = re.compile(rf"(?<!\w){re.escape(canonical)}(?!\w)", re.IGNORECASE)
+    reference_occurrences = pattern.findall(reference)
+    candidate_occurrences = pattern.findall(candidate)
+    available = bool(reference_occurrences or candidate_occurrences)
+    exact = (
+        available
+        and reference_occurrences == [canonical] * len(reference_occurrences)
+        and candidate_occurrences == [canonical] * len(candidate_occurrences)
+        and len(reference_occurrences) == len(candidate_occurrences)
+    )
+    return {
+        "available": available,
+        "canonical": canonical,
+        "reference_occurrences": reference_occurrences,
+        "candidate_occurrences": candidate_occurrences,
+        "exact_match": exact if available else None,
+        "score": (1.0 if exact else 0.0) if available else None,
     }
 
 
@@ -354,9 +493,11 @@ def evaluate(
     storyboard = expected["storyboard"]
     observations = observations_contract["scenes"]
     alignment = calculate_tag_metrics(storyboard, observations)
+    screen_policy = calculate_screen_policy_metrics(storyboard, observations)
     frame_evidence = extract_frames(video_path, storyboard, artifacts_dir / "frames")
 
     subtitle_metric: dict[str, float | int] | None = None
+    brand_text_metric: dict[str, Any] | None = None
     pipeline_record: dict[str, Any] | None = None
     subtitle_path_value = subtitle_override or scenario.get("artifact", {}).get(
         "subtitle"
@@ -371,9 +512,14 @@ def evaluate(
     if subtitle_path_value and pipeline_record is not None:
         subtitle_path = resolve_repo_path(subtitle_path_value, "subtitle")
         if subtitle_path.is_file():
+            subtitle_text = parse_srt_text(subtitle_path)
             subtitle_metric = token_f1(
                 pipeline_record.get("script", ""),
-                parse_srt_text(subtitle_path),
+                subtitle_text,
+            )
+            brand_text_metric = exact_brand_text_match(
+                pipeline_record.get("script", ""),
+                subtitle_text,
             )
     record_metrics, record_metric_reasons = pipeline_record_metrics(pipeline_record)
     evidence_constraints, evidence_pending = pipeline_constraint_evidence(
@@ -391,12 +537,19 @@ def evaluate(
     }
     brand_assets_required = bool(expected.get("brand_assets_required", False))
     pending_constraints = {
-        "voiceover_wer_pass": "timestamped ASR is not enabled in evaluator v0",
+        "voiceover_wer_pass": "timestamped ASR is not enabled in the active evaluator",
         **evidence_pending,
         "brand_asset_fidelity_pass": (
             "brand assets are required but the fidelity judge is not enabled"
             if brand_assets_required
             else "the scenario does not require a brand asset"
+        ),
+        "screen_policy_automated_pass": (
+            "screen-policy evidence comes from a structured human fixture; "
+            "the versioned vision judge is not enabled"
+        ),
+        "brand_pronunciation_pass": (
+            "rendered-audio ASR or phoneme evidence is not enabled"
         ),
     }
 
@@ -427,6 +580,11 @@ def evaluate(
                 "false_negative": alignment["false_negative"],
             },
             "subtitle_text_token_f1": subtitle_metric["f1"] if subtitle_metric else None,
+            "brand_text_exact_match": (
+                brand_text_metric["score"] if brand_text_metric else None
+            ),
+            "brand_pronunciation_pass": None,
+            "screen_policy_compliance": screen_policy["compliance"],
             "visual_judge_win_rate": None,
             "brand_asset_fidelity": None,
             "voiceover_wer": None,
@@ -449,19 +607,42 @@ def evaluate(
             "black_segments": black_segments,
             "decode_error": decode_error or None,
             "subtitle_token_comparison": subtitle_metric,
+            "brand_text_comparison": brand_text_metric,
+            "screen_policy": screen_policy,
             "observations_source": str(observations_path.relative_to(LOOP_ROOT)),
         },
         "unavailable_metric_reasons": {
-            "visual_judge_win_rate": "pairwise visual judge is not enabled in evaluator v0",
+            "visual_judge_win_rate": "pairwise visual judge is not enabled in the active evaluator",
             "brand_asset_fidelity": (
                 "brand fidelity judge is not enabled"
                 if brand_assets_required
                 else "scenario has no required brand asset"
             ),
-            "voiceover_wer": "timestamped ASR is not enabled in evaluator v0",
-            "word_timing_mae_ms": "word-level ASR alignment is not enabled in evaluator v0",
-            "shot_boundary_mae_ms": "automatic scene-boundary comparison is not enabled in evaluator v0",
+            **(
+                {
+                    "brand_text_exact_match": (
+                        "subtitle or canonical pipeline script is unavailable"
+                    )
+                }
+                if not brand_text_metric
+                else {}
+            ),
+            "brand_pronunciation_pass": (
+                "rendered-audio ASR or phoneme evidence is not enabled"
+            ),
+            "voiceover_wer": "timestamped ASR is not enabled in the active evaluator",
+            "word_timing_mae_ms": "word-level ASR alignment is not enabled in the active evaluator",
+            "shot_boundary_mae_ms": "automatic scene-boundary comparison is not enabled in the active evaluator",
             "cost_per_accepted_video_usd": "cost and acceptance are unavailable",
+            **(
+                {
+                    "screen_policy_compliance": (
+                        "no scene has evaluable screen-policy evidence"
+                    )
+                }
+                if screen_policy["compliance"] is None
+                else {}
+            ),
             **record_metric_reasons,
         },
     }

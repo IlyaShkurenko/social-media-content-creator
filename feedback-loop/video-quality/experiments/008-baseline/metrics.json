@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "evaluator_version": "0.4.0",
+  "generated_at": "2026-08-17T17:05:18.920269+00:00",
+  "scenario_id": "mixed-media-stock-baseline-001",
+  "observation_mode": "human_fixture",
+  "artifact": {
+    "video": "feedback-loop/video-quality/experiments/008-baseline/artifacts/video.mp4",
+    "duration_seconds": 15.0,
+    "width": 720,
+    "height": 1280,
+    "fps": 30.0,
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "sha256": "374c1f46abb453836fbaf1895ca61ae28e9a730cd5f1c4358ba6657163824568"
+  },
+  "primary": {
+    "name": "timeline_alignment_f1",
+    "value": 0.952381
+  },
+  "metrics": {
+    "timeline_alignment_precision": 0.909091,
+    "timeline_alignment_recall": 1.0,
+    "timeline_alignment_f1": 0.952381,
+    "timeline_alignment_counts": {
+      "true_positive": 10,
+      "false_positive": 1,
+      "false_negative": 0
+    },
+    "subtitle_text_token_f1": 1.0,
+    "brand_text_exact_match": 1.0,
+    "brand_pronunciation_pass": null,
+    "screen_policy_compliance": 1.0,
+    "visual_judge_win_rate": null,
+    "brand_asset_fidelity": null,
+    "voiceover_wer": null,
+    "word_timing_mae_ms": null,
+    "shot_boundary_mae_ms": null,
+    "generation_latency_seconds": 158.877,
+    "estimated_cost_usd": 0.6,
+    "cost_per_accepted_video_usd": null
+  },
+  "constraints": {
+    "enforced": {
+      "render_success": true,
+      "audio_present": true,
+      "aspect_ratio_pass": true,
+      "duration_pass": true,
+      "no_sustained_black_segments": true,
+      "all_evidence_frames_extracted": true,
+      "subtitle_safe_area_pass": true
+    },
+    "all_enforced_pass": true,
+    "pending": {
+      "voiceover_wer_pass": "timestamped ASR is not enabled in the active evaluator",
+      "brand_asset_fidelity_pass": "brand assets are required but the fidelity judge is not enabled",
+      "screen_policy_automated_pass": "screen-policy evidence comes from a structured human fixture; the versioned vision judge is not enabled",
+      "brand_pronunciation_pass": "rendered-audio ASR or phoneme evidence is not enabled"
+    },
+    "all_goal_constraints_verified": false
+  },
+  "evidence": {
+    "frames": [
+      {
+        "scene_id": "hook",
+        "timestamp_seconds": 2.5,
+        "path": "artifacts/frames/01-hook.jpg",
+        "extracted": true
+      },
+      {
+        "scene_id": "product_demo",
+        "timestamp_seconds": 8.0,
+        "path": "artifacts/frames/02-product_demo.jpg",
+        "extracted": true
+      },
+      {
+        "scene_id": "cta",
+        "timestamp_seconds": 13.0,
+        "path": "artifacts/frames/03-cta.jpg",
+        "extracted": true
+      }
+    ],
+    "black_segments": [],
+    "decode_error": null,
+    "subtitle_token_comparison": {
+      "reference_tokens": 28,
+      "candidate_tokens": 28,
+      "matching_tokens": 28,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "brand_text_comparison": {
+      "available": true,
+      "canonical": "tict",
+      "reference_occurrences": [
+        "tict",
+        "tict"
+      ],
+      "candidate_occurrences": [
+        "tict",
+        "tict"
+      ],
+      "exact_match": true,
+      "score": 1.0
+    },
+    "screen_policy": {
+      "compliance": 1.0,
+      "evaluated_scenes": 3,
+      "passed_scenes": 3,
+      "failed_scenes": 0,
+      "pending_scenes": 0,
+      "failures": [],
+      "evidence": [
+        {
+          "scene_id": "hook",
+          "declared_policy": "non_product_context",
+          "observed_screen_class": "generic_non_product",
+          "status": "pass",
+          "reason": "generic or hidden non-product screen does not claim tict identity",
+          "evidence_timestamp_seconds": 2.5
+        },
+        {
+          "scene_id": "product_demo",
+          "declared_policy": "approved_product_ui",
+          "observed_screen_class": "approved_tict_ui",
+          "status": "pass",
+          "reason": "observed screen matches the approved tict product capture",
+          "evidence_timestamp_seconds": 8.0
+        },
+        {
+          "scene_id": "cta",
+          "declared_policy": "unconstrained",
+          "status": "pass",
+          "reason": "the scene declares no device-screen constraint",
+          "evidence_timestamp_seconds": 13.0
+        }
+      ]
+    },
+    "observations_source": "evals/dataset/observations/mixed-media-brand-pronunciation-001.json"
+  },
+  "unavailable_metric_reasons": {
+    "visual_judge_win_rate": "pairwise visual judge is not enabled in the active evaluator",
+    "brand_asset_fidelity": "brand fidelity judge is not enabled",
+    "brand_pronunciation_pass": "rendered-audio ASR or phoneme evidence is not enabled",
+    "voiceover_wer": "timestamped ASR is not enabled in the active evaluator",
+    "word_timing_mae_ms": "word-level ASR alignment is not enabled in the active evaluator",
+    "shot_boundary_mae_ms": "automatic scene-boundary comparison is not enabled in the active evaluator",
+    "cost_per_accepted_video_usd": "cost and acceptance are unavailable"
+  }
+}

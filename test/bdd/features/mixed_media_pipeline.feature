@@ -24,3 +24,15 @@ Feature: Controlled mixed-media advertising production
     Given a ten dollar iteration budget with nine dollars and eighty cents charged
     When a sixty cent generation is reserved
     Then the reservation is rejected before provider submission
+
+  Scenario: [STORY-1.5] A planning-frustration hook permits a non-product phone screen
+    Given a hook storyboard declaring a non-product contextual screen
+    When the Runway hook request is compiled
+    Then the generated hook may show a generic phone screen
+    And the generated hook must not claim that screen is tict UI
+
+  Scenario: [BRAND-1.4] Brand subtitles and synthesis pronunciation remain separate
+    Given a storyboard with lowercase tict copy and its tickt pronunciation
+    When narration settings are resolved from the storyboard
+    Then the subtitle narration retains lowercase tict
+    And the synthesis narration uses the tickt pronunciation

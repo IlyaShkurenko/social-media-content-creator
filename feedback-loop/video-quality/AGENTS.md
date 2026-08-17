@@ -16,10 +16,10 @@ This subtree owns measurable experiments for the final MP4 produced by MoneyPrin
 
 - Do not change the evaluator, scenario assertions, observation fixture, or thresholds merely to improve a score.
 - Any intentional evaluator change requires an evaluator-version bump, a new baseline, and an explanation in that baseline README.
-- `human_fixture` observations are frozen evidence for evaluator v0. They are not an automatic vision judgement and must never be reported as one.
+- `human_fixture` observations are frozen evidence for their recorded evaluator version. They are not an automatic vision judgement and must never be reported as one.
 - Never log credentials or copy `config.toml` into an experiment.
 - Paid video generation stays disabled unless the user explicitly authorizes a provider and a per-run budget.
-- Store large decoded frames and transient media under an experiment's ignored `artifacts/` directory. Keep metrics and experiment documentation tracked.
+- Store large decoded frames and transient media under an experiment's ignored `artifacts/` directory. New compact records keep tracked `README.md`, `metrics.json`, and `inputs.json`; a failure adds a tracked `evaluator.stderr.log`. Do not copy unchanged shared fixtures into new experiment directories.
 
 ## Stable commands
 

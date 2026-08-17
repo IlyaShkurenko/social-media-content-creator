@@ -59,6 +59,11 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--asset-root", default=str(DEFAULT_ASSET_ROOT))
     parser.add_argument("--output", default=str(DEFAULT_OUTPUT))
     parser.add_argument("--hook-video")
+    parser.add_argument(
+        "--variant-id",
+        choices=("stock-baseline", "runway-candidate"),
+        default="stock-baseline",
+    )
     parser.add_argument("--narrate", action="store_true")
     parser.add_argument("--narration-audio")
     parser.add_argument("--interface-locale", default="en-US")
@@ -73,6 +78,8 @@ def _parse_args() -> argparse.Namespace:
         parser.error("paid Runway execution requires --confirm-paid YES")
     if args.execute_runway and args.hook_video:
         parser.error("choose either --execute-runway or --hook-video, not both")
+    if not args.hook_video and args.variant_id != "stock-baseline":
+        parser.error("--variant-id runway-candidate requires --hook-video")
     if args.narrate and not (args.execute_runway or args.hook_video):
         parser.error("--narrate requires a Runway or stock hook video")
     if args.narrate and args.narration_audio:
@@ -121,6 +128,20 @@ def main() -> int:
         asset_root=asset_root,
         output_dir=output_dir,
     )
+    previous_summary_path = prepared.output_dir / "run-summary.json"
+    previous_summary = None
+    if args.hook_video and args.variant_id == "runway-candidate":
+        if not previous_summary_path.is_file():
+            raise RuntimeError(
+                "Runway rerender requires an existing paid run-summary.json"
+            )
+        previous_summary = json.loads(
+            previous_summary_path.read_text(encoding="utf-8")
+        )
+        if not previous_summary.get("runway_job_id"):
+            raise RuntimeError(
+                "Runway rerender requires recorded provider job provenance"
+            )
     summary: dict = {
         "storyboard_id": storyboard.storyboard_id,
         "output_dir": str(prepared.output_dir),
@@ -138,6 +159,10 @@ def main() -> int:
             for scene in storyboard.scenes
             if scene.voiceover.strip()
         ),
+        "brand_pronunciations": [
+            pronunciation.model_dump(mode="json")
+            for pronunciation in storyboard.brand_pronunciations
+        ],
     }
 
     hook_video: Path | None = None
@@ -187,7 +212,24 @@ def main() -> int:
         variant_id = "runway-candidate"
     elif args.hook_video:
         hook_video = _resolve(args.hook_video, relative_to=REPO_ROOT)
-        variant_id = "stock-baseline"
+        variant_id = args.variant_id
+        if variant_id == "runway-candidate" and previous_summary is not None:
+            summary.update(
+                {
+                    key: previous_summary[key]
+                    for key in (
+                        "runway_job_id",
+                        "charged_microusd",
+                        "remaining_microusd",
+                        "generation_latency_seconds",
+                        "actual_paid_cost_usd",
+                    )
+                    if key in previous_summary
+                }
+            )
+            summary["source_paid_submission"] = True
+            summary["paid_submission"] = False
+            summary["rerender_incremental_cost_usd"] = 0.0
 
     if hook_video is not None and variant_id is not None:
         narration_audio = None
@@ -206,6 +248,11 @@ def main() -> int:
             )
             narration_audio = narration.audio_path
             summary["narration_voice"] = narration.plan.settings.voice_name
+            summary["synthesis_script"] = " ".join(
+                scene.spoken_text
+                for scene in narration.plan.scenes
+                if scene.spoken_text
+            )
         rendered = render_mixed_media_video(
             storyboard,
             hook_video_path=hook_video,

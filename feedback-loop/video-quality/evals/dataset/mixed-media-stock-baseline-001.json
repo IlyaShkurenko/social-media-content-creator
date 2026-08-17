@@ -21,6 +21,7 @@
         "id": "hook",
         "start_seconds": 0.0,
         "end_seconds": 5.0,
+        "screen_content_policy": "non_product_context",
         "description": "A traveller in an airport visibly struggles with fragmented planning on a phone.",
         "expected_tags": [
           "traveller_visible",
@@ -33,6 +34,7 @@
         "id": "product_demo",
         "start_seconds": 5.0,
         "end_seconds": 11.0,
+        "screen_content_policy": "approved_product_ui",
         "description": "The exact approved TICT trip overview is shown legibly.",
         "expected_tags": [
           "approved_tict_ui_visible",
@@ -44,6 +46,7 @@
         "id": "cta",
         "start_seconds": 11.0,
         "end_seconds": 15.0,
+        "screen_content_policy": "unconstrained",
         "description": "The approved logo and mascot support one clear call to action.",
         "expected_tags": [
           "approved_logo_visible",

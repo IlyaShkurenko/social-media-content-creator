@@ -15,6 +15,10 @@ The LLM generates text assets: the script, stock-media search terms, and optiona
 - Material search results are cached and filtered/prioritized for the requested aspect ratio.
 - TwelveLabs is optional and requires the `twelvelabs` dependency extra. Term reranking is wired into the task pipeline. The module also exposes an `analyze_clip()` video-understanding helper, but the current production pipeline does not call it, so generated videos receive no automatic semantic QA.
 
+## Generated video
+
+The opt-in mixed-media experiment uses Runway `gen4.5` for generated base footage. Storyboard validation and budget reservation happen before submission; successful output is downloaded into managed local storage. Product screens remain exact local composition layers. Runway is instructed to show approved product UI, generic non-product UI, or no screen according to each scene's explicit screen policy.
+
 ## Speech and subtitles
 
 Speech implementations include Edge/Azure TTS, SiliconFlow, Gemini TTS, Xiaomi MiMo, MiniMax, ElevenLabs, and a separately hosted Chatterbox-compatible service. Uploaded narration and a no-voice mode are also supported.

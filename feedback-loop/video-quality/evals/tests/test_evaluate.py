@@ -5,7 +5,9 @@ import unittest
 from pathlib import Path
 
 from evals.evaluate import (
+    calculate_screen_policy_metrics,
     calculate_tag_metrics,
+    exact_brand_text_match,
     parse_srt_text,
     pipeline_record_metrics,
     pipeline_constraint_evidence,
@@ -51,6 +53,53 @@ class TranscriptMetricTests(unittest.TestCase):
             path = Path(directory) / "sample.srt"
             path.write_text("1\n00:00:00,000 --> 00:00:01,000\nHello\n\n2\n00:00:01,000 --> 00:00:02,000\nworld\n", encoding="utf-8")
             self.assertEqual(parse_srt_text(path), "Hello world")
+
+    def test_exact_brand_text_is_case_sensitive(self) -> None:
+        self.assertEqual(
+            exact_brand_text_match("tict plans trips", "tict plans trips")["score"],
+            1.0,
+        )
+        self.assertEqual(
+            exact_brand_text_match("tict plans trips", "TICT plans trips")["score"],
+            0.0,
+        )
+
+
+class ScreenPolicyMetricTests(unittest.TestCase):
+    def test_non_product_screen_is_compliant_in_context(self) -> None:
+        result = calculate_screen_policy_metrics(
+            [{"id": "hook", "screen_content_policy": "non_product_context"}],
+            [
+                {
+                    "scene_id": "hook",
+                    "screen_observation": {
+                        "screen_class": "generic_non_product",
+                        "claims_tict_identity": False,
+                        "evidence_timestamp_seconds": 2.5,
+                    },
+                }
+            ],
+        )
+        self.assertEqual(result["compliance"], 1.0)
+        self.assertEqual(result["failures"], [])
+
+    def test_generic_screen_fails_when_approved_product_ui_is_required(self) -> None:
+        result = calculate_screen_policy_metrics(
+            [{"id": "demo", "screen_content_policy": "approved_product_ui"}],
+            [
+                {
+                    "scene_id": "demo",
+                    "screen_observation": {
+                        "screen_class": "generic_non_product",
+                        "claims_tict_identity": False,
+                        "approved_asset_match": False,
+                        "evidence_timestamp_seconds": 8.0,
+                    },
+                }
+            ],
+        )
+        self.assertEqual(result["compliance"], 0.0)
+        self.assertEqual(result["failures"][0]["scene_id"], "demo")
 
 
 class PipelineRecordMetricTests(unittest.TestCase):

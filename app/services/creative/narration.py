@@ -10,6 +10,7 @@ from app.services.creative.storyboard import (
     NarrationSettings,
     Storyboard,
     StoryboardValidationError,
+    apply_brand_pronunciations,
     resolve_narration_voice,
     validate_storyboard,
 )
@@ -24,7 +25,14 @@ class SceneNarration:
     start_seconds: float
     end_seconds: float
     duration_seconds: float
-    text: str
+    display_text: str
+    spoken_text: str
+
+    @property
+    def text(self) -> str:
+        """Compatibility alias for the text sent to the synthesizer."""
+
+        return self.spoken_text
 
 
 @dataclass(frozen=True)
@@ -62,7 +70,11 @@ def build_narration_plan(
                 start_seconds=scene.start_seconds,
                 end_seconds=scene.end_seconds,
                 duration_seconds=scene.end_seconds - scene.start_seconds,
-                text=scene.voiceover.strip(),
+                display_text=scene.voiceover.strip(),
+                spoken_text=apply_brand_pronunciations(
+                    storyboard,
+                    scene.voiceover.strip(),
+                ),
             )
             for scene in storyboard.scenes
         ),
@@ -206,11 +218,11 @@ def generate_scene_narration(
     for index, scene in enumerate(plan.scenes, start=1):
         raw_path = narration_dir / f"{index:02d}-{scene.scene_id}-raw.mp3"
         fitted_path = narration_dir / f"{index:02d}-{scene.scene_id}.m4a"
-        if not scene.text:
+        if not scene.spoken_text:
             raise StoryboardValidationError(
                 f"scene {scene.scene_id!r} has no narration text"
             )
-        if not synthesize(scene.text, plan.settings.voice_name, raw_path):
+        if not synthesize(scene.spoken_text, plan.settings.voice_name, raw_path):
             raise StoryboardValidationError(
                 f"narration synthesis failed for scene {scene.scene_id!r}"
             )

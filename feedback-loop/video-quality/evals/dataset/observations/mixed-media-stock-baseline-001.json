@@ -13,6 +13,12 @@
         "phone_visible",
         "luggage_visible"
       ],
+      "screen_observation": {
+        "screen_class": "screen_not_visible",
+        "evidence_timestamp_seconds": 2.5,
+        "claims_tict_identity": false,
+        "approved_asset_match": false
+      },
       "notes": "A seated traveller looks at a phone beside luggage. The location resembles a waiting area but airport identity and planning stress are not literal enough to award those tags."
     },
     {
@@ -23,6 +29,12 @@
         "product_text_legible",
         "subtitle_obscures_ui"
       ],
+      "screen_observation": {
+        "screen_class": "approved_tict_ui",
+        "evidence_timestamp_seconds": 8.0,
+        "claims_tict_identity": true,
+        "approved_asset_match": true
+      },
       "notes": "The exact exported trip overview is recognizable and mostly legible, but the large narration subtitle covers a material part of the screen."
     },
     {
@@ -33,6 +45,12 @@
         "single_cta_visible",
         "duplicate_text_visible"
       ],
+      "screen_observation": {
+        "screen_class": "none",
+        "evidence_timestamp_seconds": 13.0,
+        "claims_tict_identity": false,
+        "approved_asset_match": false
+      },
       "notes": "Logo, mascot, and one button are visible. Narration subtitles duplicate the deterministic CTA text and partially cover the mascot area."
     }
   ]

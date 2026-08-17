@@ -28,6 +28,10 @@ The first vertical slice MUST resolve `en-US` as its content language and MUST u
 
 The first vertical slice MUST accept one user-supplied advertising hypothesis and produce one canonical storyboard. Autonomous hypothesis generation and batches of up to five storyboards remain outside this slice.
 
+#### STORY-1.5 — Explicit device-screen intent
+
+Every scene MUST declare one device-screen policy: `approved_product_ui`, `non_product_context`, `screen_hidden`, or `unconstrained`. The planner and provider compiler MUST preserve that policy. A generic or third-party screen is valid under `non_product_context`; it MUST NOT be treated as a product-fidelity failure merely because it is not tict UI.
+
 ### ADPIPE-1 — Provider-neutral execution
 
 #### ADPIPE-1.1 — Planner output is provider-neutral
@@ -60,6 +64,14 @@ Direct use of product UI as generative reference material MUST be marked as an e
 
 Product and brand asset identifiers MUST resolve to files inside approved managed asset roots before execution. Raw arbitrary filesystem paths from planner output MUST be rejected.
 
+#### BRAND-1.4 — Canonical spelling and spoken pronunciation
+
+Visible brand copy and subtitles MUST use the canonical lowercase spelling `tict`. Narration synthesis MUST pronounce the brand as `/tɪkt/` ("tickt") without replacing the canonical spelling in subtitles, storyboard copy, logs, or on-screen text. Display text and provider-specific synthesis text MUST remain separately inspectable.
+
+#### BRAND-1.5 — Policy-bound screen handling
+
+An `approved_product_ui` scene MUST resolve at least one approved `product_capture` layer and MUST NOT ask a generative provider to invent the product interface. A `non_product_context` scene MAY show a generic non-tict screen when consistent with the declared action. A `screen_hidden` scene MUST compile an instruction that keeps device displays away from the camera. `unconstrained` MUST NOT imply product identity.
+
 ### RUNWAY-1 — Budgeted generated-video adapter
 
 #### RUNWAY-1.1 — Accepted first benchmark
@@ -88,7 +100,7 @@ Successful provider output MUST be downloaded into managed task storage before t
 
 ## Current behavior
 
-The current production path generates prose and stock keywords, then retrieves or accepts clips and concatenates them. There is no storyboard intermediate representation, generated-video adapter, iteration-wide budget ledger, or provider-neutral execution plan.
+The legacy WebUI/API path still generates prose and stock keywords, retrieves or accepts clips, and concatenates them. An opt-in experimental path now validates a provider-neutral storyboard, compiles stock and Runway variants, reserves a shared iteration budget, downloads one generated hook, and locally composites approved product/brand layers. It does not yet generate batches of hypotheses, animate the mascot, or expose the experimental workflow through the main WebUI.
 
 ## Expected first-slice behavior
 
@@ -118,6 +130,7 @@ Validation is deterministic and local. It covers:
 - known media source kinds;
 - required base layer;
 - narration and voice-language compatibility;
+- explicit screen policy and its required product-capture relationship;
 - managed required-asset resolution;
 - paid source authorization and available budget.
 
@@ -177,6 +190,8 @@ Planner output is untrusted input. Length limits apply to the brief, hypothesis,
   - STORY-1.3: the first slice resolves English narration explicitly.
   - ADPIPE-1.2: stock and Runway plans differ only in the hook base source.
   - RUNWAY-1.2: exhausted iteration budget blocks submission.
+  - STORY-1.5 / BRAND-1.5: a generic screen is allowed only when the scene declares non-product context.
+  - BRAND-1.4: canonical subtitle spelling remains separate from provider-specific pronunciation text.
 - `test/services/test_storyboard.py`
   - STORY-1.1, STORY-1.2, STORY-1.3, ADPIPE-1.3, BRAND-1.3.
 - `test/services/test_generation_budget.py`

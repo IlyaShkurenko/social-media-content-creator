@@ -1,6 +1,6 @@
-# Goal: TICT advertising video quality
+# Goal: tict advertising video quality
 
-Build an autonomous, reproducible production loop that turns a TICT advertising hypothesis into up to five distinct short-form videos, measures the rendered results against their storyboards, and keeps only demonstrable improvements.
+Build an autonomous, reproducible production loop that turns a tict advertising hypothesis into up to five distinct short-form videos, measures the rendered results against their storyboards, and keeps only demonstrable improvements.
 
 ## Primary metric
 
@@ -13,6 +13,9 @@ The first trustworthy automated baseline will set the numeric target. Until then
 - `visual_judge_win_rate`
 - `brand_asset_fidelity`
 - `subtitle_text_token_f1`
+- `brand_text_exact_match`
+- `brand_pronunciation_pass`
+- `screen_policy_compliance`
 - `voiceover_wer`
 - `word_timing_mae_ms`
 - `shot_boundary_mae_ms`
