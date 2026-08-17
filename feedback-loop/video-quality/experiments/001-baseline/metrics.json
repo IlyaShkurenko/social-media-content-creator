@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "evaluator_version": "0.1.0",
+  "generated_at": "2026-08-17T14:54:31.700408+00:00",
+  "scenario_id": "coverr-controlled-smoke-001",
+  "observation_mode": "human_fixture",
+  "artifact": {
+    "video": "storage/tasks/5e7f3d8c-4c39-4df1-9ee0-01b9fe24ad17/final-1.mp4",
+    "duration_seconds": 23.83,
+    "width": 1080,
+    "height": 1920,
+    "fps": 30.0,
+    "video_codec": "h264",
+    "audio_codec": "aac"
+  },
+  "primary": {
+    "name": "timeline_alignment_f1",
+    "value": 0.153846
+  },
+  "metrics": {
+    "timeline_alignment_precision": 0.125,
+    "timeline_alignment_recall": 0.2,
+    "timeline_alignment_f1": 0.153846,
+    "timeline_alignment_counts": {
+      "true_positive": 1,
+      "false_positive": 7,
+      "false_negative": 4
+    },
+    "subtitle_text_token_f1": 1.0,
+    "visual_judge_win_rate": null,
+    "brand_asset_fidelity": null,
+    "voiceover_wer": null,
+    "word_timing_mae_ms": null,
+    "shot_boundary_mae_ms": null,
+    "generation_latency_seconds": null,
+    "estimated_cost_usd": null,
+    "cost_per_accepted_video_usd": null
+  },
+  "constraints": {
+    "enforced": {
+      "render_success": true,
+      "audio_present": true,
+      "aspect_ratio_pass": true,
+      "duration_pass": true,
+      "no_sustained_black_segments": true,
+      "all_evidence_frames_extracted": true
+    },
+    "all_enforced_pass": true,
+    "pending": {
+      "voiceover_wer_pass": "timestamped ASR is not enabled in evaluator v0",
+      "subtitle_safe_area_pass": "frame-level subtitle box detection is not enabled in evaluator v0",
+      "brand_asset_fidelity_pass": "the controlled stock baseline does not require a TICT brand asset"
+    },
+    "all_goal_constraints_verified": false
+  },
+  "evidence": {
+    "frames": [
+      {
+        "scene_id": "scene_01_phone",
+        "timestamp_seconds": 2.975,
+        "path": "artifacts/frames/01-scene_01_phone.jpg",
+        "extracted": true
+      },
+      {
+        "scene_id": "scene_02_technology",
+        "timestamp_seconds": 8.925,
+        "path": "artifacts/frames/02-scene_02_technology.jpg",
+        "extracted": true
+      },
+      {
+        "scene_id": "scene_03_business",
+        "timestamp_seconds": 14.875,
+        "path": "artifacts/frames/03-scene_03_business.jpg",
+        "extracted": true
+      },
+      {
+        "scene_id": "scene_04_office",
+        "timestamp_seconds": 20.84,
+        "path": "artifacts/frames/04-scene_04_office.jpg",
+        "extracted": true
+      }
+    ],
+    "black_segments": [],
+    "decode_error": null,
+    "subtitle_token_comparison": {
+      "reference_tokens": 45,
+      "candidate_tokens": 45,
+      "matching_tokens": 45,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    }
+  },
+  "unavailable_metric_reasons": {
+    "visual_judge_win_rate": "pairwise visual judge is not enabled in evaluator v0",
+    "brand_asset_fidelity": "scenario has no required brand asset",
+    "voiceover_wer": "timestamped ASR is not enabled in evaluator v0",
+    "word_timing_mae_ms": "word-level ASR alignment is not enabled in evaluator v0",
+    "shot_boundary_mae_ms": "automatic scene-boundary comparison is not enabled in evaluator v0",
+    "generation_latency_seconds": "the source task did not record generation timing",
+    "estimated_cost_usd": "the source task did not record provider cost",
+    "cost_per_accepted_video_usd": "cost and acceptance are unavailable"
+  }
+}

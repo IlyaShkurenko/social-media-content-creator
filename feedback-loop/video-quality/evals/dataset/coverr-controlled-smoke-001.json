@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "id": "coverr-controlled-smoke-001",
+  "title": "Controlled Coverr stock-footage alignment baseline",
+  "purpose": "Freeze the existing online smoke artifact so evaluator changes are reproducible. Search terms were supplied manually; this is not a test of Kimi term generation.",
+  "artifact": {
+    "video": "storage/tasks/5e7f3d8c-4c39-4df1-9ee0-01b9fe24ad17/final-1.mp4",
+    "pipeline_record": "storage/tasks/5e7f3d8c-4c39-4df1-9ee0-01b9fe24ad17/script.json",
+    "subtitle": "storage/tasks/5e7f3d8c-4c39-4df1-9ee0-01b9fe24ad17/subtitle.srt"
+  },
+  "expected": {
+    "aspect_ratio": "9:16",
+    "duration_seconds": {
+      "min": 20.0,
+      "max": 26.0
+    },
+    "audio_required": true,
+    "storyboard": [
+      {
+        "id": "scene_01_phone",
+        "start_seconds": 0.0,
+        "end_seconds": 5.95,
+        "description": "A phone or unmistakable mobile-device context supports the opening claim.",
+        "expected_tags": ["phone"]
+      },
+      {
+        "id": "scene_02_technology",
+        "start_seconds": 5.95,
+        "end_seconds": 11.9,
+        "description": "Technology or an AI/software workflow supports the problem-to-solution transition.",
+        "expected_tags": ["technology"]
+      },
+      {
+        "id": "scene_03_business",
+        "start_seconds": 11.9,
+        "end_seconds": 17.85,
+        "description": "A business or professional production context supports the automation claim.",
+        "expected_tags": ["business"]
+      },
+      {
+        "id": "scene_04_office",
+        "start_seconds": 17.85,
+        "end_seconds": 23.83,
+        "description": "An office/computer context supports the final professional CTA.",
+        "expected_tags": ["office", "computer"]
+      }
+    ]
+  },
+  "observations": {
+    "mode": "human_fixture",
+    "reviewed_at": "2026-08-17",
+    "review_protocol": "One midpoint frame per declared scene; literal visible concepts only.",
+    "scenes": [
+      {
+        "scene_id": "scene_01_phone",
+        "observed_tags": ["sports", "screen"],
+        "notes": "A sports/football image is visible; a phone device is not established."
+      },
+      {
+        "scene_id": "scene_02_technology",
+        "observed_tags": ["desert", "people"],
+        "notes": "People are outdoors in a desert-like landscape; no technology workflow is visible."
+      },
+      {
+        "scene_id": "scene_03_business",
+        "observed_tags": ["desert", "people"],
+        "notes": "The outdoor people shot continues; no business context is visible."
+      },
+      {
+        "scene_id": "scene_04_office",
+        "observed_tags": ["computer", "keyboard"],
+        "notes": "A close-up computer keyboard is visible, partially matching the office intent."
+      }
+    ]
+  }
+}

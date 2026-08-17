@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "id": "tict-travel-ad-storyboard-v1",
+  "status": "draft_requires_generated_video",
+  "title": "TICT travel inspiration to product reveal",
+  "hypothesis": "Showing an aspirational trip before revealing the same trip inside TICT makes the product benefit immediately understandable.",
+  "target": {
+    "aspect_ratio": "9:16",
+    "duration_seconds": 24,
+    "variants": 5
+  },
+  "storyboard": [
+    {
+      "id": "hook_travel",
+      "start_seconds": 0,
+      "end_seconds": 4,
+      "intent": "A concrete aspirational travel moment with a strong visual hook.",
+      "required": ["destination", "traveller action"],
+      "forbidden": ["generic office stock"]
+    },
+    {
+      "id": "planning_pain",
+      "start_seconds": 4,
+      "end_seconds": 8,
+      "intent": "Show fragmented planning or decision overload.",
+      "required": ["planning friction", "multiple travel decisions"]
+    },
+    {
+      "id": "tict_reveal",
+      "start_seconds": 8,
+      "end_seconds": 14,
+      "intent": "Transition from the travel scene into the matching trip inside the real TICT UI.",
+      "required": ["approved TICT product screen", "visual continuity with destination"]
+    },
+    {
+      "id": "product_proof",
+      "start_seconds": 14,
+      "end_seconds": 20,
+      "intent": "Demonstrate AI planning, editing, or navigator behavior with readable UI.",
+      "required": ["legible product action", "brand palette"]
+    },
+    {
+      "id": "cta",
+      "start_seconds": 20,
+      "end_seconds": 24,
+      "intent": "Close with mascot/logo and one clear action.",
+      "required": ["approved logo or mascot", "single CTA"]
+    }
+  ],
+  "brand_kit": "../assets/brand/brand-kit.json"
+}

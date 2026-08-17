@@ -1,0 +1,14 @@
+version: 1
+mode: project
+
+modules:
+  base-harness: enabled
+  context-graph: enabled
+  spec-driven: disabled
+  feedback-loop: enabled
+  agent-runtime: disabled
+  shared-knowledge: disabled
+
+context:
+  current: ./docs
+  retrieval: mq

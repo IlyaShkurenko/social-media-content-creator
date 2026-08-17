@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "brand": "TICT",
+  "retrieved_at": "2026-08-17",
+  "figma": {
+    "logo_and_mascot": {
+      "file_key": "lWrhCimzZ9NMGZNSsH9Ew2",
+      "page_node_id": "0:1",
+      "logo_node_id": "10589:2",
+      "mascot_node_ids": ["185:4225", "185:4226"]
+    },
+    "product_screens": {
+      "file_key": "lWrhCimzZ9NMGZNSsH9Ew2",
+      "page_node_id": "1:12",
+      "screen_node_ids": {
+        "five_apps": "12372:72523",
+        "ai_planner": "12372:72579",
+        "navigator": "12372:72476",
+        "edit_trip": "12372:72417"
+      }
+    },
+    "typography_source": {
+      "file_key": "eb4Ldg4Fpa9dvQnCfCXmzv",
+      "node_id": "138:739",
+      "status": "unavailable",
+      "reason": "Figma connector reports that the connected user lacks the required access."
+    }
+  },
+  "confirmed_tokens": {
+    "background": "#FFFCEE",
+    "text": "#1D1E18",
+    "logo_dark": "#34352F",
+    "logo_yellow": "#FFCC00",
+    "typography": null
+  },
+  "assets": {
+    "logo_png": "tict-logo.png",
+    "logo_svg": "tict-logo.svg",
+    "mascot_variants": ["tict-mascot-1.png", "tict-mascot-2.png"],
+    "product_screens": [
+      "screens/01-five-apps.png",
+      "screens/02-ai-planner.png",
+      "screens/03-navigator.png",
+      "screens/04-edit-trip.png"
+    ]
+  },
+  "usage_contract": {
+    "mascot": "Use an exported mascot as an identity reference. Animation may change pose or expression but must preserve the pin silhouette, yellow palette, face, and recognizability.",
+    "product_ui": "Use approved exported screens or current captured UI. Do not ask a generative model to redraw readable application UI or product text.",
+    "transition": "Travel footage should transition into a semantically matching product screen, preserving destination, action, or map continuity.",
+    "text": "On-screen product text must remain legible and must be evaluated separately from general visual similarity."
+  }
+}
