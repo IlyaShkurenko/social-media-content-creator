@@ -1,0 +1,19 @@
+{
+  "storyboard_id": "mixed-media-first-slice-001",
+  "output_dir": "/Users/illiashkurenko/ai-reels-creator/MoneyPrinterTurbo/feedback-loop/video-quality/.state/prepared/mixed-media-first-slice-001",
+  "paid_submission": true,
+  "iteration_budget_usd": 10.0,
+  "actual_paid_cost_usd": 0.6,
+  "generation_latency_seconds": 158.877,
+  "estimated_runway_cost_usd": 0.6,
+  "rendered_video": "/Users/illiashkurenko/ai-reels-creator/MoneyPrinterTurbo/feedback-loop/video-quality/.state/prepared/mixed-media-first-slice-001/renders/runway-candidate/final.mp4",
+  "script": "Planning a trip should not feel like another job. TICT turns every booking, place, and next step into one clear trip plan. Plan less. Travel more with TICT.",
+  "runway_job_id": "e1ba2784-8506-4ae0-995f-7b03611f31e8",
+  "charged_microusd": 600000,
+  "remaining_microusd": 9400000,
+  "narration_voice": "en-US-JennyNeural-Female",
+  "subtitle_path": "/Users/illiashkurenko/ai-reels-creator/MoneyPrinterTurbo/feedback-loop/video-quality/.state/prepared/mixed-media-first-slice-001/renders/runway-candidate/storyboard.srt",
+  "subtitle_layout_path": "/Users/illiashkurenko/ai-reels-creator/MoneyPrinterTurbo/feedback-loop/video-quality/.state/prepared/mixed-media-first-slice-001/renders/runway-candidate/subtitle-layout.json",
+  "subtitle_safe_area_pass": true,
+  "variant_id": "runway-candidate"
+}

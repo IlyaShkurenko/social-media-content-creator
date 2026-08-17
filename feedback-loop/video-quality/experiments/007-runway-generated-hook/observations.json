@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "scenario_id": "mixed-media-stock-baseline-001",
+  "mode": "human_fixture",
+  "artifact_sha256": "8f8683edcb0bd704216ccf7c5d8eea93ffa3eb1077d4752399118f65f6f35b56",
+  "reviewed_at": "2026-08-17",
+  "review_protocol": "One exact midpoint frame per scene plus a nine-frame contact sheet inspected from the rendered MP4; only literal visible evidence is tagged.",
+  "scenes": [
+    {
+      "scene_id": "hook",
+      "observed_tags": [
+        "traveller_visible",
+        "phone_visible",
+        "airport_visible",
+        "planning_stress_visible",
+        "luggage_visible"
+      ],
+      "notes": "The generated hook clearly shows a traveller using a phone in an airport with a visibly furrowed, overwhelmed expression. A rolling suitcase is also visible and is retained as an extra literal tag."
+    },
+    {
+      "scene_id": "product_demo",
+      "observed_tags": [
+        "approved_tict_ui_visible",
+        "trip_plan_visible",
+        "product_text_legible"
+      ],
+      "notes": "The exact approved trip overview remains fully visible and legible in the deterministic product scene, with the subtitle in its separate safe zone."
+    },
+    {
+      "scene_id": "cta",
+      "observed_tags": [
+        "approved_logo_visible",
+        "approved_mascot_visible",
+        "single_cta_visible"
+      ],
+      "notes": "The deterministic CTA preserves the approved logo and mascot, one clear CTA, and no duplicate narration subtitle."
+    }
+  ]
+}
