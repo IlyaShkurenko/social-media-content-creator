@@ -13,7 +13,7 @@ from collections.abc import Callable
 from typing import Any, Literal
 
 from google import genai
-from google.genai import types
+from google.genai import errors, types
 from pydantic import BaseModel, Field
 
 
@@ -25,7 +25,7 @@ if str(REPO_ROOT) not in sys.path:
 from app.services.creative.budget import IterationBudgetLedger  # noqa: E402
 
 
-EVALUATOR_VERSION = "0.5.0"
+EVALUATOR_VERSION = "0.6.0"
 JUDGE_SCHEMA_VERSION = 1
 JUDGE_MODEL = "gemini-3.6-flash"
 ITERATION_SCOPE_ID = "mixed-media-iteration-001"
@@ -316,6 +316,11 @@ class GeminiVideoJudge:
                     ),
                 ),
             )
+        except errors.APIError as exc:
+            raise RuntimeError(
+                "Gemini rejected the judge request before returning a billable "
+                f"result (HTTP {exc.code}); no charge was recorded"
+            ) from exc
         except Exception as exc:
             self.budget_ledger.record_manual_charge(
                 operation_id,

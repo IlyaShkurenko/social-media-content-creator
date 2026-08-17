@@ -11,8 +11,18 @@ from pathlib import Path
 from typing import Any
 
 
-EVALUATOR_VERSION = "0.5.0"
+EVALUATOR_VERSION = "0.6.0"
 JUDGE_SCHEMA_VERSION = 1
+TEMPORAL_SCHEMA_VERSION = 1
+TEMPORAL_EVENT_TYPES = {
+    "object_disappearance",
+    "object_duplication",
+    "orientation_discontinuity",
+    "screen_visibility_contradiction",
+    "geometry_deformation",
+    "hand_interaction_discontinuity",
+}
+TEMPORAL_SEVERITIES = {"low", "medium", "high"}
 LOOP_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = LOOP_ROOT.parents[1]
 
@@ -227,6 +237,55 @@ def calculate_visual_judge_win_rate(
         "credits": credits,
         "self_comparison": False,
         "position_balanced": True,
+    }
+
+
+def calculate_temporal_consistency(evidence: dict[str, Any]) -> dict[str, Any]:
+    """Convert closed, timestamped temporal events into deterministic metrics."""
+
+    if evidence.get("status") != "complete":
+        raise ValueError("temporal evidence is incomplete")
+    events = evidence.get("events")
+    if not isinstance(events, list):
+        raise ValueError("temporal evidence events must be a list")
+    counts = {severity: 0 for severity in sorted(TEMPORAL_SEVERITIES)}
+    normalized: list[dict[str, Any]] = []
+    for event in events:
+        if not isinstance(event, dict):
+            raise ValueError("temporal event must be an object")
+        event_type = str(event.get("event_type", ""))
+        severity = str(event.get("severity", ""))
+        if event_type not in TEMPORAL_EVENT_TYPES:
+            raise ValueError(f"unknown temporal event type: {event_type!r}")
+        if severity not in TEMPORAL_SEVERITIES:
+            raise ValueError(f"unknown temporal severity: {severity!r}")
+        start = float(event.get("start_seconds", -1))
+        end = float(event.get("end_seconds", -1))
+        frames = event.get("frame_indices")
+        affected_object = str(event.get("affected_object", "")).strip()
+        reason = str(event.get("reason", "")).strip()
+        if start < 0 or end < start:
+            raise ValueError("temporal event has an invalid time range")
+        if not isinstance(frames, list) or len(frames) < 2:
+            raise ValueError("temporal event requires at least two supporting frames")
+        if not affected_object or not reason:
+            raise ValueError("temporal event requires object and reason")
+        counts[severity] += 1
+        normalized.append(
+            {
+                **event,
+                "start_seconds": round(start, 3),
+                "end_seconds": round(end, 3),
+                "frame_indices": [int(value) for value in frames],
+            }
+        )
+    return {
+        "temporal_consistency_pass": counts["high"] == 0,
+        "high_severity_event_count": counts["high"],
+        "medium_severity_event_count": counts["medium"],
+        "low_severity_event_count": counts["low"],
+        "total_event_count": len(normalized),
+        "events": normalized,
     }
 
 
@@ -610,6 +669,7 @@ def evaluate(
     pipeline_record_override: str | None = None,
     subtitle_override: str | None = None,
     judge_evidence_override: str | None = None,
+    temporal_evidence_override: str | None = None,
 ) -> dict[str, Any]:
     scenario = json.loads(scenario_path.read_text(encoding="utf-8"))
     video_value = video_override or scenario["artifact"]["video"]
@@ -634,7 +694,24 @@ def evaluate(
             judge_evidence_path.read_text(encoding="utf-8")
         )
     if judge_evidence is None:
-        raise ValueError("evaluator 0.5 requires versioned --judge-evidence")
+        raise ValueError("evaluator 0.6 requires versioned --judge-evidence")
+
+    if not temporal_evidence_override:
+        raise ValueError("evaluator 0.6 requires versioned --temporal-evidence")
+    raw_temporal_path = Path(temporal_evidence_override)
+    temporal_evidence_path = (
+        raw_temporal_path
+        if raw_temporal_path.is_absolute()
+        else LOOP_ROOT / raw_temporal_path
+    )
+    temporal_evidence_path = ensure_within(
+        temporal_evidence_path,
+        LOOP_ROOT,
+        "temporal evidence",
+    )
+    temporal_evidence = json.loads(
+        temporal_evidence_path.read_text(encoding="utf-8")
+    )
     if judge_evidence is not None:
         observations_path = judge_evidence_path
         observations_contract = {
@@ -740,6 +817,26 @@ def evaluate(
         record_path = resolve_repo_path(record_path_value, "pipeline record")
         if record_path.is_file():
             pipeline_record = json.loads(record_path.read_text(encoding="utf-8"))
+    if pipeline_record is None:
+        raise ValueError(
+            "evaluator 0.6 requires a pipeline record with temporal source provenance"
+        )
+    if temporal_evidence.get("schema_version") != TEMPORAL_SCHEMA_VERSION:
+        raise ValueError("unsupported temporal evidence schema version")
+    if temporal_evidence.get("evaluator_version") != EVALUATOR_VERSION:
+        raise ValueError("temporal evidence belongs to a different evaluator version")
+    if temporal_evidence.get("status") != "complete":
+        raise ValueError("temporal evidence is partial and cannot be scored")
+    if temporal_evidence.get("scene_id") != "hook":
+        raise ValueError("temporal evidence must screen the generated hook")
+    if temporal_evidence.get("sample_fps") != 10:
+        raise ValueError("temporal evidence must use the frozen 10 FPS protocol")
+    temporal_source_sha256 = pipeline_record.get("temporal_source_sha256")
+    if temporal_evidence.get("video_sha256") != temporal_source_sha256:
+        raise ValueError(
+            "temporal evidence does not match the pipeline temporal source"
+        )
+    temporal_consistency = calculate_temporal_consistency(temporal_evidence)
     if subtitle_path_value and pipeline_record is not None:
         subtitle_path = resolve_repo_path(subtitle_path_value, "subtitle")
         if subtitle_path.is_file():
@@ -770,6 +867,9 @@ def evaluate(
         "no_sustained_black_segments": len(black_segments) == 0,
         "all_evidence_frames_extracted": all(item["extracted"] for item in frame_evidence),
         "screen_policy_automated_pass": screen_automated_pass,
+        "temporal_consistency_pass": temporal_consistency[
+            "temporal_consistency_pass"
+        ],
         **evidence_constraints,
     }
     brand_assets_required = bool(expected.get("brand_assets_required", False))
@@ -816,6 +916,15 @@ def evaluate(
             "requested_model": judge_evidence["requested_model"],
             "model_versions": judge_evidence["model_versions"],
         },
+        "temporal_protocol": {
+            "schema_version": temporal_evidence["schema_version"],
+            "evaluator_version": temporal_evidence["evaluator_version"],
+            "observation_mode": temporal_evidence["observation_mode"],
+            "sample_fps": temporal_evidence["sample_fps"],
+            "prompt_sha256": temporal_evidence["prompt_sha256"],
+            "requested_model": temporal_evidence["requested_model"],
+            "model_version": temporal_evidence["model_version"],
+        },
         "artifact": {
             "video": str(video_path.relative_to(REPO_ROOT)),
             "duration_seconds": round(duration, 3),
@@ -846,6 +955,18 @@ def evaluate(
             "brand_pronunciation_pass": None,
             "screen_policy_compliance": screen_policy["compliance"],
             "visual_judge_win_rate": pairwise["win_rate"],
+            "temporal_consistency_pass": temporal_consistency[
+                "temporal_consistency_pass"
+            ],
+            "temporal_high_severity_event_count": temporal_consistency[
+                "high_severity_event_count"
+            ],
+            "temporal_medium_severity_event_count": temporal_consistency[
+                "medium_severity_event_count"
+            ],
+            "temporal_low_severity_event_count": temporal_consistency[
+                "low_severity_event_count"
+            ],
             "brand_asset_fidelity": brand_fidelity,
             "voiceover_wer": None,
             "word_timing_mae_ms": None,
@@ -887,6 +1008,9 @@ def evaluate(
             "screen_policy": screen_policy,
             "automated_observation_consensus": automated_observations,
             "pairwise_preference": pairwise,
+            "temporal_consistency": temporal_consistency,
+            "temporal_judge": temporal_evidence,
+            "temporal_evidence_sha256": sha256_file(temporal_evidence_path),
             "judge": judge_evidence,
             "judge_evidence_sha256": sha256_file(judge_evidence_path),
             "observations_source": "stored_versioned_judge_evidence",
@@ -963,6 +1087,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--pipeline-record")
     parser.add_argument("--subtitle")
     parser.add_argument("--judge-evidence")
+    parser.add_argument("--temporal-evidence")
     return parser.parse_args()
 
 
@@ -981,6 +1106,7 @@ def main() -> int:
         args.pipeline_record,
         args.subtitle,
         args.judge_evidence,
+        args.temporal_evidence,
     )
     (output_dir / "metrics.json").write_text(json.dumps(metrics, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     write_summary(metrics, output_dir)

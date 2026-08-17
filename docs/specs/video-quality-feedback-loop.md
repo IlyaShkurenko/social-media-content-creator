@@ -8,6 +8,7 @@ Define the deterministic acceptance boundary for a candidate advertising-video e
 
 - `records/rfcs/0001-experimental-mixed-media-advertising-pipeline.md`
 - `records/rfcs/0002-versioned-gemini-video-quality-judge.md`
+- `records/rfcs/0003-temporal-screening-and-artifact-retention.md`
 
 ## Requirements
 
@@ -55,9 +56,13 @@ New experiment directories SHOULD contain only the human decision record, machin
 
 A product experiment MUST move through explicit `planned`, `evaluated`, and final `kept` or `reverted` states. `experiment-start` MUST reproduce and freeze a comparable baseline before allocating the next identity, and MUST record the observed problem, falsifiable engineering hypothesis, one coherent planned change, expected metric impact, starting revision, and baseline evidence before candidate code or metrics are introduced. `experiment-evaluate` MUST add candidate inputs and results to that same identity without rewriting the frozen plan. `experiment-finish` MUST record learning and a final decision; it MUST reject `keep` when the primary metric did not improve, and MUST require explicit human-review evidence before keeping a provisional result. Final git revert, validation, commit, and push remain deliberate agent actions governed by the scoped experiment protocol.
 
+### EVAL-3.3 — Mandatory final artifact retention
+
+Every `evaluated`, `kept`, or `reverted` experiment MUST retain its exact final MP4 at `artifacts/video.mp4`, record its SHA-256 in `inputs.json`, and verify that path and hash before replay or finish. A `planned` or `failed_before_evaluation` experiment MAY have no final MP4 but MUST NOT claim candidate metrics or a completed result. Large media remains ignored by Git; tracked records MUST distinguish stored, not-created, and invalid artifacts explicitly. Existing historical experiments remain immutable.
+
 ### EVAL-4.1 — Versioned structured judge evidence
 
-Evaluator `0.5` live evidence MUST record the evaluator version, response-schema version, requested model, provider-reported model version when available, prompt SHA-256, scenario SHA-256, and SHA-256 of both MP4 inputs. It MUST contain structured scene observations and MUST NOT contain credentials, authorization headers, provider file URIs, or unrestricted external paths.
+Evaluator `0.5` and later live pairwise evidence MUST record the evaluator version, response-schema version, requested model, provider-reported model version when available, prompt SHA-256, scenario SHA-256, and SHA-256 of both MP4 inputs. It MUST contain structured scene observations and MUST NOT contain credentials, authorization headers, provider file URIs, or unrestricted external paths.
 
 ### EVAL-4.2 — Order-balanced pairwise preference
 
@@ -79,6 +84,22 @@ Every Gemini inference pass MUST check a fail-closed maximum cost against scope 
 
 Historical `make evaluate` MUST consume stored judge evidence and MUST NOT call Gemini. It MUST verify evidence and input hashes. Candidate and baseline are comparable only when scenario, evaluator version, judge schema, prompt hash, requested model, and provider-reported model version match; otherwise a new baseline is required.
 
+### EVAL-5.1 — High-frequency temporal evidence
+
+Evaluator `0.6` generated-scene screening MUST sample the declared hook at 10 FPS and produce chronological, timestamped frame strips. Evidence MUST record the source-video SHA-256, scene range, sample rate, sampled frame count, strip hashes, temporal prompt hash, response schema, requested model, provider-reported model version, usage, recorded charge, and remaining budget. Provider credentials, provider file URIs, and unrestricted external paths MUST NOT be persisted.
+
+### EVAL-5.2 — Closed temporal event contract
+
+Temporal events MUST use only `object_disappearance`, `object_duplication`, `orientation_discontinuity`, `screen_visibility_contradiction`, `geometry_deformation`, or `hand_interaction_discontinuity`. Every event MUST include `low`, `medium`, or `high` severity, source timestamps, supporting frame indices, affected object, and an evidence-based reason. Deterministic evaluator code MUST calculate event counts and MUST NOT accept provider-supplied metric values.
+
+### EVAL-5.3 — Temporal failures veto generated hooks
+
+Any high-severity temporal event MUST set `temporal_consistency_pass=false` and make the generated hook ineligible for selection. Missing, partial, malformed, hash-mismatched, or wrong-protocol temporal evidence MUST also fail closed. Medium and low events remain reported without independently vetoing evaluator `0.6`.
+
+### EVAL-5.4 — Temporal evidence replays offline
+
+Historical evaluation MUST consume stored temporal evidence and MUST NOT re-extract frames or call Gemini. Candidate and baseline temporal evidence are comparable only when evaluator version, temporal schema, prompt hash, sampling rate, requested model, and provider-reported model version match.
+
 ## Executable coverage
 
-`test/bdd/features/video_quality_acceptance.feature` covers the high-value acceptance boundary in EVAL-1.2, EVAL-1.3, EVAL-2.4, the pre-change plan freeze in EVAL-3.2, order-balanced preference in EVAL-4.2, and regression blocking in EVAL-4.4. Lower-level evaluator output, exact brand spelling, metric calculations, lifecycle transitions, budget transitions, hash verification, and compact-record serialization remain covered by ordinary evaluator tests.
+`test/bdd/features/video_quality_acceptance.feature` covers the high-value acceptance boundary in EVAL-1.2, EVAL-1.3, EVAL-2.4, the pre-change plan freeze in EVAL-3.2, mandatory artifact verification in EVAL-3.3, order-balanced preference in EVAL-4.2, regression blocking in EVAL-4.4, and temporal veto in EVAL-5.3. Lower-level evaluator output, exact brand spelling, temporal extraction, metric calculations, lifecycle transitions, budget transitions, hash verification, and compact-record serialization remain covered by ordinary evaluator tests.

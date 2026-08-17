@@ -323,3 +323,28 @@ def subtitle_retains_canonical_brand(scenario_context: dict[str, Any]) -> None:
 def synthesis_uses_brand_pronunciation(scenario_context: dict[str, Any]) -> None:
     plan = scenario_context["narration_plan"]
     assert "tickt" in plan.scenes[1].spoken_text
+
+
+@given("three generated hooks with one passing temporal screen")
+def temporal_candidate_pool(scenario_context: dict[str, Any]) -> None:
+    scenario_context["generated_hooks"] = [
+        {"candidate_id": "hook-1", "temporal_consistency_pass": False},
+        {"candidate_id": "hook-2", "temporal_consistency_pass": True},
+        {"candidate_id": "hook-3", "temporal_consistency_pass": False},
+    ]
+
+
+@when("generated hook selection is requested")
+def request_temporal_selection(scenario_context: dict[str, Any]) -> None:
+    from app.services.creative.temporal import eligible_temporal_candidates
+
+    scenario_context["eligible_hooks"] = eligible_temporal_candidates(
+        scenario_context["generated_hooks"]
+    )
+
+
+@then("only the passing generated hook is eligible")
+def only_passing_hook_is_eligible(scenario_context: dict[str, Any]) -> None:
+    assert [
+        item["candidate_id"] for item in scenario_context["eligible_hooks"]
+    ] == ["hook-2"]

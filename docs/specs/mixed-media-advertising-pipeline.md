@@ -98,6 +98,20 @@ The adapter MUST record a provider job identifier, sanitized request metadata, m
 
 Successful provider output MUST be downloaded into managed task storage before the result is exposed to rendering. A temporary provider URL is not a final project artifact.
 
+### RUNWAY-2 — Temporally screened candidate pools
+
+#### RUNWAY-2.1 — Independent three-to-five candidate batch
+
+A temporal-selection experiment MUST request between three and five independent Runway jobs with unique operation and provider job identifiers. Reused provider output MUST be labelled as a zero-cost rerender and MUST NOT be reported as a new generation.
+
+#### RUNWAY-2.2 — Screen before selection
+
+Every downloaded generated hook MUST receive EVAL-5 temporal evidence before selection. A hook with missing, invalid, or failing temporal evidence MUST be ineligible. Selection MUST return only eligible hooks; if none pass, the batch MUST finish without silently substituting stock or a rejected generation.
+
+#### RUNWAY-2.3 — Retain every generated candidate
+
+Every generated output in the batch MUST be retained under the experiment's ignored artifact tree with provider job ID, local SHA-256, recorded charge, generation latency, temporal evidence status, and selection disposition in the tracked manifest.
+
 ## Current behavior
 
 The legacy WebUI/API path still generates prose and stock keywords, retrieves or accepts clips, and concatenates them. An opt-in experimental path now validates a provider-neutral storyboard, compiles stock and Runway variants, reserves a shared iteration budget, downloads one generated hook, and locally composites approved product/brand layers. It does not yet generate batches of hypotheses, animate the mascot, or expose the experimental workflow through the main WebUI.
@@ -198,6 +212,10 @@ Planner output is untrusted input. Length limits apply to the brief, hypothesis,
   - RUNWAY-1.2, RUNWAY-1.3, RUNWAY-1.4.
 - `test/services/test_runway.py`
   - RUNWAY-1.1, RUNWAY-1.4, RUNWAY-1.5, RUNWAY-1.6 without live paid requests.
+- `test/bdd/features/mixed_media_pipeline.feature`
+  - RUNWAY-2.2: only temporally passing generated hooks are eligible for selection.
+- `feedback-loop/video-quality/evals/tests/test_temporal_judge.py`
+  - EVAL-5 provider-schema compatibility without live paid requests.
 
 ## Unresolved non-blocking choices
 

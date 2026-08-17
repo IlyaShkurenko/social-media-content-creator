@@ -25,6 +25,11 @@ Feature: Video-quality experiment acceptance
     Then the experiment is planned without candidate metrics
     And its engineering hypothesis and baseline evidence are frozen
 
+  Scenario: [EVAL-3.3] A finished experiment retains its exact final MP4
+    Given an evaluated experiment with a hash-matching local video artifact
+    When final artifact retention is verified
+    Then the experiment artifact is accepted as retained
+
   Scenario: [EVAL-4.2] Pairwise preference is balanced across reversed input order
     Given a baseline and candidate are judged in both A/B orders
     And the candidate is preferred in both judge passes
@@ -36,3 +41,8 @@ Feature: Video-quality experiment acceptance
     And its timeline alignment regresses below the comparable baseline
     When the comparison-aware experiment decision is calculated
     Then the candidate is rejected for a constraint regression
+
+  Scenario: [EVAL-5.3] A high-severity temporal hallucination vetoes a generated hook
+    Given temporal evidence contains a high-severity screen visibility contradiction
+    When temporal consistency is calculated
+    Then temporal screening rejects the generated hook

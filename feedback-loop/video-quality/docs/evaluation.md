@@ -1,9 +1,9 @@
 # Video-quality evaluation
 
-## What evaluator 0.5 measures
+## What evaluator 0.6 measures
 
-The evaluator consumes a fixed scenario, a rendered MP4, and stored versioned
-Gemini judge evidence. It:
+The evaluator consumes a fixed scenario, a rendered MP4, stored versioned
+Gemini pairwise evidence, and stored high-frequency temporal evidence. It:
 
 1. probes streams, duration, dimensions, and frame rate with FFprobe;
 2. decodes the full video with FFmpeg to catch corrupt media;
@@ -14,13 +14,14 @@ Gemini judge evidence. It:
 7. calculates timeline-alignment precision, recall, and F1 deterministically;
 8. compares subtitle tokens and exact canonical `tict` spelling with the stored script;
 9. evaluates every scene's declared screen policy from structured screen evidence;
-10. records generation latency, judge usage, conservative ledger charge, and remaining budget;
-11. records unavailable metrics explicitly.
+10. verifies a 10 FPS temporal screen of the generated hook and vetoes any high-severity continuity event;
+11. records generation latency, judge usage, conservative ledger charge, and remaining budget;
+12. records unavailable metrics explicitly.
 
 The old `human_fixture` remains historical evaluator `0.4` evidence. Evaluator
-`0.5` requires a compact judge document created by the paid `make judge` stage.
-That document is embedded in tracked experiment inputs, so `make evaluate` is
-offline and reproducible.
+`0.6` requires compact documents created by the paid `make temporal-judge` and
+`make judge` stages. Both documents are embedded in tracked experiment inputs,
+so `make evaluate` is offline and reproducible.
 
 ## Interpretation
 
@@ -37,7 +38,10 @@ the primary experiment metric.
 Hard checks currently enforced are decode success, audio presence, aspect ratio,
 duration, absence of sustained black segments, evidence-frame extraction,
 subtitle safe-area compliance, automated screen policy, and available brand
-fidelity. Exact `tict` spelling remains independently scored. Timestamped ASR,
+fidelity. A high-severity `object_disappearance`, `object_duplication`,
+`orientation_discontinuity`, `screen_visibility_contradiction`,
+`geometry_deformation`, or `hand_interaction_discontinuity` event fails temporal
+consistency. Exact `tict` spelling remains independently scored. Timestamped ASR,
 rendered-audio pronunciation, word timing, and automatic shot-boundary error are
 still pending. A candidate cannot be automatically accepted while a required
 constraint is pending.
@@ -52,17 +56,23 @@ Screen policy is intent-aware:
 ## Evaluator architecture
 
 ```text
+generated hook + storyboard
+  -> 10 FPS timestamped strips
+  -> paid versioned Gemini temporal judge
+  -> deterministic temporal veto
+
 baseline MP4 + candidate MP4 + storyboard
   -> paid versioned Gemini judge (two reversed A/B passes)
   -> sanitized structured judge evidence
   -> offline deterministic evaluator
-  -> timeline, screen, brand, technical and pairwise metrics
+  -> temporal, timeline, screen, brand, technical and pairwise metrics
   -> metrics.json + reproducible experiment record
 ```
 
 The judge returns structured scene observations and rubric evidence rather than a
 single unrestricted aesthetic score. Pairwise preference is the primary research
-metric for evaluator `0.5`, but it is never the sole acceptance rule: alignment
+metric for evaluator `0.6`, but it is never the sole acceptance rule: temporal
+consistency, alignment,
 and deterministic constraints can veto it, and pending ASR/pronunciation evidence
 still requires human review.
 
@@ -72,6 +82,12 @@ Run from `feedback-loop/video-quality`:
 
 ```bash
 make verify
+make temporal-judge \
+  CONFIRM_PAID=YES \
+  TEMPORAL_VIDEO=path/to/generated-hook.mp4 \
+  TEMPORAL_OUTPUT=.state/temporal/hook.json \
+  OPERATION_ID=unique-temporal-id
+
 make judge \
   CONFIRM_PAID=YES \
   BASELINE_VIDEO=path/to/baseline.mp4 \
@@ -82,11 +98,12 @@ make judge \
 make baseline \
   SCENARIO=evals/dataset/mixed-media-stock-baseline-001.json \
   VIDEO=path/to/baseline.mp4 \
-  JUDGE_EVIDENCE=.state/judges/self-comparison.json
+  JUDGE_EVIDENCE=.state/judges/self-comparison.json \
+  TEMPORAL_EVIDENCE=.state/temporal/hook.json
 
-make evaluate EXPERIMENT=experiments/<evaluator-0.5-baseline>
+make evaluate EXPERIMENT=experiments/<evaluator-0.6-baseline>
 make experiment-start \
-  BASELINE=experiments/<evaluator-0.5-baseline> \
+  BASELINE=experiments/<evaluator-0.6-baseline> \
   SLUG=ordered-materials \
   PROBLEM="The product reveal is visually disconnected from the hook" \
   HYPOTHESIS="A semantic bridge improves scene alignment" \
@@ -96,7 +113,8 @@ make experiment-start \
 make experiment-evaluate \
   EXPERIMENT=experiments/009-ordered-materials \
   VIDEO=path/to/candidate.mp4 \
-  JUDGE_EVIDENCE=.state/judges/candidate-comparison.json
+  JUDGE_EVIDENCE=.state/judges/candidate-comparison.json \
+  TEMPORAL_EVIDENCE=.state/temporal/candidate-hook.json
 
 make experiment-finish \
   EXPERIMENT=experiments/009-ordered-materials \
@@ -112,9 +130,11 @@ make experiment-finish \
 
 Successful records track only `README.md`, `metrics.json`, and `inputs.json`;
 failed evaluation also retains `evaluator.stderr.log`. Video snapshots and
-extracted frames stay under ignored `artifacts/`. Sanitized judge evidence is
-stored inside `inputs.json`. `make evaluate` reconstructs it under ignored state,
-verifies hashes, and performs no network call. Historical layouts remain intact.
+extracted frames stay under ignored `artifacts/`; every evaluated record must
+retain its exact final MP4 at `artifacts/video.mp4`. Sanitized pairwise and
+temporal evidence is stored inside `inputs.json`. `make evaluate` reconstructs it
+under ignored state, verifies hashes, and performs no network call. Historical
+layouts remain intact.
 
 ## tict brand fixture
 

@@ -9,10 +9,10 @@ BASELINE ?= experiments/008-baseline
 MIXED_STORYBOARD ?= evals/dataset/mixed-media-first-slice-001.json
 MIXED_OUTPUT ?= .state/prepared/mixed-media-first-slice-001
 
-.PHONY: baseline judge experiment experiment-start experiment-evaluate experiment-finish evaluate verify mixed-prepare mixed-render-stock mixed-rerender-runway mixed-runway
+.PHONY: baseline judge temporal-judge experiment experiment-start experiment-evaluate experiment-finish evaluate verify mixed-prepare mixed-render-stock mixed-rerender-runway mixed-runway
 
 baseline:
-	$(PYTHON) scripts/run_experiment.py --kind baseline --slug baseline --scenario $(SCENARIO) $(if $(VIDEO),--video "$(VIDEO)",) $(if $(OBSERVATIONS),--observations "$(OBSERVATIONS)",) $(if $(PIPELINE_RECORD),--pipeline-record "$(PIPELINE_RECORD)",) $(if $(SUBTITLE),--subtitle "$(SUBTITLE)",) $(if $(JUDGE_EVIDENCE),--judge-evidence "$(JUDGE_EVIDENCE)",)
+	$(PYTHON) scripts/run_experiment.py --kind baseline --slug baseline --scenario $(SCENARIO) $(if $(VIDEO),--video "$(VIDEO)",) $(if $(OBSERVATIONS),--observations "$(OBSERVATIONS)",) $(if $(PIPELINE_RECORD),--pipeline-record "$(PIPELINE_RECORD)",) $(if $(SUBTITLE),--subtitle "$(SUBTITLE)",) $(if $(JUDGE_EVIDENCE),--judge-evidence "$(JUDGE_EVIDENCE)",) $(if $(TEMPORAL_EVIDENCE),--temporal-evidence "$(TEMPORAL_EVIDENCE)",)
 
 judge:
 	@test "$(CONFIRM_PAID)" = "YES" || (echo "CONFIRM_PAID=YES is required" >&2; exit 2)
@@ -21,6 +21,13 @@ judge:
 	@test -n "$(JUDGE_OUTPUT)" || (echo "JUDGE_OUTPUT is required" >&2; exit 2)
 	@test -n "$(OPERATION_PREFIX)" || (echo "OPERATION_PREFIX is required" >&2; exit 2)
 	$(PYTHON) evals/gemini_judge.py --scenario "$(EXPERIMENT_SCENARIO)" --baseline-video "$(BASELINE_VIDEO)" --candidate-video "$(CANDIDATE_VIDEO)" --output "$(JUDGE_OUTPUT)" --operation-prefix "$(OPERATION_PREFIX)" --confirm-paid YES
+
+temporal-judge:
+	@test "$(CONFIRM_PAID)" = "YES" || (echo "CONFIRM_PAID=YES is required" >&2; exit 2)
+	@test -n "$(TEMPORAL_VIDEO)" || (echo "TEMPORAL_VIDEO is required" >&2; exit 2)
+	@test -n "$(TEMPORAL_OUTPUT)" || (echo "TEMPORAL_OUTPUT is required" >&2; exit 2)
+	@test -n "$(OPERATION_ID)" || (echo "OPERATION_ID is required" >&2; exit 2)
+	$(PYTHON) evals/temporal_judge.py --storyboard "$(MIXED_STORYBOARD)" --video "$(TEMPORAL_VIDEO)" --scene-id hook --output "$(TEMPORAL_OUTPUT)" --operation-id "$(OPERATION_ID)" --confirm-paid YES
 
 experiment: experiment-start
 
@@ -35,7 +42,7 @@ experiment-start:
 
 experiment-evaluate:
 	@test -n "$(EXPERIMENT)" || (echo "EXPERIMENT is required" >&2; exit 2)
-	$(PYTHON) scripts/run_experiment.py --kind experiment --phase evaluate --experiment "$(EXPERIMENT)" $(if $(VIDEO),--video "$(VIDEO)",) $(if $(OBSERVATIONS),--observations "$(OBSERVATIONS)",) $(if $(PIPELINE_RECORD),--pipeline-record "$(PIPELINE_RECORD)",) $(if $(SUBTITLE),--subtitle "$(SUBTITLE)",) $(if $(JUDGE_EVIDENCE),--judge-evidence "$(JUDGE_EVIDENCE)",)
+	$(PYTHON) scripts/run_experiment.py --kind experiment --phase evaluate --experiment "$(EXPERIMENT)" $(if $(VIDEO),--video "$(VIDEO)",) $(if $(OBSERVATIONS),--observations "$(OBSERVATIONS)",) $(if $(PIPELINE_RECORD),--pipeline-record "$(PIPELINE_RECORD)",) $(if $(SUBTITLE),--subtitle "$(SUBTITLE)",) $(if $(JUDGE_EVIDENCE),--judge-evidence "$(JUDGE_EVIDENCE)",) $(if $(TEMPORAL_EVIDENCE),--temporal-evidence "$(TEMPORAL_EVIDENCE)",)
 
 experiment-finish:
 	@test -n "$(EXPERIMENT)" || (echo "EXPERIMENT is required" >&2; exit 2)

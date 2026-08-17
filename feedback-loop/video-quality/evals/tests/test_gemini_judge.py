@@ -6,6 +6,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 
+from google.genai import errors
+
 LOOP_ROOT = Path(__file__).resolve().parents[2]
 if str(LOOP_ROOT) not in sys.path:
     sys.path.insert(0, str(LOOP_ROOT))
@@ -77,12 +79,23 @@ class _FakeFiles:
 
 
 class _FakeModels:
-    def __init__(self, *, fail_on_call: int | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        fail_on_call: int | None = None,
+        api_error_on_call: int | None = None,
+    ) -> None:
         self.fail_on_call = fail_on_call
+        self.api_error_on_call = api_error_on_call
         self.calls = 0
 
     def generate_content(self, **kwargs) -> SimpleNamespace:
         self.calls += 1
+        if self.calls == self.api_error_on_call:
+            raise errors.ServerError(
+                503,
+                {"error": {"message": "high demand"}},
+            )
         if self.calls == self.fail_on_call:
             raise ConnectionError("ambiguous transport failure")
         winner = "B" if self.calls == 1 else "A"
@@ -128,9 +141,17 @@ class _FakeModels:
 
 
 class _FakeClient:
-    def __init__(self, *, fail_on_call: int | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        fail_on_call: int | None = None,
+        api_error_on_call: int | None = None,
+    ) -> None:
         self.files = _FakeFiles()
-        self.models = _FakeModels(fail_on_call=fail_on_call)
+        self.models = _FakeModels(
+            fail_on_call=fail_on_call,
+            api_error_on_call=api_error_on_call,
+        )
 
 
 def _scenario() -> dict:
@@ -153,6 +174,43 @@ def _scenario() -> dict:
 
 
 class GeminiVideoJudgeTests(unittest.TestCase):
+    def test_explicit_provider_rejection_does_not_consume_budget(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            baseline = root / "baseline.mp4"
+            candidate = root / "candidate.mp4"
+            baseline.write_bytes(b"baseline")
+            candidate.write_bytes(b"candidate")
+            ledger = IterationBudgetLedger(
+                root / "budget.sqlite3",
+                scope_id="iteration-001",
+                cap_microusd=10_000_000,
+            )
+            client = _FakeClient(api_error_on_call=1)
+            judge = GeminiVideoJudge(
+                api_key="fake-key",
+                budget_ledger=ledger,
+                client=client,
+            )
+
+            with self.assertRaisesRegex(RuntimeError, "no charge was recorded"):
+                judge.compare(
+                    baseline_video=baseline,
+                    candidate_video=candidate,
+                    baseline_duration_seconds=15,
+                    candidate_duration_seconds=15,
+                    scenario=_scenario(),
+                    scenario_sha256="a" * 64,
+                    operation_prefix="judge-rejected",
+                )
+
+            budget_snapshot = ledger.snapshot()
+
+        self.assertEqual(client.models.calls, 1)
+        self.assertEqual(budget_snapshot.charged_microusd, 0)
+        self.assertEqual(budget_snapshot.reserved_microusd, 0)
+        self.assertEqual(client.files.deleted, ["files/1", "files/2"])
+
     def test_comparison_swaps_order_charges_both_passes_and_deletes_uploads(self) -> None:
         with TemporaryDirectory() as directory:
             root = Path(directory)

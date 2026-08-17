@@ -29,6 +29,31 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def verify_retained_artifact(
+    experiment_dir: Path,
+    manifest: dict[str, Any],
+) -> bool:
+    """Verify the required ignored final MP4 for a completed experiment."""
+
+    status = manifest.get("lifecycle", {}).get("status")
+    if status not in {"evaluated", "kept", "reverted"}:
+        raise ValueError("only evaluated or finished experiments require an artifact")
+    video_entry = manifest.get("candidate", {}).get("video")
+    if not isinstance(video_entry, dict):
+        raise ValueError("evaluated experiment has no candidate video record")
+    snapshot_path = str(video_entry.get("snapshot_path", ""))
+    if Path(snapshot_path).as_posix() != "artifacts/video.mp4":
+        raise ValueError("candidate artifact must be stored at artifacts/video.mp4")
+    artifact = (experiment_dir / snapshot_path).resolve()
+    root = experiment_dir.resolve()
+    if root not in artifact.parents or not artifact.is_file():
+        raise ValueError(f"missing retained candidate artifact: {artifact}")
+    expected_hash = str(video_entry.get("snapshot_sha256", ""))
+    if not expected_hash or sha256_file(artifact) != expected_hash:
+        raise ValueError("retained candidate artifact hash does not match inputs.json")
+    return True
+
+
 def sha256_json(value: Any) -> str:
     encoded = json.dumps(
         value,
@@ -436,19 +461,23 @@ def _candidate_inputs(
         if args.subtitle
         else None
     )
-    video_snapshot = output_dir / "artifacts" / f"video{video.suffix.lower()}"
+    if video.suffix.lower() != ".mp4":
+        raise ValueError("experiment candidate video must be an MP4")
+    video_snapshot = output_dir / "artifacts" / "video.mp4"
     video_snapshot.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(video, video_snapshot)
     candidate: dict[str, Any] = {
         "video": {
             "source_path": _relative(video, REPO_ROOT, "video"),
             "source_sha256": sha256_file(video),
-            "snapshot_path": _relative(video_snapshot, REPO_ROOT, "video snapshot"),
+            "snapshot_path": "artifacts/video.mp4",
+            "snapshot_sha256": sha256_file(video_snapshot),
         },
         "observations": None,
         "pipeline_record": None,
         "subtitle": None,
         "judge_evidence": None,
+        "temporal_evidence": None,
     }
     command_args = ["--video", str(video_snapshot)]
     if observations is not None:
@@ -491,6 +520,24 @@ def _candidate_inputs(
             ),
         }
         command_args.extend(["--judge-evidence", str(judge_evidence)])
+    if args.temporal_evidence:
+        temporal_evidence = _managed_file(
+            args.temporal_evidence,
+            root=LOOP_ROOT,
+            label="temporal evidence",
+        )
+        candidate["temporal_evidence"] = {
+            "source_path": _relative(
+                temporal_evidence,
+                LOOP_ROOT,
+                "temporal evidence",
+            ),
+            "source_sha256": sha256_file(temporal_evidence),
+            "content": _sanitize_record(
+                json.loads(temporal_evidence.read_text(encoding="utf-8"))
+            ),
+        }
+        command_args.extend(["--temporal-evidence", str(temporal_evidence)])
     return candidate, command_args
 
 
@@ -513,6 +560,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--pipeline-record")
     parser.add_argument("--subtitle")
     parser.add_argument("--judge-evidence")
+    parser.add_argument("--temporal-evidence")
     parser.add_argument("--decision", choices=("keep", "revert"))
     parser.add_argument("--learning")
     parser.add_argument("--human-review", choices=("YES", "NO"), default="NO")
@@ -557,8 +605,15 @@ def run_baseline(args: argparse.Namespace) -> int:
     if args.subtitle:
         _managed_file(args.subtitle, root=REPO_ROOT, label="subtitle")
     if not args.judge_evidence:
-        raise ValueError("evaluator 0.5 baseline requires --judge-evidence")
+        raise ValueError("evaluator 0.6 baseline requires --judge-evidence")
     _managed_file(args.judge_evidence, root=LOOP_ROOT, label="judge evidence")
+    if not args.temporal_evidence:
+        raise ValueError("evaluator 0.6 baseline requires --temporal-evidence")
+    _managed_file(
+        args.temporal_evidence,
+        root=LOOP_ROOT,
+        label="temporal evidence",
+    )
     experiment_id = next_experiment_id()
     output_dir = EXPERIMENTS_ROOT / f"{experiment_id:03d}-{safe_slug(slug)}"
     output_dir.mkdir(parents=False, exist_ok=False)
@@ -783,6 +838,13 @@ def evaluate_experiment(args: argparse.Namespace) -> int:
             "candidate judge protocol differs from the frozen baseline; "
             "establish a new evaluator baseline"
         )
+    if metrics.get("temporal_protocol") != baseline_metrics.get(
+        "temporal_protocol"
+    ):
+        raise ValueError(
+            "candidate temporal protocol differs from the frozen baseline; "
+            "establish a new evaluator baseline"
+        )
     evaluation["recommended_decision"] = recommended_decision(
         metrics,
         baseline_metrics,
@@ -805,6 +867,7 @@ def finish_experiment(args: argparse.Namespace) -> int:
         raise ValueError("experiment-finish requires a staged schema v2 record")
     if manifest["lifecycle"]["status"] != "evaluated":
         raise ValueError("only an evaluated experiment may be finished")
+    verify_retained_artifact(output_dir, manifest)
     baseline_dir = _experiment_directory(manifest["baseline"]["experiment"])
     baseline_metrics_path = baseline_dir / "metrics.json"
     if sha256_file(baseline_metrics_path) != manifest["baseline"]["metrics_sha256"]:

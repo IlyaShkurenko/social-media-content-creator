@@ -4,7 +4,7 @@ Build an autonomous, reproducible production loop that turns a tict advertising 
 
 ## Primary metric
 
-For evaluator `0.5`, maximize `visual_judge_win_rate`: the mean candidate credit from two blind Gemini pairwise passes with reversed A/B order. Candidate win is `1.0`, tie is `0.5`, and baseline win is `0.0`. The self-comparison baseline is `0.5`; a candidate must beat the latest comparable baseline.
+For evaluator `0.6`, maximize `visual_judge_win_rate`: the mean candidate credit from two blind Gemini pairwise passes with reversed A/B order. Candidate win is `1.0`, tie is `0.5`, and baseline win is `0.0`. The self-comparison baseline is `0.5`; a candidate must beat the latest comparable baseline.
 
 `timeline_alignment_f1` remains a required non-regression metric. It is micro-averaged F1 over `(scene_id, expected_visual_tag)` pairs calculated deterministically from the judge's closed-vocabulary scene observations. Pairwise preference cannot override an alignment, technical, screen-policy, or brand regression.
 
@@ -16,6 +16,8 @@ For evaluator `0.5`, maximize `visual_judge_win_rate`: the mean candidate credit
 - `brand_text_exact_match`
 - `brand_pronunciation_pass`
 - `screen_policy_compliance`
+- `temporal_consistency_pass`
+- `temporal_high_severity_event_count`
 - `voiceover_wer`
 - `word_timing_mae_ms`
 - `shot_boundary_mae_ms`
@@ -31,6 +33,8 @@ Unavailable metrics must be emitted as `null` with a reason, never silently omit
 - Expected audio stream is present: 100%.
 - Aspect ratio and duration satisfy the scenario contract: 100%.
 - No corrupt frames or sustained black segments.
+- Every generated hook is sampled at 10 FPS and has zero high-severity temporal events before selection.
+- Every evaluated experiment retains a hash-matching `artifacts/video.mp4`.
 - Voiceover WER is at most `0.05` once ASR evaluation is enabled.
 - Subtitle safe-area compliance is 100% once frame-level subtitle detection is enabled.
 - Brand assets preserve the approved logo/mascot identity when the scenario requires them.

@@ -65,10 +65,18 @@ def main() -> int:
     if not candidate.get("video"):
         raise ValueError("planned experiment has no candidate artifact to replay")
     video_entry = candidate["video"]
-    video = (REPO_ROOT / video_entry["snapshot_path"]).resolve()
+    snapshot_value = Path(video_entry["snapshot_path"])
+    video = (
+        experiment / snapshot_value
+        if snapshot_value.parts[:1] == ("artifacts",)
+        else REPO_ROOT / snapshot_value
+    ).resolve()
     if REPO_ROOT.resolve() not in video.parents or not video.is_file():
         raise ValueError(f"missing ignored video snapshot: {video}")
-    if sha256_file(video) != video_entry["source_sha256"]:
+    expected_video_hash = video_entry.get("snapshot_sha256") or video_entry[
+        "source_sha256"
+    ]
+    if sha256_file(video) != expected_video_hash:
         raise ValueError(f"video snapshot hash changed: {video}")
 
     output_dir = (
@@ -122,6 +130,21 @@ def main() -> int:
         if sha256_file(judge_evidence) != judge_entry["source_sha256"]:
             raise ValueError("stored judge evidence content hash changed")
         command.extend(["--judge-evidence", str(judge_evidence)])
+    temporal_entry = candidate.get("temporal_evidence")
+    if temporal_entry:
+        temporal_evidence = replay_dir / "temporal-evidence.json"
+        temporal_evidence.write_text(
+            json.dumps(
+                temporal_entry["content"],
+                indent=2,
+                ensure_ascii=False,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        if sha256_file(temporal_evidence) != temporal_entry["source_sha256"]:
+            raise ValueError("stored temporal evidence content hash changed")
+        command.extend(["--temporal-evidence", str(temporal_evidence)])
 
     result = subprocess.run(
         command,

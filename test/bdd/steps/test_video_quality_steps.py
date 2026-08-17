@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 from pathlib import Path
 from types import ModuleType
@@ -219,6 +220,47 @@ def plan_and_baseline_are_frozen(planned_experiment: dict[str, Any]) -> None:
 
 
 @given(
+    "an evaluated experiment with a hash-matching local video artifact",
+    target_fixture="artifact_case",
+)
+def evaluated_experiment_artifact(tmp_path: Path) -> dict[str, Any]:
+    experiment = tmp_path / "010-candidate"
+    artifact = experiment / "artifacts" / "video.mp4"
+    artifact.parent.mkdir(parents=True)
+    artifact.write_bytes(b"real-candidate-video")
+    return {
+        "experiment_dir": experiment,
+        "manifest": {
+            "lifecycle": {"status": "evaluated"},
+            "candidate": {
+                "video": {
+                    "snapshot_path": "artifacts/video.mp4",
+                    "snapshot_sha256": hashlib.sha256(
+                        artifact.read_bytes()
+                    ).hexdigest(),
+                }
+            },
+        },
+    }
+
+
+@when(
+    "final artifact retention is verified",
+    target_fixture="artifact_retention_result",
+)
+def verify_artifact_retention(artifact_case: dict[str, Any]) -> bool:
+    return EXPERIMENT_MODULE.verify_retained_artifact(
+        artifact_case["experiment_dir"],
+        artifact_case["manifest"],
+    )
+
+
+@then("the experiment artifact is accepted as retained")
+def retained_artifact_passes(artifact_retention_result: bool) -> None:
+    assert artifact_retention_result is True
+
+
+@given(
     "a baseline and candidate are judged in both A/B orders",
     target_fixture="pairwise_case",
 )
@@ -309,3 +351,37 @@ def comparison_decision(comparison_case: dict[str, Any]) -> str:
 @then("the candidate is rejected for a constraint regression")
 def rejected_for_constraint_regression(comparison_decision: str) -> None:
     assert comparison_decision == "reject_constraint_regression"
+
+
+@given(
+    "temporal evidence contains a high-severity screen visibility contradiction",
+    target_fixture="temporal_evidence",
+)
+def high_severity_temporal_event() -> dict[str, Any]:
+    return {
+        "status": "complete",
+        "events": [
+            {
+                "event_type": "screen_visibility_contradiction",
+                "severity": "high",
+                "start_seconds": 0.2,
+                "end_seconds": 0.5,
+                "frame_indices": [2, 3, 4, 5],
+                "affected_object": "phone",
+                "reason": "The display appears before the phone turns toward camera.",
+            }
+        ],
+    }
+
+
+@when("temporal consistency is calculated", target_fixture="temporal_result")
+def calculate_temporal_consistency(
+    temporal_evidence: dict[str, Any],
+) -> dict[str, Any]:
+    return EVALUATOR_MODULE.calculate_temporal_consistency(temporal_evidence)
+
+
+@then("temporal screening rejects the generated hook")
+def temporal_screening_rejects(temporal_result: dict[str, Any]) -> None:
+    assert temporal_result["high_severity_event_count"] == 1
+    assert temporal_result["temporal_consistency_pass"] is False

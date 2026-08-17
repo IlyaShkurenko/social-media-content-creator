@@ -36,3 +36,8 @@ Feature: Controlled mixed-media advertising production
     When narration settings are resolved from the storyboard
     Then the subtitle narration retains lowercase tict
     And the synthesis narration uses the tickt pronunciation
+
+  Scenario: [RUNWAY-2.2] Only temporally passing generated hooks are selectable
+    Given three generated hooks with one passing temporal screen
+    When generated hook selection is requested
+    Then only the passing generated hook is eligible
