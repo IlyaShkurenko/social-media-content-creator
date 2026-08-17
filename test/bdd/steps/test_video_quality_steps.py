@@ -216,3 +216,96 @@ def plan_and_baseline_are_frozen(planned_experiment: dict[str, Any]) -> None:
         "experiments/008-baseline"
     )
     assert planned_experiment["baseline"]["primary"]["value"] == 0.952381
+
+
+@given(
+    "a baseline and candidate are judged in both A/B orders",
+    target_fixture="pairwise_case",
+)
+def pairwise_orders() -> dict[str, Any]:
+    baseline_sha256 = "a" * 64
+    candidate_sha256 = "b" * 64
+    return {
+        "baseline_sha256": baseline_sha256,
+        "candidate_sha256": candidate_sha256,
+        "passes": [
+            {
+                "order": {"A": baseline_sha256, "B": candidate_sha256},
+                "response": {"winner": "B"},
+            },
+            {
+                "order": {"A": candidate_sha256, "B": baseline_sha256},
+                "response": {"winner": "A"},
+            },
+        ],
+    }
+
+
+@given("the candidate is preferred in both judge passes")
+def candidate_preferred(pairwise_case: dict[str, Any]) -> None:
+    assert [item["response"]["winner"] for item in pairwise_case["passes"]] == [
+        "B",
+        "A",
+    ]
+
+
+@when(
+    "the order-balanced visual win rate is calculated",
+    target_fixture="visual_win_rate",
+)
+def calculate_order_balanced_win_rate(pairwise_case: dict[str, Any]) -> float:
+    return EVALUATOR_MODULE.calculate_visual_judge_win_rate(
+        pairwise_case["passes"],
+        baseline_sha256=pairwise_case["baseline_sha256"],
+        candidate_sha256=pairwise_case["candidate_sha256"],
+    )["win_rate"]
+
+
+@then("the candidate visual win rate is 1.0")
+def visual_win_rate_is_one(visual_win_rate: float) -> None:
+    assert visual_win_rate == 1.0
+
+
+@given(
+    "a candidate improves its visual judge primary metric",
+    target_fixture="comparison_case",
+)
+def visual_primary_improvement() -> dict[str, Any]:
+    return {
+        "candidate": {
+            "primary": {"name": "visual_judge_win_rate", "value": 1.0},
+            "metrics": {"timeline_alignment_f1": 0.9},
+            "constraints": {
+                "all_enforced_pass": True,
+                "all_goal_constraints_verified": True,
+            },
+        },
+        "baseline": {
+            "primary": {"name": "visual_judge_win_rate", "value": 0.5},
+            "metrics": {"timeline_alignment_f1": 0.95},
+        },
+    }
+
+
+@given("its timeline alignment regresses below the comparable baseline")
+def timeline_regresses(comparison_case: dict[str, Any]) -> None:
+    assert (
+        comparison_case["candidate"]["metrics"]["timeline_alignment_f1"]
+        < comparison_case["baseline"]["metrics"]["timeline_alignment_f1"]
+    )
+
+
+@when(
+    "the comparison-aware experiment decision is calculated",
+    target_fixture="comparison_decision",
+)
+def comparison_decision(comparison_case: dict[str, Any]) -> str:
+    return EXPERIMENT_MODULE.recommended_decision(
+        comparison_case["candidate"],
+        comparison_case["baseline"],
+    )
+
+
+@then("the candidate is rejected for a constraint regression")
+def rejected_for_constraint_regression(comparison_decision: str) -> None:
+    assert comparison_decision == "reject_constraint_regression"

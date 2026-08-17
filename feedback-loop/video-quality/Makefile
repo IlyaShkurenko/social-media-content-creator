@@ -9,10 +9,18 @@ BASELINE ?= experiments/008-baseline
 MIXED_STORYBOARD ?= evals/dataset/mixed-media-first-slice-001.json
 MIXED_OUTPUT ?= .state/prepared/mixed-media-first-slice-001
 
-.PHONY: baseline experiment experiment-start experiment-evaluate experiment-finish evaluate verify mixed-prepare mixed-render-stock mixed-rerender-runway mixed-runway
+.PHONY: baseline judge experiment experiment-start experiment-evaluate experiment-finish evaluate verify mixed-prepare mixed-render-stock mixed-rerender-runway mixed-runway
 
 baseline:
-	$(PYTHON) scripts/run_experiment.py --kind baseline --slug baseline --scenario $(SCENARIO) $(if $(VIDEO),--video "$(VIDEO)",) $(if $(OBSERVATIONS),--observations "$(OBSERVATIONS)",) $(if $(PIPELINE_RECORD),--pipeline-record "$(PIPELINE_RECORD)",) $(if $(SUBTITLE),--subtitle "$(SUBTITLE)",)
+	$(PYTHON) scripts/run_experiment.py --kind baseline --slug baseline --scenario $(SCENARIO) $(if $(VIDEO),--video "$(VIDEO)",) $(if $(OBSERVATIONS),--observations "$(OBSERVATIONS)",) $(if $(PIPELINE_RECORD),--pipeline-record "$(PIPELINE_RECORD)",) $(if $(SUBTITLE),--subtitle "$(SUBTITLE)",) $(if $(JUDGE_EVIDENCE),--judge-evidence "$(JUDGE_EVIDENCE)",)
+
+judge:
+	@test "$(CONFIRM_PAID)" = "YES" || (echo "CONFIRM_PAID=YES is required" >&2; exit 2)
+	@test -n "$(BASELINE_VIDEO)" || (echo "BASELINE_VIDEO is required" >&2; exit 2)
+	@test -n "$(CANDIDATE_VIDEO)" || (echo "CANDIDATE_VIDEO is required" >&2; exit 2)
+	@test -n "$(JUDGE_OUTPUT)" || (echo "JUDGE_OUTPUT is required" >&2; exit 2)
+	@test -n "$(OPERATION_PREFIX)" || (echo "OPERATION_PREFIX is required" >&2; exit 2)
+	$(PYTHON) evals/gemini_judge.py --scenario "$(EXPERIMENT_SCENARIO)" --baseline-video "$(BASELINE_VIDEO)" --candidate-video "$(CANDIDATE_VIDEO)" --output "$(JUDGE_OUTPUT)" --operation-prefix "$(OPERATION_PREFIX)" --confirm-paid YES
 
 experiment: experiment-start
 
@@ -27,7 +35,7 @@ experiment-start:
 
 experiment-evaluate:
 	@test -n "$(EXPERIMENT)" || (echo "EXPERIMENT is required" >&2; exit 2)
-	$(PYTHON) scripts/run_experiment.py --kind experiment --phase evaluate --experiment "$(EXPERIMENT)" $(if $(VIDEO),--video "$(VIDEO)",) $(if $(OBSERVATIONS),--observations "$(OBSERVATIONS)",) $(if $(PIPELINE_RECORD),--pipeline-record "$(PIPELINE_RECORD)",) $(if $(SUBTITLE),--subtitle "$(SUBTITLE)",)
+	$(PYTHON) scripts/run_experiment.py --kind experiment --phase evaluate --experiment "$(EXPERIMENT)" $(if $(VIDEO),--video "$(VIDEO)",) $(if $(OBSERVATIONS),--observations "$(OBSERVATIONS)",) $(if $(PIPELINE_RECORD),--pipeline-record "$(PIPELINE_RECORD)",) $(if $(SUBTITLE),--subtitle "$(SUBTITLE)",) $(if $(JUDGE_EVIDENCE),--judge-evidence "$(JUDGE_EVIDENCE)",)
 
 experiment-finish:
 	@test -n "$(EXPERIMENT)" || (echo "EXPERIMENT is required" >&2; exit 2)

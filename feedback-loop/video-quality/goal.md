@@ -4,13 +4,13 @@ Build an autonomous, reproducible production loop that turns a tict advertising 
 
 ## Primary metric
 
-Maximize `timeline_alignment_f1`: micro-averaged F1 over `(scene_id, expected_visual_tag)` pairs compared with the visual observations for the same scene. The current fixed fixture is human-labelled; the target architecture replaces it with a versioned vision judge without changing the metric contract.
+For evaluator `0.5`, maximize `visual_judge_win_rate`: the mean candidate credit from two blind Gemini pairwise passes with reversed A/B order. Candidate win is `1.0`, tie is `0.5`, and baseline win is `0.0`. The self-comparison baseline is `0.5`; a candidate must beat the latest comparable baseline.
 
-The first trustworthy automated baseline will set the numeric target. Until then, improvement is continuous: a candidate must beat the latest comparable baseline.
+`timeline_alignment_f1` remains a required non-regression metric. It is micro-averaged F1 over `(scene_id, expected_visual_tag)` pairs calculated deterministically from the judge's closed-vocabulary scene observations. Pairwise preference cannot override an alignment, technical, screen-policy, or brand regression.
 
 ## Secondary metrics
 
-- `visual_judge_win_rate`
+- `timeline_alignment_f1`
 - `brand_asset_fidelity`
 - `subtitle_text_token_f1`
 - `brand_text_exact_match`
@@ -42,7 +42,7 @@ Unavailable metrics must be emitted as `null` with a reason, never silently omit
 - Scope ID: `mixed-media-iteration-001`.
 - Shared paid-call ceiling: **$10.00 USD** (`10_000_000` micro-USD) for the whole iteration, not per generation.
 - The durable ledger is `feedback-loop/video-quality/.state/mixed-media-iteration-001.sqlite3`.
-- Every paid request must reserve its fail-closed estimated cost before submission. An accepted provider job remains charged even when the creative is rejected.
+- Every paid request must pass a fail-closed budget check before submission. The check creates no durable reservation; completed calls record their usage-based charge and ambiguous outcomes record a worst-case charge.
 - Dry runs, local rendering, FFmpeg evaluation, and stock-provider searches do not consume this paid-call budget. Any paid planner, TTS, vision judge, or generated-media call introduced later must use this same scope.
 - No automatic top-up, implicit resubmission, or budget reset is allowed.
 

@@ -11,7 +11,8 @@ from pathlib import Path
 from typing import Any
 
 
-EVALUATOR_VERSION = "0.4.0"
+EVALUATOR_VERSION = "0.5.0"
+JUDGE_SCHEMA_VERSION = 1
 LOOP_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = LOOP_ROOT.parents[1]
 
@@ -173,6 +174,185 @@ def calculate_tag_metrics(
         "precision": round(precision, 6),
         "recall": round(recall, 6),
         "f1": round(f1, 6),
+    }
+
+
+def calculate_visual_judge_win_rate(
+    passes: list[dict[str, Any]],
+    *,
+    baseline_sha256: str,
+    candidate_sha256: str,
+) -> dict[str, Any]:
+    """Map two reversed blind A/B verdicts into candidate win credit."""
+
+    if len(passes) != 2:
+        raise ValueError("order-balanced judge evidence requires exactly two passes")
+    if baseline_sha256 == candidate_sha256:
+        for item in passes:
+            order = item.get("order", {})
+            if order.get("A") != baseline_sha256 or order.get("B") != baseline_sha256:
+                raise ValueError("self-comparison pass hashes do not match the artifact")
+            if item.get("response", {}).get("winner") not in {"A", "B", "tie"}:
+                raise ValueError("judge pass has an invalid winner")
+        return {
+            "win_rate": 0.5,
+            "credits": [0.5, 0.5],
+            "self_comparison": True,
+            "position_balanced": True,
+        }
+
+    expected_orders = {
+        (("A", baseline_sha256), ("B", candidate_sha256)),
+        (("A", candidate_sha256), ("B", baseline_sha256)),
+    }
+    actual_orders: set[tuple[tuple[str, str], ...]] = set()
+    credits: list[float] = []
+    for item in passes:
+        order = item.get("order", {})
+        normalized_order = tuple(sorted((str(key), str(value)) for key, value in order.items()))
+        actual_orders.add(normalized_order)
+        winner = item.get("response", {}).get("winner")
+        if winner == "tie":
+            credits.append(0.5)
+        elif winner in {"A", "B"} and order.get(winner) == candidate_sha256:
+            credits.append(1.0)
+        elif winner in {"A", "B"} and order.get(winner) == baseline_sha256:
+            credits.append(0.0)
+        else:
+            raise ValueError("judge pass winner does not map to either input artifact")
+    if actual_orders != expected_orders:
+        raise ValueError("judge passes must contain both reversed A/B input orders")
+    return {
+        "win_rate": round(sum(credits) / len(credits), 6),
+        "credits": credits,
+        "self_comparison": False,
+        "position_balanced": True,
+    }
+
+
+def aggregate_candidate_observations(
+    passes: list[dict[str, Any]],
+    *,
+    candidate_sha256: str,
+    storyboard: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Build deterministic scene evidence from both candidate-labelled passes."""
+
+    scene_ids = [str(scene["id"]) for scene in storyboard]
+    allowed_tags = {
+        str(tag)
+        for scene in storyboard
+        for tag in scene.get("expected_tags", [])
+    }
+    observations_by_scene: dict[str, list[dict[str, Any]]] = {
+        scene_id: [] for scene_id in scene_ids
+    }
+    for item in passes:
+        order = item.get("order", {})
+        candidate_labels = [
+            label for label in ("A", "B") if order.get(label) == candidate_sha256
+        ]
+        if not candidate_labels:
+            raise ValueError("judge pass does not contain the candidate artifact")
+        # A self-comparison contains the same artifact under both labels. Use both
+        # labelled observations as equivalent evidence rather than inventing one.
+        labels = candidate_labels if len(candidate_labels) == 1 else ["A", "B"]
+        pass_observations = item.get("response", {}).get("scene_observations", [])
+        for label in labels:
+            for scene_id in scene_ids:
+                matches = [
+                    observation
+                    for observation in pass_observations
+                    if observation.get("video_label") == label
+                    and observation.get("scene_id") == scene_id
+                ]
+                if len(matches) != 1:
+                    raise ValueError(
+                        "judge response must contain exactly one observation for "
+                        f"video {label} scene {scene_id}"
+                    )
+                tags = {str(tag) for tag in matches[0].get("observed_tags", [])}
+                unknown_tags = tags - allowed_tags
+                if unknown_tags:
+                    raise ValueError(
+                        "judge returned tags outside the storyboard vocabulary: "
+                        + ", ".join(sorted(unknown_tags))
+                    )
+                observations_by_scene[scene_id].append(matches[0])
+
+    scenes: list[dict[str, Any]] = []
+    disagreements: list[dict[str, Any]] = []
+    fidelity_values: list[float] = []
+    for scene_id in scene_ids:
+        items = observations_by_scene[scene_id]
+        if len(items) < 2:
+            raise ValueError(f"scene {scene_id} lacks order-balanced observations")
+        tag_sets = [{str(tag) for tag in item.get("observed_tags", [])} for item in items]
+        agreed_tags = set.intersection(*tag_sets)
+        disputed_tags = set.union(*tag_sets) - agreed_tags
+        if disputed_tags:
+            disagreements.append(
+                {
+                    "scene_id": scene_id,
+                    "field": "observed_tags",
+                    "values": sorted(disputed_tags),
+                }
+            )
+
+        screen_facts = {
+            (
+                item.get("screen_class"),
+                bool(item.get("claims_tict_identity", False)),
+                bool(item.get("approved_asset_match", False)),
+            )
+            for item in items
+        }
+        screen_observation = None
+        if len(screen_facts) == 1:
+            screen_class, claims_tict, approved_match = next(iter(screen_facts))
+            screen_observation = {
+                "screen_class": screen_class,
+                "claims_tict_identity": claims_tict,
+                "approved_asset_match": approved_match,
+                "evidence_timestamp_seconds": round(
+                    sum(float(item["evidence_timestamp_seconds"]) for item in items)
+                    / len(items),
+                    3,
+                ),
+            }
+        else:
+            disagreements.append(
+                {
+                    "scene_id": scene_id,
+                    "field": "screen_observation",
+                    "values": [list(value) for value in sorted(screen_facts, key=str)],
+                }
+            )
+
+        scene_fidelity = [
+            float(item["brand_asset_fidelity"])
+            for item in items
+            if item.get("brand_asset_fidelity") is not None
+        ]
+        if scene_fidelity:
+            fidelity_values.append(sum(scene_fidelity) / len(scene_fidelity))
+        scene_record: dict[str, Any] = {
+            "scene_id": scene_id,
+            "observed_tags": sorted(agreed_tags),
+            "notes": "Order-balanced Gemini observation consensus.",
+        }
+        if screen_observation is not None:
+            scene_record["screen_observation"] = screen_observation
+        scenes.append(scene_record)
+
+    return {
+        "scenes": scenes,
+        "disagreements": disagreements,
+        "brand_asset_fidelity": (
+            round(sum(fidelity_values) / len(fidelity_values), 6)
+            if fidelity_values
+            else None
+        ),
     }
 
 
@@ -429,6 +609,7 @@ def evaluate(
     observations_override: str | None = None,
     pipeline_record_override: str | None = None,
     subtitle_override: str | None = None,
+    judge_evidence_override: str | None = None,
 ) -> dict[str, Any]:
     scenario = json.loads(scenario_path.read_text(encoding="utf-8"))
     video_value = video_override or scenario["artifact"]["video"]
@@ -437,7 +618,31 @@ def evaluate(
         raise FileNotFoundError(f"video artifact does not exist: {video_path}")
     artifact_sha256 = sha256_file(video_path)
 
-    if observations_override:
+    judge_evidence: dict[str, Any] | None = None
+    judge_evidence_path: Path | None = None
+    if judge_evidence_override:
+        raw_judge_path = Path(judge_evidence_override)
+        judge_evidence_path = (
+            raw_judge_path if raw_judge_path.is_absolute() else LOOP_ROOT / raw_judge_path
+        )
+        judge_evidence_path = ensure_within(
+            judge_evidence_path,
+            LOOP_ROOT,
+            "judge evidence",
+        )
+        judge_evidence = json.loads(
+            judge_evidence_path.read_text(encoding="utf-8")
+        )
+    if judge_evidence is None:
+        raise ValueError("evaluator 0.5 requires versioned --judge-evidence")
+    if judge_evidence is not None:
+        observations_path = judge_evidence_path
+        observations_contract = {
+            "scenario_id": scenario["id"],
+            "mode": judge_evidence.get("observation_mode", "gemini_pairwise_v1"),
+            "scenes": [],
+        }
+    elif observations_override:
         raw_observations_path = Path(observations_override)
         observations_path = (
             raw_observations_path
@@ -491,7 +696,33 @@ def evaluate(
     decode_success, decode_error = full_decode_succeeds(video_path)
     black_segments = detect_black_segments(video_path)
     storyboard = expected["storyboard"]
-    observations = observations_contract["scenes"]
+    if judge_evidence.get("schema_version") != JUDGE_SCHEMA_VERSION:
+        raise ValueError("unsupported judge evidence schema version")
+    if judge_evidence.get("status") != "complete":
+        raise ValueError("judge evidence is partial and cannot be scored")
+    if judge_evidence.get("evaluator_version") != EVALUATOR_VERSION:
+        raise ValueError("judge evidence belongs to a different evaluator version")
+    if judge_evidence.get("scenario_id") != scenario["id"]:
+        raise ValueError("judge evidence belongs to a different scenario")
+    if judge_evidence.get("scenario_sha256") != sha256_file(scenario_path):
+        raise ValueError("judge evidence scenario hash does not match")
+    if judge_evidence.get("candidate_sha256") != artifact_sha256:
+        raise ValueError("judge evidence candidate hash does not match the video")
+    pairwise = calculate_visual_judge_win_rate(
+        judge_evidence.get("passes", []),
+        baseline_sha256=str(judge_evidence.get("baseline_sha256", "")),
+        candidate_sha256=artifact_sha256,
+    )
+    automated_observations = aggregate_candidate_observations(
+        judge_evidence["passes"],
+        candidate_sha256=artifact_sha256,
+        storyboard=storyboard,
+    )
+    observations = automated_observations["scenes"]
+    observations_contract = {
+        "mode": judge_evidence.get("observation_mode", "gemini_pairwise_v1"),
+        "scenes": observations,
+    }
     alignment = calculate_tag_metrics(storyboard, observations)
     screen_policy = calculate_screen_policy_metrics(storyboard, observations)
     frame_evidence = extract_frames(video_path, storyboard, artifacts_dir / "frames")
@@ -526,6 +757,11 @@ def evaluate(
         pipeline_record
     )
 
+    screen_automated_pass = (
+        screen_policy["compliance"] == 1.0
+        and screen_policy["pending_scenes"] == 0
+    )
+    brand_fidelity = automated_observations["brand_asset_fidelity"]
     enforced_constraints = {
         "render_success": decode_success,
         "audio_present": audio_stream is not None if expected.get("audio_required", False) else True,
@@ -533,25 +769,40 @@ def evaluate(
         "duration_pass": duration_pass,
         "no_sustained_black_segments": len(black_segments) == 0,
         "all_evidence_frames_extracted": all(item["extracted"] for item in frame_evidence),
+        "screen_policy_automated_pass": screen_automated_pass,
         **evidence_constraints,
     }
     brand_assets_required = bool(expected.get("brand_assets_required", False))
+    if brand_assets_required and brand_fidelity is not None:
+        enforced_constraints["brand_asset_fidelity_pass"] = brand_fidelity >= 0.9
     pending_constraints = {
         "voiceover_wer_pass": "timestamped ASR is not enabled in the active evaluator",
         **evidence_pending,
-        "brand_asset_fidelity_pass": (
-            "brand assets are required but the fidelity judge is not enabled"
-            if brand_assets_required
-            else "the scenario does not require a brand asset"
-        ),
-        "screen_policy_automated_pass": (
-            "screen-policy evidence comes from a structured human fixture; "
-            "the versioned vision judge is not enabled"
-        ),
         "brand_pronunciation_pass": (
             "rendered-audio ASR or phoneme evidence is not enabled"
         ),
     }
+    if brand_assets_required and brand_fidelity is None:
+        pending_constraints["brand_asset_fidelity_pass"] = (
+            "the versioned judge did not return brand fidelity evidence"
+        )
+
+    judge_charged_microusd = sum(
+        int(item.get("budget", {}).get("charged_microusd", 0))
+        for item in judge_evidence["passes"]
+    )
+    judge_actual_costs = [
+        item.get("provider", {}).get("estimated_actual_cost_microusd")
+        for item in judge_evidence["passes"]
+    ]
+    judge_actual_microusd = (
+        sum(int(value) for value in judge_actual_costs)
+        if all(value is not None for value in judge_actual_costs)
+        else None
+    )
+    remaining_microusd = judge_evidence["passes"][-1].get("budget", {}).get(
+        "remaining_scope_microusd"
+    )
 
     metrics = {
         "schema_version": 1,
@@ -559,6 +810,12 @@ def evaluate(
         "generated_at": utc_now(),
         "scenario_id": scenario["id"],
         "observation_mode": observations_contract["mode"],
+        "judge_protocol": {
+            "schema_version": judge_evidence["schema_version"],
+            "prompt_sha256": judge_evidence["prompt_sha256"],
+            "requested_model": judge_evidence["requested_model"],
+            "model_versions": judge_evidence["model_versions"],
+        },
         "artifact": {
             "video": str(video_path.relative_to(REPO_ROOT)),
             "duration_seconds": round(duration, 3),
@@ -569,7 +826,10 @@ def evaluate(
             "audio_codec": audio_stream.get("codec_name") if audio_stream else None,
             "sha256": artifact_sha256,
         },
-        "primary": {"name": "timeline_alignment_f1", "value": alignment["f1"]},
+        "primary": {
+            "name": "visual_judge_win_rate",
+            "value": pairwise["win_rate"],
+        },
         "metrics": {
             "timeline_alignment_precision": alignment["precision"],
             "timeline_alignment_recall": alignment["recall"],
@@ -585,8 +845,8 @@ def evaluate(
             ),
             "brand_pronunciation_pass": None,
             "screen_policy_compliance": screen_policy["compliance"],
-            "visual_judge_win_rate": None,
-            "brand_asset_fidelity": None,
+            "visual_judge_win_rate": pairwise["win_rate"],
+            "brand_asset_fidelity": brand_fidelity,
             "voiceover_wer": None,
             "word_timing_mae_ms": None,
             "shot_boundary_mae_ms": None,
@@ -594,13 +854,29 @@ def evaluate(
                 "generation_latency_seconds"
             ],
             "estimated_cost_usd": record_metrics["estimated_cost_usd"],
+            "judge_charged_cost_usd": round(
+                judge_charged_microusd / 1_000_000,
+                6,
+            ),
+            "judge_estimated_actual_cost_usd": (
+                round(judge_actual_microusd / 1_000_000, 6)
+                if judge_actual_microusd is not None
+                else None
+            ),
+            "remaining_iteration_budget_usd": (
+                round(float(remaining_microusd) / 1_000_000, 6)
+                if remaining_microusd is not None
+                else None
+            ),
             "cost_per_accepted_video_usd": None,
         },
         "constraints": {
             "enforced": enforced_constraints,
             "all_enforced_pass": all(enforced_constraints.values()),
             "pending": pending_constraints,
-            "all_goal_constraints_verified": False,
+            "all_goal_constraints_verified": (
+                all(enforced_constraints.values()) and not pending_constraints
+            ),
         },
         "evidence": {
             "frames": frame_evidence,
@@ -609,14 +885,21 @@ def evaluate(
             "subtitle_token_comparison": subtitle_metric,
             "brand_text_comparison": brand_text_metric,
             "screen_policy": screen_policy,
-            "observations_source": str(observations_path.relative_to(LOOP_ROOT)),
+            "automated_observation_consensus": automated_observations,
+            "pairwise_preference": pairwise,
+            "judge": judge_evidence,
+            "judge_evidence_sha256": sha256_file(judge_evidence_path),
+            "observations_source": "stored_versioned_judge_evidence",
         },
         "unavailable_metric_reasons": {
-            "visual_judge_win_rate": "pairwise visual judge is not enabled in the active evaluator",
-            "brand_asset_fidelity": (
-                "brand fidelity judge is not enabled"
-                if brand_assets_required
-                else "scenario has no required brand asset"
+            **(
+                {
+                    "brand_asset_fidelity": (
+                        "the versioned judge did not return brand fidelity evidence"
+                    )
+                }
+                if brand_fidelity is None
+                else {}
             ),
             **(
                 {
@@ -679,6 +962,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--pipeline-record")
     parser.add_argument("--subtitle")
+    parser.add_argument("--judge-evidence")
     return parser.parse_args()
 
 
@@ -696,6 +980,7 @@ def main() -> int:
         args.observations,
         args.pipeline_record,
         args.subtitle,
+        args.judge_evidence,
     )
     (output_dir / "metrics.json").write_text(json.dumps(metrics, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     write_summary(metrics, output_dir)

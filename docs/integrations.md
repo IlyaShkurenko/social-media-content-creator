@@ -14,6 +14,7 @@ The LLM generates text assets: the script, stock-media search terms, and optiona
 - Local files bypass external discovery.
 - Material search results are cached and filtered/prioritized for the requested aspect ratio.
 - TwelveLabs is optional and requires the `twelvelabs` dependency extra. Term reranking is wired into the task pipeline. The module also exposes an `analyze_clip()` video-understanding helper, but the current production pipeline does not call it, so generated videos receive no automatic semantic QA.
+- The experimental video-quality loop uses Gemini 3.6 Flash as a versioned, order-balanced pairwise judge. It uploads the baseline and candidate only for the live judge stage, stores sanitized structured evidence, deletes provider files, and replays metrics offline. Judge calls share the mixed-media iteration budget and are not part of the normal production task path.
 
 ## Generated video
 

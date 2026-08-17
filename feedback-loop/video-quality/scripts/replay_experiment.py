@@ -107,6 +107,21 @@ def main() -> int:
         subtitle = replay_dir / "subtitle.srt"
         subtitle.write_text(subtitle_entry["content"], encoding="utf-8")
         command.extend(["--subtitle", str(subtitle)])
+    judge_entry = candidate.get("judge_evidence")
+    if judge_entry:
+        judge_evidence = replay_dir / "judge-evidence.json"
+        judge_evidence.write_text(
+            json.dumps(
+                judge_entry["content"],
+                indent=2,
+                ensure_ascii=False,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        if sha256_file(judge_evidence) != judge_entry["source_sha256"]:
+            raise ValueError("stored judge evidence content hash changed")
+        command.extend(["--judge-evidence", str(judge_evidence)])
 
     result = subprocess.run(
         command,

@@ -24,3 +24,15 @@ Feature: Video-quality experiment acceptance
     When a new experiment is started with a problem, hypothesis, change, and expected impact
     Then the experiment is planned without candidate metrics
     And its engineering hypothesis and baseline evidence are frozen
+
+  Scenario: [EVAL-4.2] Pairwise preference is balanced across reversed input order
+    Given a baseline and candidate are judged in both A/B orders
+    And the candidate is preferred in both judge passes
+    When the order-balanced visual win rate is calculated
+    Then the candidate visual win rate is 1.0
+
+  Scenario: [EVAL-4.4] Visual preference cannot override timeline regression
+    Given a candidate improves its visual judge primary metric
+    And its timeline alignment regresses below the comparable baseline
+    When the comparison-aware experiment decision is calculated
+    Then the candidate is rejected for a constraint regression

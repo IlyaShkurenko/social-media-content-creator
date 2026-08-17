@@ -314,6 +314,25 @@ class IterationBudgetLedger:
             row = self._get_operation(connection, operation_id)
             return self._reservation_from_row(row)
 
+    def ensure_available(self, amount_microusd: int) -> BudgetSnapshot:
+        """Check a prospective charge without creating a durable reservation."""
+
+        if amount_microusd <= 0:
+            raise ValueError("amount_microusd must be positive")
+        connection = self._connect()
+        try:
+            self._assert_fits(connection, int(amount_microusd))
+            reserved, charged = self._totals(connection)
+        finally:
+            connection.close()
+        return BudgetSnapshot(
+            scope_id=self.scope_id,
+            cap_microusd=self.cap_microusd,
+            reserved_microusd=reserved,
+            charged_microusd=charged,
+            remaining_microusd=self.cap_microusd - reserved - charged,
+        )
+
     def snapshot(self) -> BudgetSnapshot:
         connection = self._connect()
         try:

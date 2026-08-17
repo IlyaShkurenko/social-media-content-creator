@@ -2,9 +2,16 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+import sys
 from pathlib import Path
 
+LOOP_ROOT = Path(__file__).resolve().parents[2]
+if str(LOOP_ROOT) not in sys.path:
+    sys.path.insert(0, str(LOOP_ROOT))
+
 from evals.evaluate import (
+    aggregate_candidate_observations,
+    calculate_visual_judge_win_rate,
     calculate_screen_policy_metrics,
     calculate_tag_metrics,
     exact_brand_text_match,
@@ -13,6 +20,97 @@ from evals.evaluate import (
     pipeline_constraint_evidence,
     token_f1,
 )
+
+
+class PairwiseJudgeMetricTests(unittest.TestCase):
+    def test_reversed_candidate_wins_produce_full_credit(self) -> None:
+        baseline = "a" * 64
+        candidate = "b" * 64
+        result = calculate_visual_judge_win_rate(
+            [
+                {
+                    "order": {"A": baseline, "B": candidate},
+                    "response": {"winner": "B"},
+                },
+                {
+                    "order": {"A": candidate, "B": baseline},
+                    "response": {"winner": "A"},
+                },
+            ],
+            baseline_sha256=baseline,
+            candidate_sha256=candidate,
+        )
+
+        self.assertEqual(result["win_rate"], 1.0)
+        self.assertTrue(result["position_balanced"])
+
+    def test_same_position_wins_cancel_as_position_bias(self) -> None:
+        baseline = "a" * 64
+        candidate = "b" * 64
+        result = calculate_visual_judge_win_rate(
+            [
+                {
+                    "order": {"A": baseline, "B": candidate},
+                    "response": {"winner": "A"},
+                },
+                {
+                    "order": {"A": candidate, "B": baseline},
+                    "response": {"winner": "A"},
+                },
+            ],
+            baseline_sha256=baseline,
+            candidate_sha256=candidate,
+        )
+
+        self.assertEqual(result["win_rate"], 0.5)
+
+    def test_candidate_observations_use_only_cross_pass_consensus(self) -> None:
+        candidate = "b" * 64
+        baseline = "a" * 64
+
+        def response(label: str, tags: list[str]) -> dict:
+            return {
+                "video_label": label,
+                "scene_id": "hook",
+                "observed_tags": tags,
+                "evidence_timestamp_seconds": 2.5,
+                "screen_class": "screen_not_visible",
+                "claims_tict_identity": False,
+                "approved_asset_match": False,
+                "brand_asset_fidelity": None,
+            }
+
+        result = aggregate_candidate_observations(
+            [
+                {
+                    "order": {"A": baseline, "B": candidate},
+                    "response": {
+                        "scene_observations": [
+                            response("B", ["traveller_visible", "phone_visible"])
+                        ]
+                    },
+                },
+                {
+                    "order": {"A": candidate, "B": baseline},
+                    "response": {
+                        "scene_observations": [response("A", ["traveller_visible"])]
+                    },
+                },
+            ],
+            candidate_sha256=candidate,
+            storyboard=[
+                {
+                    "id": "hook",
+                    "expected_tags": ["traveller_visible", "phone_visible"],
+                }
+            ],
+        )
+
+        self.assertEqual(
+            result["scenes"][0]["observed_tags"],
+            ["traveller_visible"],
+        )
+        self.assertEqual(result["disagreements"][0]["values"], ["phone_visible"])
 
 
 class TagMetricTests(unittest.TestCase):

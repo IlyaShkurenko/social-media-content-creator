@@ -1,0 +1,375 @@
+{
+  "schema_version": 1,
+  "scenario": {
+    "path": "evals/dataset/mixed-media-stock-baseline-001.json",
+    "sha256": "2c66b606c90eaaa3db9d550aeed3672b595da86d9812b547b969ac151e5b21da"
+  },
+  "video": {
+    "source_path": "feedback-loop/video-quality/.state/prepared/mixed-media-first-slice-001/renders/runway-candidate/final.mp4",
+    "source_sha256": "374c1f46abb453836fbaf1895ca61ae28e9a730cd5f1c4358ba6657163824568",
+    "snapshot_path": "feedback-loop/video-quality/experiments/009-baseline/artifacts/video.mp4"
+  },
+  "observations": null,
+  "pipeline_record": {
+    "source_path": "feedback-loop/video-quality/.state/prepared/mixed-media-first-slice-001/run-summary.json",
+    "source_sha256": "31aae5818fe061e4f316dee5c3e65e896ed787fd8efe33fd0f0497452ef4c89e",
+    "content": {
+      "storyboard_id": "mixed-media-first-slice-001",
+      "output_dir": "<repo>/feedback-loop/video-quality/.state/prepared/mixed-media-first-slice-001",
+      "paid_submission": false,
+      "iteration_budget_usd": 10.0,
+      "actual_paid_cost_usd": 0.6,
+      "generation_latency_seconds": 158.877,
+      "estimated_runway_cost_usd": 0.6,
+      "rendered_video": "<repo>/feedback-loop/video-quality/.state/prepared/mixed-media-first-slice-001/renders/runway-candidate/final.mp4",
+      "script": "Planning a trip should not feel like another job. tict turns every booking, place, and next step into one clear trip plan. Plan less. Travel more with tict.",
+      "brand_pronunciations": [
+        {
+          "canonical": "tict",
+          "spoken_alias": "tickt",
+          "ipa": "tɪkt"
+        }
+      ],
+      "runway_job_id": "e1ba2784-8506-4ae0-995f-7b03611f31e8",
+      "charged_microusd": 600000,
+      "remaining_microusd": 9400000,
+      "source_paid_submission": true,
+      "rerender_incremental_cost_usd": 0.0,
+      "narration_voice": "en-US-JennyNeural-Female",
+      "synthesis_script": "Planning a trip should not feel like another job. tickt turns every booking, place, and next step into one clear trip plan. Plan less. Travel more with tickt.",
+      "subtitle_path": "<repo>/feedback-loop/video-quality/.state/prepared/mixed-media-first-slice-001/renders/runway-candidate/storyboard.srt",
+      "subtitle_layout_path": "<repo>/feedback-loop/video-quality/.state/prepared/mixed-media-first-slice-001/renders/runway-candidate/subtitle-layout.json",
+      "subtitle_safe_area_pass": true,
+      "variant_id": "runway-candidate"
+    }
+  },
+  "subtitle": {
+    "source_path": "feedback-loop/video-quality/.state/prepared/mixed-media-first-slice-001/renders/runway-candidate/storyboard.srt",
+    "source_sha256": "14c77bf5e5d4c223df295df3180773845f3040e41450b10214fc93319bf8d2dd",
+    "content": "1\n00:00:00,000 --> 00:00:05,000\nPlanning a trip should not feel like another job.\n\n2\n00:00:05,000 --> 00:00:11,000\ntict turns every booking, place, and next step into one clear trip plan.\n\n3\n00:00:11,000 --> 00:00:15,000\nPlan less. Travel more with tict.\n"
+  },
+  "judge_evidence": {
+    "source_path": ".state/judges/evaluator-050-baseline-009-self-v2.json",
+    "source_sha256": "e165983c27c0442c3b2815ec5f33fdc31f5a0e77663db5bd0985eeb195c4f857",
+    "content": {
+      "schema_version": 1,
+      "evaluator_version": "0.5.0",
+      "observation_mode": "gemini_pairwise_v1",
+      "status": "complete",
+      "scenario_id": "mixed-media-stock-baseline-001",
+      "scenario_sha256": "2c66b606c90eaaa3db9d550aeed3672b595da86d9812b547b969ac151e5b21da",
+      "prompt_sha256": "bd4b4b71ec8f3422767e4b867c49f3f03a73fe90a83c84ac23a7b91a669d1e13",
+      "requested_model": "gemini-3.6-flash",
+      "model_versions": [
+        "gemini-3.6-flash"
+      ],
+      "baseline_sha256": "374c1f46abb453836fbaf1895ca61ae28e9a730cd5f1c4358ba6657163824568",
+      "candidate_sha256": "374c1f46abb453836fbaf1895ca61ae28e9a730cd5f1c4358ba6657163824568",
+      "self_comparison": true,
+      "passes": [
+        {
+          "pass_id": "baseline-a",
+          "order": {
+            "A": "374c1f46abb453836fbaf1895ca61ae28e9a730cd5f1c4358ba6657163824568",
+            "B": "374c1f46abb453836fbaf1895ca61ae28e9a730cd5f1c4358ba6657163824568"
+          },
+          "response": {
+            "winner": "tie",
+            "confidence": 1.0,
+            "summary": "Both Video A and Video B are identical in visual content, voiceover timing, on-screen text, branding assets, and overall editing structure. Both perfectly follow the storyboard contract, resulting in an exact tie across all rubric categories.",
+            "rubric": {
+              "editing_continuity": {
+                "video_a": 5,
+                "video_b": 5,
+                "reason": "Both videos exhibit seamless transitions between live-action footage, product UI overview, and the final call-to-action end card."
+              },
+              "storyboard_alignment": {
+                "video_a": 5,
+                "video_b": 5,
+                "reason": "Both videos match the storyboard contract perfectly across all scenes, displaying all required tags and exact timings."
+              },
+              "audiovisual_coherence": {
+                "video_a": 5,
+                "video_b": 5,
+                "reason": "Both videos feature clear voiceover narration and subtitles perfectly aligned with visual transitions."
+              },
+              "product_demo_clarity": {
+                "video_a": 5,
+                "video_b": 5,
+                "reason": "The product UI is crisp, highly legible, and showcases the trip itinerary effectively in both videos."
+              },
+              "professional_finish": {
+                "video_a": 5,
+                "video_b": 5,
+                "reason": "Both videos demonstrate professional visual design, high resolution, clear branding, and excellent polish."
+              }
+            },
+            "scene_observations": [
+              {
+                "video_label": "A",
+                "scene_id": "hook",
+                "observed_tags": [
+                  "airport_visible",
+                  "phone_visible",
+                  "planning_stress_visible",
+                  "traveller_visible"
+                ],
+                "evidence_timestamp_seconds": 2.5,
+                "screen_class": "generic_non_product",
+                "claims_tict_identity": false,
+                "approved_asset_match": false,
+                "brand_asset_fidelity": null,
+                "reason": "A traveller in an airport holds a phone looking frustrated with trip planning."
+              },
+              {
+                "video_label": "A",
+                "scene_id": "product_demo",
+                "observed_tags": [
+                  "approved_tict_ui_visible",
+                  "product_text_legible",
+                  "trip_plan_visible"
+                ],
+                "evidence_timestamp_seconds": 7.5,
+                "screen_class": "approved_tict_ui",
+                "claims_tict_identity": true,
+                "approved_asset_match": true,
+                "brand_asset_fidelity": 1.0,
+                "reason": "The official TICT UI displaying a Dubai trip plan is shown with clear legible text."
+              },
+              {
+                "video_label": "A",
+                "scene_id": "cta",
+                "observed_tags": [
+                  "approved_logo_visible",
+                  "approved_mascot_visible",
+                  "single_cta_visible"
+                ],
+                "evidence_timestamp_seconds": 12.5,
+                "screen_class": "none",
+                "claims_tict_identity": true,
+                "approved_asset_match": true,
+                "brand_asset_fidelity": 1.0,
+                "reason": "End card shows the approved TICT logo, mascot, tagline, and Create your trip CTA button."
+              },
+              {
+                "video_label": "B",
+                "scene_id": "hook",
+                "observed_tags": [
+                  "airport_visible",
+                  "phone_visible",
+                  "planning_stress_visible",
+                  "traveller_visible"
+                ],
+                "evidence_timestamp_seconds": 2.5,
+                "screen_class": "generic_non_product",
+                "claims_tict_identity": false,
+                "approved_asset_match": false,
+                "brand_asset_fidelity": null,
+                "reason": "A traveller in an airport holds a phone looking frustrated with trip planning."
+              },
+              {
+                "video_label": "B",
+                "scene_id": "product_demo",
+                "observed_tags": [
+                  "approved_tict_ui_visible",
+                  "product_text_legible",
+                  "trip_plan_visible"
+                ],
+                "evidence_timestamp_seconds": 7.5,
+                "screen_class": "approved_tict_ui",
+                "claims_tict_identity": true,
+                "approved_asset_match": true,
+                "brand_asset_fidelity": 1.0,
+                "reason": "The official TICT UI displaying a Dubai trip plan is shown with clear legible text."
+              },
+              {
+                "video_label": "B",
+                "scene_id": "cta",
+                "observed_tags": [
+                  "approved_logo_visible",
+                  "approved_mascot_visible",
+                  "single_cta_visible"
+                ],
+                "evidence_timestamp_seconds": 12.5,
+                "screen_class": "none",
+                "claims_tict_identity": true,
+                "approved_asset_match": true,
+                "brand_asset_fidelity": 1.0,
+                "reason": "End card shows the approved TICT logo, mascot, tagline, and Create your trip CTA button."
+              }
+            ]
+          },
+          "provider": {
+            "requested_model": "gemini-3.6-flash",
+            "model_version": "gemini-3.6-flash",
+            "response_id": "ckyDar73IsTFnsEPuuOvuAw",
+            "usage": {
+              "prompt_tokens": 9454,
+              "output_tokens": 870,
+              "thinking_tokens": 1595,
+              "total_tokens": 11919
+            },
+            "estimated_actual_cost_microusd": 20706
+          },
+          "budget": {
+            "operation_id": "evaluator-050-baseline-009-self-v2-pass-1",
+            "preflight_maximum_microusd": 57000,
+            "charged_microusd": 20706,
+            "remaining_scope_microusd": 9322294
+          }
+        },
+        {
+          "pass_id": "candidate-a",
+          "order": {
+            "A": "374c1f46abb453836fbaf1895ca61ae28e9a730cd5f1c4358ba6657163824568",
+            "B": "374c1f46abb453836fbaf1895ca61ae28e9a730cd5f1c4358ba6657163824568"
+          },
+          "response": {
+            "winner": "tie",
+            "confidence": 1.0,
+            "summary": "Both Video A and Video B are completely identical in visual quality, audio timing, voiceover sync, and storyboard execution. Both videos perfectly match the required contract specs across all scenes.",
+            "rubric": {
+              "editing_continuity": {
+                "video_a": 5,
+                "video_b": 5,
+                "reason": "Both videos exhibit identical smooth transitions and flawless continuity between scenes."
+              },
+              "storyboard_alignment": {
+                "video_a": 5,
+                "video_b": 5,
+                "reason": "Both videos follow the exact storyboard structure, scenes, timing, and content requirements."
+              },
+              "audiovisual_coherence": {
+                "video_a": 5,
+                "video_b": 5,
+                "reason": "Voiceover timing, captions, and visual elements are perfectly synchronized in both videos."
+              },
+              "product_demo_clarity": {
+                "video_a": 5,
+                "video_b": 5,
+                "reason": "The product UI is crisp, highly legible, and clearly demonstrates the trip planning features."
+              },
+              "professional_finish": {
+                "video_a": 5,
+                "video_b": 5,
+                "reason": "Both videos have excellent production value, clean typography, and sharp brand assets."
+              }
+            },
+            "scene_observations": [
+              {
+                "video_label": "A",
+                "scene_id": "hook",
+                "observed_tags": [
+                  "traveller_visible",
+                  "phone_visible",
+                  "airport_visible",
+                  "planning_stress_visible"
+                ],
+                "evidence_timestamp_seconds": 2.5,
+                "screen_class": "generic_non_product",
+                "claims_tict_identity": false,
+                "approved_asset_match": false,
+                "brand_asset_fidelity": null,
+                "reason": "A traveller in an airport holds a smartphone looking frustrated with trip planning."
+              },
+              {
+                "video_label": "A",
+                "scene_id": "product_demo",
+                "observed_tags": [
+                  "approved_tict_ui_visible",
+                  "trip_plan_visible",
+                  "product_text_legible"
+                ],
+                "evidence_timestamp_seconds": 7.5,
+                "screen_class": "approved_tict_ui",
+                "claims_tict_identity": true,
+                "approved_asset_match": true,
+                "brand_asset_fidelity": 1.0,
+                "reason": "The official TICT UI displaying the trip plan overview is clearly visible and legible."
+              },
+              {
+                "video_label": "A",
+                "scene_id": "cta",
+                "observed_tags": [
+                  "approved_logo_visible",
+                  "approved_mascot_visible",
+                  "single_cta_visible"
+                ],
+                "evidence_timestamp_seconds": 12.5,
+                "screen_class": "none",
+                "claims_tict_identity": true,
+                "approved_asset_match": true,
+                "brand_asset_fidelity": 1.0,
+                "reason": "The end screen displays the TICT logo, mascot, and the Create your trip call to action button."
+              },
+              {
+                "video_label": "B",
+                "scene_id": "hook",
+                "observed_tags": [
+                  "traveller_visible",
+                  "phone_visible",
+                  "airport_visible",
+                  "planning_stress_visible"
+                ],
+                "evidence_timestamp_seconds": 2.5,
+                "screen_class": "generic_non_product",
+                "claims_tict_identity": false,
+                "approved_asset_match": false,
+                "brand_asset_fidelity": null,
+                "reason": "A traveller in an airport holds a smartphone looking frustrated with trip planning."
+              },
+              {
+                "video_label": "B",
+                "scene_id": "product_demo",
+                "observed_tags": [
+                  "approved_tict_ui_visible",
+                  "trip_plan_visible",
+                  "product_text_legible"
+                ],
+                "evidence_timestamp_seconds": 7.5,
+                "screen_class": "approved_tict_ui",
+                "claims_tict_identity": true,
+                "approved_asset_match": true,
+                "brand_asset_fidelity": 1.0,
+                "reason": "The official TICT UI displaying the trip plan overview is clearly visible and legible."
+              },
+              {
+                "video_label": "B",
+                "scene_id": "cta",
+                "observed_tags": [
+                  "approved_logo_visible",
+                  "approved_mascot_visible",
+                  "single_cta_visible"
+                ],
+                "evidence_timestamp_seconds": 12.5,
+                "screen_class": "none",
+                "claims_tict_identity": true,
+                "approved_asset_match": true,
+                "brand_asset_fidelity": 1.0,
+                "reason": "The end screen displays the TICT logo, mascot, and the Create your trip call to action button."
+              }
+            ]
+          },
+          "provider": {
+            "requested_model": "gemini-3.6-flash",
+            "model_version": "gemini-3.6-flash",
+            "response_id": "gkyDas-eEdHmnsEP547mmAk",
+            "usage": {
+              "prompt_tokens": 9454,
+              "output_tokens": 840,
+              "thinking_tokens": 1591,
+              "total_tokens": 11885
+            },
+            "estimated_actual_cost_microusd": 20481
+          },
+          "budget": {
+            "operation_id": "evaluator-050-baseline-009-self-v2-pass-2",
+            "preflight_maximum_microusd": 57000,
+            "charged_microusd": 20481,
+            "remaining_scope_microusd": 9301813
+          }
+        }
+      ]
+    }
+  }
+}

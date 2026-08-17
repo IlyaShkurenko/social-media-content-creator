@@ -162,10 +162,24 @@ def recommended_decision(
     metrics: dict[str, Any],
     baseline_metrics: dict[str, Any],
 ) -> str:
+    if metrics["primary"]["name"] != baseline_metrics["primary"]["name"]:
+        raise ValueError("candidate and baseline use different primary metrics")
     current_value = metrics["primary"]["value"]
     baseline_value = baseline_metrics["primary"]["value"]
     if current_value <= baseline_value:
         return "reject_no_primary_improvement"
+    candidate_alignment = metrics.get("metrics", {}).get(
+        "timeline_alignment_f1"
+    )
+    baseline_alignment = baseline_metrics.get("metrics", {}).get(
+        "timeline_alignment_f1"
+    )
+    if (
+        candidate_alignment is not None
+        and baseline_alignment is not None
+        and candidate_alignment < baseline_alignment
+    ) or metrics["constraints"].get("all_enforced_pass") is False:
+        return "reject_constraint_regression"
     if metrics["constraints"]["all_goal_constraints_verified"]:
         return "keep"
     return "provisional_requires_review"
@@ -188,6 +202,8 @@ def resolve_final_decision(
     baseline_value = baseline_metrics["primary"]["value"]
     if current_value <= baseline_value:
         raise ValueError("primary metric did not improve; keep is not allowed")
+    if recommended_decision(metrics, baseline_metrics) == "reject_constraint_regression":
+        raise ValueError("candidate has a constraint regression; keep is not allowed")
     if metrics["constraints"]["all_goal_constraints_verified"]:
         return "kept"
     if not human_reviewed:
@@ -432,6 +448,7 @@ def _candidate_inputs(
         "observations": None,
         "pipeline_record": None,
         "subtitle": None,
+        "judge_evidence": None,
     }
     command_args = ["--video", str(video_snapshot)]
     if observations is not None:
@@ -456,6 +473,24 @@ def _candidate_inputs(
             "content": subtitle.read_text(encoding="utf-8"),
         }
         command_args.extend(["--subtitle", str(subtitle)])
+    if args.judge_evidence:
+        judge_evidence = _managed_file(
+            args.judge_evidence,
+            root=LOOP_ROOT,
+            label="judge evidence",
+        )
+        candidate["judge_evidence"] = {
+            "source_path": _relative(
+                judge_evidence,
+                LOOP_ROOT,
+                "judge evidence",
+            ),
+            "source_sha256": sha256_file(judge_evidence),
+            "content": _sanitize_record(
+                json.loads(judge_evidence.read_text(encoding="utf-8"))
+            ),
+        }
+        command_args.extend(["--judge-evidence", str(judge_evidence)])
     return candidate, command_args
 
 
@@ -477,6 +512,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--observations")
     parser.add_argument("--pipeline-record")
     parser.add_argument("--subtitle")
+    parser.add_argument("--judge-evidence")
     parser.add_argument("--decision", choices=("keep", "revert"))
     parser.add_argument("--learning")
     parser.add_argument("--human-review", choices=("YES", "NO"), default="NO")
@@ -520,6 +556,9 @@ def run_baseline(args: argparse.Namespace) -> int:
         _managed_file(args.pipeline_record, root=REPO_ROOT, label="pipeline record")
     if args.subtitle:
         _managed_file(args.subtitle, root=REPO_ROOT, label="subtitle")
+    if not args.judge_evidence:
+        raise ValueError("evaluator 0.5 baseline requires --judge-evidence")
+    _managed_file(args.judge_evidence, root=LOOP_ROOT, label="judge evidence")
     experiment_id = next_experiment_id()
     output_dir = EXPERIMENTS_ROOT / f"{experiment_id:03d}-{safe_slug(slug)}"
     output_dir.mkdir(parents=False, exist_ok=False)
@@ -739,6 +778,11 @@ def evaluate_experiment(args: argparse.Namespace) -> int:
         or metrics["evaluator_version"] != baseline_metrics["evaluator_version"]
     ):
         raise ValueError("candidate metrics are not comparable with the frozen baseline")
+    if metrics.get("judge_protocol") != baseline_metrics.get("judge_protocol"):
+        raise ValueError(
+            "candidate judge protocol differs from the frozen baseline; "
+            "establish a new evaluator baseline"
+        )
     evaluation["recommended_decision"] = recommended_decision(
         metrics,
         baseline_metrics,
