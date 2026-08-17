@@ -1,0 +1,431 @@
+{
+  "schema_version": 2,
+  "kind": "experiment",
+  "lifecycle": {
+    "status": "reverted",
+    "started_at": "2026-08-17T18:03:28.992051+00:00",
+    "start_revision": "bfd4256831fc60434e3527d5b748e5a3a8aaeb78",
+    "plan_sha256": "b504e57250e51fe466cd76f04c7c41cf90cf8b598b1305bd41f8bad34074c483"
+  },
+  "scenario": {
+    "path": "evals/dataset/mixed-media-stock-baseline-001.json",
+    "sha256": "2c66b606c90eaaa3db9d550aeed3672b595da86d9812b547b969ac151e5b21da"
+  },
+  "baseline": {
+    "experiment": "experiments/009-baseline",
+    "metrics_sha256": "2c2a5291094502567a2c8240778986e25462eec48ca96be386be627be0a9ef66",
+    "scenario_id": "mixed-media-stock-baseline-001",
+    "evaluator_version": "0.5.0",
+    "primary": {
+      "name": "visual_judge_win_rate",
+      "value": 0.5
+    },
+    "constraints": {
+      "enforced": {
+        "render_success": true,
+        "audio_present": true,
+        "aspect_ratio_pass": true,
+        "duration_pass": true,
+        "no_sustained_black_segments": true,
+        "all_evidence_frames_extracted": true,
+        "screen_policy_automated_pass": true,
+        "subtitle_safe_area_pass": true,
+        "brand_asset_fidelity_pass": true
+      },
+      "all_enforced_pass": true,
+      "pending": {
+        "voiceover_wer_pass": "timestamped ASR is not enabled in the active evaluator",
+        "brand_pronunciation_pass": "rendered-audio ASR or phoneme evidence is not enabled"
+      },
+      "all_goal_constraints_verified": false
+    }
+  },
+  "plan": {
+    "observed_problem": "The live airport hook cuts abruptly to the static product demonstration at the five-second boundary.",
+    "hypothesis": "A short crossfade from the generated airport footage into the exact product card will make the product reveal feel intentionally connected and improve pairwise visual quality.",
+    "planned_change": "Replace only the hard scene concatenation with a 0.35-second dissolve while preserving the exact scene clips, narration timeline, product assets, and total duration.",
+    "expected_metric_impact": "Increase visual_judge_win_rate above 0.5 without reducing timeline_alignment_f1 or violating any enforced constraint."
+  },
+  "candidate": {
+    "video": {
+      "source_path": "feedback-loop/video-quality/.state/prepared/mixed-media-first-slice-010-crossfade/renders/runway-candidate/final.mp4",
+      "source_sha256": "6cf45084e6e2b9f9913cf176ce4cee816df3a03854cd5c797bce7a9c0bbdb439",
+      "snapshot_path": "feedback-loop/video-quality/experiments/010-semantic-crossfade-bridge/artifacts/video.mp4"
+    },
+    "observations": null,
+    "pipeline_record": {
+      "source_path": "feedback-loop/video-quality/.state/prepared/mixed-media-first-slice-010-crossfade/run-summary.json",
+      "source_sha256": "35aa8fd7836d79336b3c1f02e4c242a4e22e6b23118a5dc6012a567783172e68",
+      "content": {
+        "storyboard_id": "mixed-media-first-slice-001",
+        "output_dir": "<repo>/feedback-loop/video-quality/.state/prepared/mixed-media-first-slice-010-crossfade",
+        "paid_submission": false,
+        "iteration_budget_usd": 10.0,
+        "actual_paid_cost_usd": 0.6,
+        "generation_latency_seconds": 158.877,
+        "estimated_runway_cost_usd": 0.6,
+        "rendered_video": "<repo>/feedback-loop/video-quality/.state/prepared/mixed-media-first-slice-010-crossfade/renders/runway-candidate/final.mp4",
+        "script": "Planning a trip should not feel like another job. tict turns every booking, place, and next step into one clear trip plan. Plan less. Travel more with tict.",
+        "brand_pronunciations": [
+          {
+            "canonical": "tict",
+            "spoken_alias": "tickt",
+            "ipa": "tɪkt"
+          }
+        ],
+        "runway_job_id": "e1ba2784-8506-4ae0-995f-7b03611f31e8",
+        "charged_microusd": 600000,
+        "remaining_microusd": 9400000,
+        "source_paid_submission": true,
+        "rerender_incremental_cost_usd": 0.0,
+        "narration_voice": "prebuilt-en-US",
+        "subtitle_path": "<repo>/feedback-loop/video-quality/.state/prepared/mixed-media-first-slice-010-crossfade/renders/runway-candidate/storyboard.srt",
+        "subtitle_layout_path": "<repo>/feedback-loop/video-quality/.state/prepared/mixed-media-first-slice-010-crossfade/renders/runway-candidate/subtitle-layout.json",
+        "subtitle_safe_area_pass": true,
+        "variant_id": "runway-candidate"
+      }
+    },
+    "subtitle": {
+      "source_path": "feedback-loop/video-quality/.state/prepared/mixed-media-first-slice-010-crossfade/renders/runway-candidate/storyboard.srt",
+      "source_sha256": "14c77bf5e5d4c223df295df3180773845f3040e41450b10214fc93319bf8d2dd",
+      "content": "1\n00:00:00,000 --> 00:00:05,000\nPlanning a trip should not feel like another job.\n\n2\n00:00:05,000 --> 00:00:11,000\ntict turns every booking, place, and next step into one clear trip plan.\n\n3\n00:00:11,000 --> 00:00:15,000\nPlan less. Travel more with tict.\n"
+    },
+    "judge_evidence": {
+      "source_path": ".state/judges/experiment-010-crossfade-v1.json",
+      "source_sha256": "a262dd98cf543b931aea62f9949eaf50a29c171ceaf20333617e45a043acd89e",
+      "content": {
+        "schema_version": 1,
+        "evaluator_version": "0.5.0",
+        "observation_mode": "gemini_pairwise_v1",
+        "status": "complete",
+        "scenario_id": "mixed-media-stock-baseline-001",
+        "scenario_sha256": "2c66b606c90eaaa3db9d550aeed3672b595da86d9812b547b969ac151e5b21da",
+        "prompt_sha256": "bd4b4b71ec8f3422767e4b867c49f3f03a73fe90a83c84ac23a7b91a669d1e13",
+        "requested_model": "gemini-3.6-flash",
+        "model_versions": [
+          "gemini-3.6-flash"
+        ],
+        "baseline_sha256": "374c1f46abb453836fbaf1895ca61ae28e9a730cd5f1c4358ba6657163824568",
+        "candidate_sha256": "6cf45084e6e2b9f9913cf176ce4cee816df3a03854cd5c797bce7a9c0bbdb439",
+        "self_comparison": false,
+        "passes": [
+          {
+            "pass_id": "baseline-a",
+            "order": {
+              "A": "374c1f46abb453836fbaf1895ca61ae28e9a730cd5f1c4358ba6657163824568",
+              "B": "6cf45084e6e2b9f9913cf176ce4cee816df3a03854cd5c797bce7a9c0bbdb439"
+            },
+            "response": {
+              "winner": "tie",
+              "confidence": 1.0,
+              "summary": "Both Video A and Video B are identical in visual composition, audio narration, subtitle timing, and scene structure. Both videos follow the storyboard contract perfectly, resulting in an exact tie across all rubric criteria.",
+              "rubric": {
+                "editing_continuity": {
+                  "video_a": 5,
+                  "video_b": 5,
+                  "reason": "Both videos exhibit identical, smooth scene transitions and consistent pacing throughout."
+                },
+                "storyboard_alignment": {
+                  "video_a": 5,
+                  "video_b": 5,
+                  "reason": "Both videos perfectly match every required scene, tag, visual asset, and text overlay specified in the storyboard contract."
+                },
+                "audiovisual_coherence": {
+                  "video_a": 5,
+                  "video_b": 5,
+                  "reason": "Voiceover timing and text captions align seamlessly with the visual sequences in both videos."
+                },
+                "product_demo_clarity": {
+                  "video_a": 5,
+                  "video_b": 5,
+                  "reason": "The product UI in both videos displays clear, highly legible travel itinerary details and brand elements."
+                },
+                "professional_finish": {
+                  "video_a": 5,
+                  "video_b": 5,
+                  "reason": "Both videos feature clean graphics, crisp visuals, clear voiceover audio, and professional graphic design."
+                }
+              },
+              "scene_observations": [
+                {
+                  "video_label": "A",
+                  "scene_id": "hook",
+                  "observed_tags": [
+                    "airport_visible",
+                    "phone_visible",
+                    "planning_stress_visible",
+                    "traveller_visible"
+                  ],
+                  "evidence_timestamp_seconds": 2.5,
+                  "screen_class": "generic_non_product",
+                  "claims_tict_identity": false,
+                  "approved_asset_match": false,
+                  "brand_asset_fidelity": null,
+                  "reason": "A traveller in an airport holds a smartphone showing a non-product screen while expressing confusion and stress over trip planning."
+                },
+                {
+                  "video_label": "A",
+                  "scene_id": "product_demo",
+                  "observed_tags": [
+                    "approved_tict_ui_visible",
+                    "product_text_legible",
+                    "trip_plan_visible"
+                  ],
+                  "evidence_timestamp_seconds": 7.5,
+                  "screen_class": "approved_tict_ui",
+                  "claims_tict_identity": true,
+                  "approved_asset_match": true,
+                  "brand_asset_fidelity": 1.0,
+                  "reason": "Displays the authentic TICT mobile app interface with clear itinerary entries and booking details."
+                },
+                {
+                  "video_label": "A",
+                  "scene_id": "cta",
+                  "observed_tags": [
+                    "approved_logo_visible",
+                    "approved_mascot_visible",
+                    "single_cta_visible"
+                  ],
+                  "evidence_timestamp_seconds": 12.5,
+                  "screen_class": "none",
+                  "claims_tict_identity": true,
+                  "approved_asset_match": true,
+                  "brand_asset_fidelity": 1.0,
+                  "reason": "Features the approved TICT logo, yellow pin mascot, slogan, and single call-to-action button."
+                },
+                {
+                  "video_label": "B",
+                  "scene_id": "hook",
+                  "observed_tags": [
+                    "airport_visible",
+                    "phone_visible",
+                    "planning_stress_visible",
+                    "traveller_visible"
+                  ],
+                  "evidence_timestamp_seconds": 2.5,
+                  "screen_class": "generic_non_product",
+                  "claims_tict_identity": false,
+                  "approved_asset_match": false,
+                  "brand_asset_fidelity": null,
+                  "reason": "A traveller in an airport holds a smartphone showing a non-product screen while expressing confusion and stress over trip planning."
+                },
+                {
+                  "video_label": "B",
+                  "scene_id": "product_demo",
+                  "observed_tags": [
+                    "approved_tict_ui_visible",
+                    "product_text_legible",
+                    "trip_plan_visible"
+                  ],
+                  "evidence_timestamp_seconds": 7.5,
+                  "screen_class": "approved_tict_ui",
+                  "claims_tict_identity": true,
+                  "approved_asset_match": true,
+                  "brand_asset_fidelity": 1.0,
+                  "reason": "Displays the authentic TICT mobile app interface with clear itinerary entries and booking details."
+                },
+                {
+                  "video_label": "B",
+                  "scene_id": "cta",
+                  "observed_tags": [
+                    "approved_logo_visible",
+                    "approved_mascot_visible",
+                    "single_cta_visible"
+                  ],
+                  "evidence_timestamp_seconds": 12.5,
+                  "screen_class": "none",
+                  "claims_tict_identity": true,
+                  "approved_asset_match": true,
+                  "brand_asset_fidelity": 1.0,
+                  "reason": "Features the approved TICT logo, yellow pin mascot, slogan, and single call-to-action button."
+                }
+              ]
+            },
+            "provider": {
+              "requested_model": "gemini-3.6-flash",
+              "model_version": "gemini-3.6-flash",
+              "response_id": "p06Dar7-CsbFnsEPtr2noAk",
+              "usage": {
+                "prompt_tokens": 9454,
+                "output_tokens": 886,
+                "thinking_tokens": 2351,
+                "total_tokens": 12691
+              },
+              "estimated_actual_cost_microusd": 20826
+            },
+            "budget": {
+              "operation_id": "experiment-010-crossfade-v1-pass-1",
+              "preflight_maximum_microusd": 57000,
+              "charged_microusd": 20826,
+              "remaining_scope_microusd": 9280987
+            }
+          },
+          {
+            "pass_id": "candidate-a",
+            "order": {
+              "A": "6cf45084e6e2b9f9913cf176ce4cee816df3a03854cd5c797bce7a9c0bbdb439",
+              "B": "374c1f46abb453836fbaf1895ca61ae28e9a730cd5f1c4358ba6657163824568"
+            },
+            "response": {
+              "winner": "tie",
+              "confidence": 1.0,
+              "summary": "Both videos are completely identical in visual elements, voiceover timing, UI display, and brand assets. Neither video exhibits any difference or advantage in execution or quality.",
+              "rubric": {
+                "editing_continuity": {
+                  "video_a": 5,
+                  "video_b": 5,
+                  "reason": "Both videos feature identical shot transitions and perfect temporal pacing across scenes."
+                },
+                "storyboard_alignment": {
+                  "video_a": 5,
+                  "video_b": 5,
+                  "reason": "Both videos adhere precisely to the storyboard sequence and requirements."
+                },
+                "audiovisual_coherence": {
+                  "video_a": 5,
+                  "video_b": 5,
+                  "reason": "The voiceover and visual timing match seamlessly across both versions."
+                },
+                "product_demo_clarity": {
+                  "video_a": 5,
+                  "video_b": 5,
+                  "reason": "The app UI product demonstration is clear, high contrast, and perfectly legible in both videos."
+                },
+                "professional_finish": {
+                  "video_a": 5,
+                  "video_b": 5,
+                  "reason": "Both videos display identical high-quality rendering, typography, and logo branding."
+                }
+              },
+              "scene_observations": [
+                {
+                  "video_label": "A",
+                  "scene_id": "hook",
+                  "observed_tags": [
+                    "airport_visible",
+                    "phone_visible",
+                    "planning_stress_visible",
+                    "traveller_visible"
+                  ],
+                  "evidence_timestamp_seconds": 2.0,
+                  "screen_class": "generic_non_product",
+                  "claims_tict_identity": false,
+                  "approved_asset_match": false,
+                  "brand_asset_fidelity": null,
+                  "reason": "A traveler in an airport looks stressed while holding a smartphone with a generic screen."
+                },
+                {
+                  "video_label": "A",
+                  "scene_id": "product_demo",
+                  "observed_tags": [
+                    "approved_tict_ui_visible",
+                    "product_text_legible",
+                    "trip_plan_visible"
+                  ],
+                  "evidence_timestamp_seconds": 7.0,
+                  "screen_class": "approved_tict_ui",
+                  "claims_tict_identity": true,
+                  "approved_asset_match": true,
+                  "brand_asset_fidelity": 1.0,
+                  "reason": "The approved TICT trip planning UI is displayed clearly with legible trip details."
+                },
+                {
+                  "video_label": "A",
+                  "scene_id": "cta",
+                  "observed_tags": [
+                    "approved_logo_visible",
+                    "approved_mascot_visible",
+                    "single_cta_visible"
+                  ],
+                  "evidence_timestamp_seconds": 12.5,
+                  "screen_class": "none",
+                  "claims_tict_identity": true,
+                  "approved_asset_match": true,
+                  "brand_asset_fidelity": 1.0,
+                  "reason": "The final end card shows the TICT logo, yellow pin mascot, and Create your trip CTA button."
+                },
+                {
+                  "video_label": "B",
+                  "scene_id": "hook",
+                  "observed_tags": [
+                    "airport_visible",
+                    "phone_visible",
+                    "planning_stress_visible",
+                    "traveller_visible"
+                  ],
+                  "evidence_timestamp_seconds": 2.0,
+                  "screen_class": "generic_non_product",
+                  "claims_tict_identity": false,
+                  "approved_asset_match": false,
+                  "brand_asset_fidelity": null,
+                  "reason": "A traveler in an airport looks stressed while holding a smartphone with a generic screen."
+                },
+                {
+                  "video_label": "B",
+                  "scene_id": "product_demo",
+                  "observed_tags": [
+                    "approved_tict_ui_visible",
+                    "product_text_legible",
+                    "trip_plan_visible"
+                  ],
+                  "evidence_timestamp_seconds": 7.0,
+                  "screen_class": "approved_tict_ui",
+                  "claims_tict_identity": true,
+                  "approved_asset_match": true,
+                  "brand_asset_fidelity": 1.0,
+                  "reason": "The approved TICT trip planning UI is displayed clearly with legible trip details."
+                },
+                {
+                  "video_label": "B",
+                  "scene_id": "cta",
+                  "observed_tags": [
+                    "approved_logo_visible",
+                    "approved_mascot_visible",
+                    "single_cta_visible"
+                  ],
+                  "evidence_timestamp_seconds": 12.5,
+                  "screen_class": "none",
+                  "claims_tict_identity": true,
+                  "approved_asset_match": true,
+                  "brand_asset_fidelity": 1.0,
+                  "reason": "The final end card shows the TICT logo, yellow pin mascot, and Create your trip CTA button."
+                }
+              ]
+            },
+            "provider": {
+              "requested_model": "gemini-3.6-flash",
+              "model_version": "gemini-3.6-flash",
+              "response_id": "uk6DaomcL5v4xs0PrKznuQ4",
+              "usage": {
+                "prompt_tokens": 9454,
+                "output_tokens": 841,
+                "thinking_tokens": 2804,
+                "total_tokens": 13099
+              },
+              "estimated_actual_cost_microusd": 20489
+            },
+            "budget": {
+              "operation_id": "experiment-010-crossfade-v1-pass-2",
+              "preflight_maximum_microusd": 57000,
+              "charged_microusd": 20489,
+              "remaining_scope_microusd": 9260498
+            }
+          }
+        ]
+      }
+    }
+  },
+  "evaluation": {
+    "evaluated_at": "2026-08-17T18:11:36.475283+00:00",
+    "candidate_revision": "bfd4256831fc60434e3527d5b748e5a3a8aaeb78",
+    "worktree_diff_sha256": "dbf8163625de3665d0552fd0e1399c685042400d4e276d5cae0b02da0dffe2cb",
+    "recommended_decision": "reject_no_primary_improvement"
+  },
+  "final": {
+    "decision": "reverted",
+    "finished_at": "2026-08-17T18:11:45.846847+00:00",
+    "learning": "A 0.35-second dissolve preserved all deterministic constraints but produced no pairwise preference; both Gemini passes incorrectly described the videos as identical. One-frame-per-second judging is not sensitive enough for subsecond transitions or phone-state hallucinations, so high-frequency temporal screening must be added before further generated-hook selection.",
+    "human_reviewed": false,
+    "reviewer": null
+  }
+}
