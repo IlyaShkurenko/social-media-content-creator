@@ -52,6 +52,14 @@ def test_story_1_5_runway_prompt_respects_non_product_screen_policy() -> None:
     assert request.ratio == "720:1280"
 
 
+def test_runway_2_2_runway_prompt_preserves_single_hidden_phone_geometry() -> None:
+    prompt = build_runway_request(storyboard()).prompt_text
+    assert "Use exactly one phone with stable geometry" in prompt
+    assert "fully away from the camera from the first frame to the last" in prompt
+    assert "do not rotate or flip the device" in prompt
+    assert "Preserve continuous hand-to-phone contact" in prompt
+
+
 def test_brand_1_3_prepare_run_fails_before_generation_for_missing_asset(
     tmp_path: Path,
 ) -> None:

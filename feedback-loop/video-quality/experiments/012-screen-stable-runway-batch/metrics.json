@@ -1,0 +1,616 @@
+{
+  "schema_version": 1,
+  "evaluator_version": "0.6.0",
+  "generated_at": "2026-08-17T18:43:36.438048+00:00",
+  "scenario_id": "mixed-media-stock-baseline-001",
+  "observation_mode": "gemini_pairwise_v1",
+  "judge_protocol": {
+    "schema_version": 1,
+    "prompt_sha256": "bd4b4b71ec8f3422767e4b867c49f3f03a73fe90a83c84ac23a7b91a669d1e13",
+    "requested_model": "gemini-3.6-flash",
+    "model_versions": [
+      "gemini-3.6-flash"
+    ]
+  },
+  "temporal_protocol": {
+    "schema_version": 1,
+    "evaluator_version": "0.6.0",
+    "observation_mode": "gemini_temporal_strips_v1",
+    "sample_fps": 10,
+    "prompt_sha256": "d5fd460a4c097dac9c54d961c29c60d98227f5ad9f20308257c4df260f52e38a",
+    "requested_model": "gemini-3.6-flash",
+    "model_version": "gemini-3.6-flash"
+  },
+  "artifact": {
+    "video": "feedback-loop/video-quality/experiments/012-screen-stable-runway-batch/artifacts/video.mp4",
+    "duration_seconds": 15.0,
+    "width": 720,
+    "height": 1280,
+    "fps": 30.0,
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "sha256": "bd3a17ef31339160eb19062568e6f4c0aac3e17ec8afbfa2007f841aeae13c52"
+  },
+  "primary": {
+    "name": "visual_judge_win_rate",
+    "value": 0.25
+  },
+  "metrics": {
+    "timeline_alignment_precision": 1.0,
+    "timeline_alignment_recall": 1.0,
+    "timeline_alignment_f1": 1.0,
+    "timeline_alignment_counts": {
+      "true_positive": 10,
+      "false_positive": 0,
+      "false_negative": 0
+    },
+    "subtitle_text_token_f1": 1.0,
+    "brand_text_exact_match": 1.0,
+    "brand_pronunciation_pass": null,
+    "screen_policy_compliance": 1.0,
+    "visual_judge_win_rate": 0.25,
+    "temporal_consistency_pass": true,
+    "temporal_high_severity_event_count": 0,
+    "temporal_medium_severity_event_count": 0,
+    "temporal_low_severity_event_count": 0,
+    "brand_asset_fidelity": 1.0,
+    "voiceover_wer": null,
+    "word_timing_mae_ms": null,
+    "shot_boundary_mae_ms": null,
+    "generation_latency_seconds": 220.178,
+    "estimated_cost_usd": 0.6,
+    "judge_charged_cost_usd": 0.04499,
+    "judge_estimated_actual_cost_usd": 0.04499,
+    "remaining_iteration_budget_usd": 6.061409,
+    "cost_per_accepted_video_usd": null
+  },
+  "constraints": {
+    "enforced": {
+      "render_success": true,
+      "audio_present": true,
+      "aspect_ratio_pass": true,
+      "duration_pass": true,
+      "no_sustained_black_segments": true,
+      "all_evidence_frames_extracted": true,
+      "screen_policy_automated_pass": true,
+      "temporal_consistency_pass": true,
+      "subtitle_safe_area_pass": true,
+      "brand_asset_fidelity_pass": true
+    },
+    "all_enforced_pass": true,
+    "pending": {
+      "voiceover_wer_pass": "timestamped ASR is not enabled in the active evaluator",
+      "brand_pronunciation_pass": "rendered-audio ASR or phoneme evidence is not enabled"
+    },
+    "all_goal_constraints_verified": false
+  },
+  "evidence": {
+    "frames": [
+      {
+        "scene_id": "hook",
+        "timestamp_seconds": 2.5,
+        "path": "artifacts/frames/01-hook.jpg",
+        "extracted": true
+      },
+      {
+        "scene_id": "product_demo",
+        "timestamp_seconds": 8.0,
+        "path": "artifacts/frames/02-product_demo.jpg",
+        "extracted": true
+      },
+      {
+        "scene_id": "cta",
+        "timestamp_seconds": 13.0,
+        "path": "artifacts/frames/03-cta.jpg",
+        "extracted": true
+      }
+    ],
+    "black_segments": [],
+    "decode_error": null,
+    "subtitle_token_comparison": {
+      "reference_tokens": 28,
+      "candidate_tokens": 28,
+      "matching_tokens": 28,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "brand_text_comparison": {
+      "available": true,
+      "canonical": "tict",
+      "reference_occurrences": [
+        "tict",
+        "tict"
+      ],
+      "candidate_occurrences": [
+        "tict",
+        "tict"
+      ],
+      "exact_match": true,
+      "score": 1.0
+    },
+    "screen_policy": {
+      "compliance": 1.0,
+      "evaluated_scenes": 3,
+      "passed_scenes": 3,
+      "failed_scenes": 0,
+      "pending_scenes": 0,
+      "failures": [],
+      "evidence": [
+        {
+          "scene_id": "hook",
+          "declared_policy": "non_product_context",
+          "observed_screen_class": "screen_not_visible",
+          "status": "pass",
+          "reason": "generic or hidden non-product screen does not claim tict identity",
+          "evidence_timestamp_seconds": 2.0
+        },
+        {
+          "scene_id": "product_demo",
+          "declared_policy": "approved_product_ui",
+          "observed_screen_class": "approved_tict_ui",
+          "status": "pass",
+          "reason": "observed screen matches the approved tict product capture",
+          "evidence_timestamp_seconds": 7.0
+        },
+        {
+          "scene_id": "cta",
+          "declared_policy": "unconstrained",
+          "status": "pass",
+          "reason": "the scene declares no device-screen constraint",
+          "evidence_timestamp_seconds": 12.5
+        }
+      ]
+    },
+    "automated_observation_consensus": {
+      "scenes": [
+        {
+          "scene_id": "hook",
+          "observed_tags": [
+            "airport_visible",
+            "phone_visible",
+            "planning_stress_visible",
+            "traveller_visible"
+          ],
+          "notes": "Order-balanced Gemini observation consensus.",
+          "screen_observation": {
+            "screen_class": "screen_not_visible",
+            "claims_tict_identity": false,
+            "approved_asset_match": false,
+            "evidence_timestamp_seconds": 2.0
+          }
+        },
+        {
+          "scene_id": "product_demo",
+          "observed_tags": [
+            "approved_tict_ui_visible",
+            "product_text_legible",
+            "trip_plan_visible"
+          ],
+          "notes": "Order-balanced Gemini observation consensus.",
+          "screen_observation": {
+            "screen_class": "approved_tict_ui",
+            "claims_tict_identity": true,
+            "approved_asset_match": true,
+            "evidence_timestamp_seconds": 7.0
+          }
+        },
+        {
+          "scene_id": "cta",
+          "observed_tags": [
+            "approved_logo_visible",
+            "approved_mascot_visible",
+            "single_cta_visible"
+          ],
+          "notes": "Order-balanced Gemini observation consensus.",
+          "screen_observation": {
+            "screen_class": "none",
+            "claims_tict_identity": true,
+            "approved_asset_match": true,
+            "evidence_timestamp_seconds": 12.5
+          }
+        }
+      ],
+      "disagreements": [],
+      "brand_asset_fidelity": 1.0
+    },
+    "pairwise_preference": {
+      "win_rate": 0.25,
+      "credits": [
+        0.0,
+        0.5
+      ],
+      "self_comparison": false,
+      "position_balanced": true
+    },
+    "temporal_consistency": {
+      "temporal_consistency_pass": true,
+      "high_severity_event_count": 0,
+      "medium_severity_event_count": 0,
+      "low_severity_event_count": 0,
+      "total_event_count": 0,
+      "events": []
+    },
+    "temporal_judge": {
+      "schema_version": 1,
+      "evaluator_version": "0.6.0",
+      "observation_mode": "gemini_temporal_strips_v1",
+      "status": "complete",
+      "video_sha256": "0d12f83636d37375e499ba22e821ea1a3aa5e445b8614f1be5bcd09f9ec1da5f",
+      "scene_id": "hook",
+      "scene_range_seconds": [
+        0.0,
+        5.0
+      ],
+      "sample_fps": 10,
+      "sampled_frame_count": 50,
+      "strip_hashes": [
+        "0fdc704f1aaa374d686b180bc15a5995d65eb1f572b4b58e7ff0aee54b52a5d8",
+        "00b8332173e70c9bda8ee78d3423be751b23a563b5da83a31c6e5bcca7fcb899",
+        "0a8385c164bff88caff894421500a6343d500ac34c1f602bc6b091de92b33a27",
+        "8cbc27b6100dbd6f9a1a8bcb3e18144544c17c2f68b284dc73f5def8fa30375e",
+        "39f778d50da0ce05f833fc0b2b0d52bc97380629f7554e487c320914c1c9f8eb",
+        "e789babaf6260adddf1eff63c2bee5f7e77d690d56c4ce7fadb07921eac92628",
+        "c8e70675b721d9340182f1a2db8f613d8296e96c1bac92569f7d0cb7d99b6187",
+        "aaa37059e5c2d30d951ef0650e7c3a18d51e9f309af31794c0c6b4bddc4c90cc",
+        "13db2d8201d4060cb3310720c519e76780a2b049c947d1c87e1f8e7d234166fd",
+        "e9a235335f33a4730b2b279e4992e737e4d5103d0acb278b8f8b91a20eac1127"
+      ],
+      "prompt_sha256": "d5fd460a4c097dac9c54d961c29c60d98227f5ad9f20308257c4df260f52e38a",
+      "requested_model": "gemini-3.6-flash",
+      "model_version": "gemini-3.6-flash",
+      "response": {
+        "summary": "The 50-frame sequence demonstrates consistent temporal continuity, with natural hand motion, plausible object persistence, and smooth camera movement throughout.",
+        "inspected_frame_count": 50,
+        "events": []
+      },
+      "events": [],
+      "provider": {
+        "response_id": "wlWDav27ErnmnsEPouiGiAk",
+        "usage": {
+          "prompt_tokens": 11124,
+          "output_tokens": 48,
+          "thinking_tokens": 3121,
+          "total_tokens": 14293
+        },
+        "estimated_actual_cost_microusd": 17046
+      },
+      "budget": {
+        "operation_id": "experiment-012-temporal-hook-05-v2",
+        "preflight_maximum_microusd": 50000,
+        "charged_microusd": 17046,
+        "remaining_scope_microusd": 6106399
+      }
+    },
+    "temporal_evidence_sha256": "94cd1ccf92dc0ef1134e25db63cc2bd4d3b3a90e5963771b67370a961d4c52d6",
+    "judge": {
+      "schema_version": 1,
+      "evaluator_version": "0.6.0",
+      "observation_mode": "gemini_pairwise_v1",
+      "status": "complete",
+      "scenario_id": "mixed-media-stock-baseline-001",
+      "scenario_sha256": "2c66b606c90eaaa3db9d550aeed3672b595da86d9812b547b969ac151e5b21da",
+      "prompt_sha256": "bd4b4b71ec8f3422767e4b867c49f3f03a73fe90a83c84ac23a7b91a669d1e13",
+      "requested_model": "gemini-3.6-flash",
+      "model_versions": [
+        "gemini-3.6-flash"
+      ],
+      "baseline_sha256": "374c1f46abb453836fbaf1895ca61ae28e9a730cd5f1c4358ba6657163824568",
+      "candidate_sha256": "bd3a17ef31339160eb19062568e6f4c0aac3e17ec8afbfa2007f841aeae13c52",
+      "self_comparison": false,
+      "passes": [
+        {
+          "pass_id": "baseline-a",
+          "order": {
+            "A": "374c1f46abb453836fbaf1895ca61ae28e9a730cd5f1c4358ba6657163824568",
+            "B": "bd3a17ef31339160eb19062568e6f4c0aac3e17ec8afbfa2007f841aeae13c52"
+          },
+          "response": {
+            "winner": "A",
+            "confidence": 0.75,
+            "summary": "Both videos strictly adhere to the storyboard contract, delivering flawless audio-visual alignment, crisp UI display, and accurate brand assets. Video A is selected as the winner because its hook sequence features a more subtle and natural portrayal of travel stress compared to Video B's slightly exaggerated reaction.",
+            "rubric": {
+              "editing_continuity": {
+                "video_a": 5,
+                "video_b": 5,
+                "reason": "Both videos execute smooth, professional transitions between live-action hooks, motion product graphics, and final end cards."
+              },
+              "storyboard_alignment": {
+                "video_a": 5,
+                "video_b": 5,
+                "reason": "Both videos match all required storyboard beats, camera setups, text overlays, and required tags perfectly."
+              },
+              "audiovisual_coherence": {
+                "video_a": 5,
+                "video_b": 5,
+                "reason": "Voiceover timing, caption syncing, and visual transitions align seamlessly across both cuts."
+              },
+              "product_demo_clarity": {
+                "video_a": 5,
+                "video_b": 5,
+                "reason": "Both videos show the exact approved TICT trip overview UI clearly with crisp typography and distinct UI elements."
+              },
+              "professional_finish": {
+                "video_a": 5,
+                "video_b": 4,
+                "reason": "Video A feels slightly more realistic and premium during the hook, whereas Video B features an overly dramatic facial expression that looks less natural."
+              }
+            },
+            "scene_observations": [
+              {
+                "video_label": "A",
+                "scene_id": "hook",
+                "observed_tags": [
+                  "traveller_visible",
+                  "phone_visible",
+                  "airport_visible",
+                  "planning_stress_visible"
+                ],
+                "evidence_timestamp_seconds": 2.0,
+                "screen_class": "screen_not_visible",
+                "claims_tict_identity": false,
+                "approved_asset_match": false,
+                "brand_asset_fidelity": null,
+                "reason": "A traveller in an airport terminal visibly struggles with her phone in a realistic and natural manner."
+              },
+              {
+                "video_label": "A",
+                "scene_id": "product_demo",
+                "observed_tags": [
+                  "approved_tict_ui_visible",
+                  "trip_plan_visible",
+                  "product_text_legible"
+                ],
+                "evidence_timestamp_seconds": 7.0,
+                "screen_class": "approved_tict_ui",
+                "claims_tict_identity": true,
+                "approved_asset_match": true,
+                "brand_asset_fidelity": 1.0,
+                "reason": "Full screen display of the approved TICT trip plan UI with clear and legible details."
+              },
+              {
+                "video_label": "A",
+                "scene_id": "cta",
+                "observed_tags": [
+                  "approved_logo_visible",
+                  "approved_mascot_visible",
+                  "single_cta_visible"
+                ],
+                "evidence_timestamp_seconds": 12.5,
+                "screen_class": "none",
+                "claims_tict_identity": true,
+                "approved_asset_match": true,
+                "brand_asset_fidelity": 1.0,
+                "reason": "Displays the approved TICT logo, pin mascot, tagline, and Create your trip CTA button."
+              },
+              {
+                "video_label": "B",
+                "scene_id": "hook",
+                "observed_tags": [
+                  "traveller_visible",
+                  "phone_visible",
+                  "airport_visible",
+                  "planning_stress_visible"
+                ],
+                "evidence_timestamp_seconds": 2.0,
+                "screen_class": "screen_not_visible",
+                "claims_tict_identity": false,
+                "approved_asset_match": false,
+                "brand_asset_fidelity": null,
+                "reason": "A traveller in an airport reacts with exaggerated frustration while looking at her phone."
+              },
+              {
+                "video_label": "B",
+                "scene_id": "product_demo",
+                "observed_tags": [
+                  "approved_tict_ui_visible",
+                  "trip_plan_visible",
+                  "product_text_legible"
+                ],
+                "evidence_timestamp_seconds": 7.0,
+                "screen_class": "approved_tict_ui",
+                "claims_tict_identity": true,
+                "approved_asset_match": true,
+                "brand_asset_fidelity": 1.0,
+                "reason": "Full screen display of the approved TICT trip plan UI with clear and legible details."
+              },
+              {
+                "video_label": "B",
+                "scene_id": "cta",
+                "observed_tags": [
+                  "approved_logo_visible",
+                  "approved_mascot_visible",
+                  "single_cta_visible"
+                ],
+                "evidence_timestamp_seconds": 12.5,
+                "screen_class": "none",
+                "claims_tict_identity": true,
+                "approved_asset_match": true,
+                "brand_asset_fidelity": 1.0,
+                "reason": "Displays the approved TICT logo, pin mascot, tagline, and Create your trip CTA button."
+              }
+            ]
+          },
+          "provider": {
+            "requested_model": "gemini-3.6-flash",
+            "model_version": "gemini-3.6-flash",
+            "response_id": "JVaDavTIDaWqkdUP2s-asAY",
+            "usage": {
+              "prompt_tokens": 9454,
+              "output_tokens": 901,
+              "thinking_tokens": 2109,
+              "total_tokens": 12464
+            },
+            "estimated_actual_cost_microusd": 20939
+          },
+          "budget": {
+            "operation_id": "experiment-012-candidate-05-pass-1",
+            "preflight_maximum_microusd": 57000,
+            "charged_microusd": 20939,
+            "remaining_scope_microusd": 6085460
+          }
+        },
+        {
+          "pass_id": "candidate-a",
+          "order": {
+            "A": "bd3a17ef31339160eb19062568e6f4c0aac3e17ec8afbfa2007f841aeae13c52",
+            "B": "374c1f46abb453836fbaf1895ca61ae28e9a730cd5f1c4358ba6657163824568"
+          },
+          "response": {
+            "winner": "tie",
+            "confidence": 0.95,
+            "summary": "Both Video A and Video B fully satisfy all storyboard requirements, incorporating all requested visual tags, synchronized voiceovers, identical high-fidelity product UI motion screens, and brand endcards without any editing flaws or continuity glitches.",
+            "rubric": {
+              "editing_continuity": {
+                "video_a": 5,
+                "video_b": 5,
+                "reason": "Both videos transition seamlessly between the live-action airport scene, the product UI demo, and the final animated brand endcard."
+              },
+              "storyboard_alignment": {
+                "video_a": 5,
+                "video_b": 5,
+                "reason": "Both videos match every scene concept, timing window, and required tag specified in the storyboard contract."
+              },
+              "audiovisual_coherence": {
+                "video_a": 5,
+                "video_b": 5,
+                "reason": "Voiceover audio and subtitles line up perfectly with screen visual transitions across both video renditions."
+              },
+              "product_demo_clarity": {
+                "video_a": 5,
+                "video_b": 5,
+                "reason": "Both videos present the approved TICT trip overview UI clearly and legibly during the exact required timestamp window."
+              },
+              "professional_finish": {
+                "video_a": 5,
+                "video_b": 5,
+                "reason": "Both videos demonstrate clean framing, high visual resolution, stable audio mixing, and professional graphics rendering."
+              }
+            },
+            "scene_observations": [
+              {
+                "video_label": "A",
+                "scene_id": "hook",
+                "observed_tags": [
+                  "airport_visible",
+                  "phone_visible",
+                  "planning_stress_visible",
+                  "traveller_visible"
+                ],
+                "evidence_timestamp_seconds": 2.0,
+                "screen_class": "screen_not_visible",
+                "claims_tict_identity": false,
+                "approved_asset_match": false,
+                "brand_asset_fidelity": null,
+                "reason": "A frustrated traveler stands in an airport checking her phone, matching all required hook scene elements."
+              },
+              {
+                "video_label": "A",
+                "scene_id": "product_demo",
+                "observed_tags": [
+                  "approved_tict_ui_visible",
+                  "product_text_legible",
+                  "trip_plan_visible"
+                ],
+                "evidence_timestamp_seconds": 7.0,
+                "screen_class": "approved_tict_ui",
+                "claims_tict_identity": true,
+                "approved_asset_match": true,
+                "brand_asset_fidelity": 1.0,
+                "reason": "The exact approved TICT trip plan UI is displayed with full legibility and accurate brand styling."
+              },
+              {
+                "video_label": "A",
+                "scene_id": "cta",
+                "observed_tags": [
+                  "approved_logo_visible",
+                  "approved_mascot_visible",
+                  "single_cta_visible"
+                ],
+                "evidence_timestamp_seconds": 12.5,
+                "screen_class": "none",
+                "claims_tict_identity": true,
+                "approved_asset_match": true,
+                "brand_asset_fidelity": 1.0,
+                "reason": "The official TICT endcard displays the approved logo, mascot illustration, tagline, and call to action button."
+              },
+              {
+                "video_label": "B",
+                "scene_id": "hook",
+                "observed_tags": [
+                  "airport_visible",
+                  "phone_visible",
+                  "planning_stress_visible",
+                  "traveller_visible"
+                ],
+                "evidence_timestamp_seconds": 2.0,
+                "screen_class": "screen_not_visible",
+                "claims_tict_identity": false,
+                "approved_asset_match": false,
+                "brand_asset_fidelity": null,
+                "reason": "A traveler with glasses looks stressed while interacting with her phone inside an airport terminal."
+              },
+              {
+                "video_label": "B",
+                "scene_id": "product_demo",
+                "observed_tags": [
+                  "approved_tict_ui_visible",
+                  "product_text_legible",
+                  "trip_plan_visible"
+                ],
+                "evidence_timestamp_seconds": 7.0,
+                "screen_class": "approved_tict_ui",
+                "claims_tict_identity": true,
+                "approved_asset_match": true,
+                "brand_asset_fidelity": 1.0,
+                "reason": "The approved TICT mobile UI screen displaying trip itinerary details is shown clearly."
+              },
+              {
+                "video_label": "B",
+                "scene_id": "cta",
+                "observed_tags": [
+                  "approved_logo_visible",
+                  "approved_mascot_visible",
+                  "single_cta_visible"
+                ],
+                "evidence_timestamp_seconds": 12.5,
+                "screen_class": "none",
+                "claims_tict_identity": true,
+                "approved_asset_match": true,
+                "brand_asset_fidelity": 1.0,
+                "reason": "The endcard presents the approved brand logo, mascot graphic, and call to action button."
+              }
+            ]
+          },
+          "provider": {
+            "requested_model": "gemini-3.6-flash",
+            "model_version": "gemini-3.6-flash",
+            "response_id": "O1aDar3TA62L7M8P5-PeuQw",
+            "usage": {
+              "prompt_tokens": 9454,
+              "output_tokens": 1316,
+              "thinking_tokens": 2112,
+              "total_tokens": 12882
+            },
+            "estimated_actual_cost_microusd": 24051
+          },
+          "budget": {
+            "operation_id": "experiment-012-candidate-05-pass-2",
+            "preflight_maximum_microusd": 57000,
+            "charged_microusd": 24051,
+            "remaining_scope_microusd": 6061409
+          }
+        }
+      ]
+    },
+    "judge_evidence_sha256": "dfb95a79a747141b529e8c158d3dd765cea8a17c506c260883cf681c6abd7518",
+    "observations_source": "stored_versioned_judge_evidence"
+  },
+  "unavailable_metric_reasons": {
+    "brand_pronunciation_pass": "rendered-audio ASR or phoneme evidence is not enabled",
+    "voiceover_wer": "timestamped ASR is not enabled in the active evaluator",
+    "word_timing_mae_ms": "word-level ASR alignment is not enabled in the active evaluator",
+    "shot_boundary_mae_ms": "automatic scene-boundary comparison is not enabled in the active evaluator",
+    "cost_per_accepted_video_usd": "cost and acceptance are unavailable"
+  }
+}

@@ -7,6 +7,7 @@ Define the first implementation slice of the provider-neutral advertising pipeli
 ## Referenced decision
 
 - `records/rfcs/0001-experimental-mixed-media-advertising-pipeline.md`
+- `records/rfcs/0004-human-calibrated-video-acceptance.md`
 
 ## Contract requirements
 
@@ -106,7 +107,7 @@ A temporal-selection experiment MUST request between three and five independent 
 
 #### RUNWAY-2.2 — Screen before selection
 
-Every downloaded generated hook MUST receive EVAL-5 temporal evidence before selection. A hook with missing, invalid, or failing temporal evidence MUST be ineligible. Selection MUST return only eligible hooks; if none pass, the batch MUST finish without silently substituting stock or a rejected generation.
+Every downloaded generated hook MUST receive EVAL-5 temporal evidence before selection. A hook with missing or invalid evidence MUST be ineligible. A reported high event MUST remain ineligible until reviewed; `confirmed_defect` or `ambiguous` confirmation remains ineligible, while a `false_positive` confirmation MAY clear only that event. Selection MUST return only eligible hooks; if none pass, the batch MUST finish without silently substituting stock or a rejected generation.
 
 #### RUNWAY-2.3 — Retain every generated candidate
 
@@ -192,7 +193,7 @@ Planner output is untrusted input. Length limits apply to the brief, hypothesis,
 - Autonomous generation of five advertising hypotheses.
 - Mascot animation acceptance.
 - Direct generative product-UI mode.
-- Automatic vision judgement as a trusted acceptance gate.
+- Automatic vision judgement as the sole trusted acceptance gate.
 - Distributed workers and remote orchestration.
 - Publication and campaign-metric optimization.
 - A general visual timeline editor in the WebUI.
@@ -213,7 +214,7 @@ Planner output is untrusted input. Length limits apply to the brief, hypothesis,
 - `test/services/test_runway.py`
   - RUNWAY-1.1, RUNWAY-1.4, RUNWAY-1.5, RUNWAY-1.6 without live paid requests.
 - `test/bdd/features/mixed_media_pipeline.feature`
-  - RUNWAY-2.2: only temporally passing generated hooks are eligible for selection.
+  - RUNWAY-2.2: temporally passing hooks and confirmed temporal false positives are eligible; confirmed defects remain blocked.
 - `feedback-loop/video-quality/evals/tests/test_temporal_judge.py`
   - EVAL-5 provider-schema compatibility without live paid requests.
 

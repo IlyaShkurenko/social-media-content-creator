@@ -334,6 +334,29 @@ def temporal_candidate_pool(scenario_context: dict[str, Any]) -> None:
     ]
 
 
+@given("a generated hook with a reviewed false-positive temporal event")
+def reviewed_temporal_false_positive(scenario_context: dict[str, Any]) -> None:
+    scenario_context["generated_hooks"] = [
+        {
+            "candidate_id": "hook-reviewed",
+            "temporal_consistency_pass": False,
+            "temporal_events": [
+                {
+                    "event_id": "orientation-001",
+                    "severity": "high",
+                    "confirmation": {
+                        "outcome": "false_positive",
+                        "reviewer": "user",
+                        "reviewed_at": "2026-08-18T10:00:00+00:00",
+                        "reason": "Dense frames show one continuous phone turn.",
+                        "evidence_frames": ["F04", "F05"],
+                    },
+                }
+            ],
+        }
+    ]
+
+
 @when("generated hook selection is requested")
 def request_temporal_selection(scenario_context: dict[str, Any]) -> None:
     from app.services.creative.temporal import eligible_temporal_candidates
@@ -348,3 +371,10 @@ def only_passing_hook_is_eligible(scenario_context: dict[str, Any]) -> None:
     assert [
         item["candidate_id"] for item in scenario_context["eligible_hooks"]
     ] == ["hook-2"]
+
+
+@then("the reviewed hook is eligible")
+def reviewed_hook_is_eligible(scenario_context: dict[str, Any]) -> None:
+    assert [
+        item["candidate_id"] for item in scenario_context["eligible_hooks"]
+    ] == ["hook-reviewed"]

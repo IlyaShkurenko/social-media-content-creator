@@ -46,3 +46,15 @@ Feature: Video-quality experiment acceptance
     Given temporal evidence contains a high-severity screen visibility contradiction
     When temporal consistency is calculated
     Then temporal screening rejects the generated hook
+
+  Scenario: [EVAL-6.2] Product-owner acceptance can override model preference
+    Given a candidate has lower model preference but passes every enforced constraint
+    And the product owner explicitly accepts the retained final video
+    When the reviewed final decision is calculated
+    Then the candidate is kept after human review
+
+  Scenario: [EVAL-6.2] Product-owner acceptance cannot override an enforced failure
+    Given a candidate has lower model preference and a failed enforced constraint
+    And the product owner explicitly accepts the retained final video
+    When the reviewed final decision is calculated
+    Then the reviewed keep is rejected for a constraint regression

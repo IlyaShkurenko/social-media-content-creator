@@ -385,3 +385,76 @@ def calculate_temporal_consistency(
 def temporal_screening_rejects(temporal_result: dict[str, Any]) -> None:
     assert temporal_result["high_severity_event_count"] == 1
     assert temporal_result["temporal_consistency_pass"] is False
+
+
+@given(
+    "a candidate has lower model preference but passes every enforced constraint",
+    target_fixture="reviewed_comparison_case",
+)
+def lower_preference_constrained_candidate() -> dict[str, Any]:
+    return {
+        "candidate": {
+            "primary": {"name": "visual_judge_win_rate", "value": 0.25},
+            "metrics": {"timeline_alignment_f1": 1.0},
+            "constraints": {
+                "all_enforced_pass": True,
+                "all_goal_constraints_verified": False,
+            },
+        },
+        "baseline": {
+            "primary": {"name": "visual_judge_win_rate", "value": 0.5},
+            "metrics": {"timeline_alignment_f1": 1.0},
+        },
+    }
+
+
+@given(
+    "a candidate has lower model preference and a failed enforced constraint",
+    target_fixture="reviewed_comparison_case",
+)
+def lower_preference_failed_candidate() -> dict[str, Any]:
+    case = lower_preference_constrained_candidate()
+    case["candidate"]["constraints"]["all_enforced_pass"] = False
+    return case
+
+
+@given("the product owner explicitly accepts the retained final video")
+def product_owner_accepts(reviewed_comparison_case: dict[str, Any]) -> None:
+    reviewed_comparison_case["review"] = {
+        "outcome": "accept",
+        "reviewer": "user",
+        "artifact_sha256": "a" * 64,
+        "reason": "Candidate 05 is acceptable as the production reference.",
+    }
+
+
+@when(
+    "the reviewed final decision is calculated",
+    target_fixture="reviewed_decision_result",
+)
+def calculate_reviewed_decision(
+    reviewed_comparison_case: dict[str, Any],
+) -> dict[str, str]:
+    try:
+        decision = EXPERIMENT_MODULE.resolve_final_decision(
+            requested="keep",
+            metrics=reviewed_comparison_case["candidate"],
+            baseline_metrics=reviewed_comparison_case["baseline"],
+            human_reviewed=True,
+            human_review_outcome=reviewed_comparison_case["review"]["outcome"],
+        )
+    except ValueError as exc:
+        return {"error": str(exc)}
+    return {"decision": decision}
+
+
+@then("the candidate is kept after human review")
+def kept_after_human_review(reviewed_decision_result: dict[str, str]) -> None:
+    assert reviewed_decision_result == {"decision": "kept_after_human_review"}
+
+
+@then("the reviewed keep is rejected for a constraint regression")
+def reviewed_keep_rejects_regression(
+    reviewed_decision_result: dict[str, str],
+) -> None:
+    assert "constraint regression" in reviewed_decision_result["error"]

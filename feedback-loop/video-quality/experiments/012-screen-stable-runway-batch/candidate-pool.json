@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "experiment": "012-screen-stable-runway-batch",
+  "candidate_count": 5,
+  "generation_policy": {
+    "provider": "runway",
+    "model": "gen4.5",
+    "duration_seconds": 5,
+    "independent_provider_jobs": true,
+    "request_sha256": "5f62a7f2270c0c1fba37cc2099d96d8cc551534b0730eddd132219ee267f8f9c"
+  },
+  "candidates": [
+    {
+      "candidate_id": "candidate-01",
+      "operation_id": "experiment-012-runway-hook-01",
+      "provider_job_id": "c99e33b3-d9c8-4841-838c-5dbef99b51da",
+      "video_sha256": "df9d922c300b9f67b509327df44651cf430bab9a9aa2c158c945c8f6fb124202",
+      "generation_latency_seconds": 99.354,
+      "generation_cost_usd": 0.6,
+      "temporal_status": "complete_disputed",
+      "reported_high_severity_events": 1,
+      "temporal_cost_usd": 0.018111,
+      "disposition": "rejected_hook_quality_and_unconfirmed_temporal_event",
+      "review": "The user and saved F04/F05 frames confirmed continuous phone motion, so the reported orientation discontinuity is a false positive. The user separately rejected the hook because it lacked an emotionally compelling depiction of planning stress."
+    },
+    {
+      "candidate_id": "candidate-02",
+      "operation_id": "experiment-012-runway-hook-02",
+      "provider_job_id": "9a22385c-d158-4186-badd-ef8622da07b7",
+      "video_sha256": "7185e80b857c04c3ff32c5c44dd9524e39c28db8399dae0d9bfe229ce352b046",
+      "generation_latency_seconds": 207.113,
+      "generation_cost_usd": 0.6,
+      "temporal_status": "complete_failed",
+      "reported_high_severity_events": 2,
+      "temporal_cost_usd": 0.019566,
+      "disposition": "rejected_temporal_screen",
+      "review": "The hook content was acceptable to the user, but the judge reported a disappearing white card and an instantaneous phone hand swap."
+    },
+    {
+      "candidate_id": "candidate-03",
+      "operation_id": "experiment-012-runway-hook-03",
+      "provider_job_id": "48b5bedd-84a6-463c-88c7-fd1260fd22f1",
+      "video_sha256": "26fa1e81dda1d2f3a5c32c1d1bfa4c607f8d639f8a343327d8b9fb94f108f7e1",
+      "generation_latency_seconds": 311.208,
+      "generation_cost_usd": 0.6,
+      "temporal_status": "invalid_provider_response",
+      "reported_high_severity_events": null,
+      "temporal_cost_usd": 0.017834,
+      "disposition": "rejected_fail_closed",
+      "review": "The hook content was acceptable to the user, but Gemini returned an unterminated structured response; no temporal pass was claimed and the judge was not retried for selection."
+    },
+    {
+      "candidate_id": "candidate-04",
+      "operation_id": "experiment-012-runway-hook-04",
+      "provider_job_id": "d0260fd6-8939-4ee1-9ac4-22625b05937c",
+      "video_sha256": "f798a1a646a70503f5e004bddb3f674841f72afae7bcc378f2d51f824ccf2bf4",
+      "generation_latency_seconds": 105.673,
+      "generation_cost_usd": 0.6,
+      "temporal_status": "complete_failed",
+      "reported_high_severity_events": 1,
+      "temporal_cost_usd": 0.018501,
+      "disposition": "rejected_temporal_screen",
+      "review": "The temporal judge reported the subject's hair bun disappearing between 2.8 and 3.4 seconds."
+    },
+    {
+      "candidate_id": "candidate-05",
+      "operation_id": "experiment-012-runway-hook-05",
+      "provider_job_id": "c12a1669-91da-4a46-bafb-c2e6eade1fac",
+      "video_sha256": "0d12f83636d37375e499ba22e821ea1a3aa5e445b8614f1be5bcd09f9ec1da5f",
+      "generation_latency_seconds": 220.178,
+      "generation_cost_usd": 0.6,
+      "temporal_status": "complete_passed",
+      "reported_high_severity_events": 0,
+      "temporal_cost_usd": 0.017046,
+      "disposition": "selected_and_kept_after_product_owner_review",
+      "review": "This hook expressed planning frustration and passed the temporal screen. Its narrated final video scored 0.25 against the 0.50 baseline because the pairwise judge penalized the stronger emotion as exaggerated. The product owner explicitly accepted the exact retained final MP4 as the production reference on 2026-08-18."
+    }
+  ],
+  "selected_candidate_id": "candidate-05",
+  "selected_final_video_sha256": "bd3a17ef31339160eb19062568e6f4c0aac3e17ec8afbfa2007f841aeae13c52",
+  "selected_full_video_judge_cost_usd": 0.04499,
+  "experiment_paid_cost_usd": 3.136048,
+  "remaining_iteration_budget_usd": 6.061409,
+  "final_decision": "kept_after_human_review"
+}

@@ -2,15 +2,18 @@
 
 Build an autonomous, reproducible production loop that turns a tict advertising hypothesis into up to five distinct short-form videos, measures the rendered results against their storyboards, and keeps only demonstrable improvements.
 
-## Primary metric
+## Acceptance objective
 
-For evaluator `0.6`, maximize `visual_judge_win_rate`: the mean candidate credit from two blind Gemini pairwise passes with reversed A/B order. Candidate win is `1.0`, tie is `0.5`, and baseline win is `0.0`. The self-comparison baseline is `0.5`; a candidate must beat the latest comparable baseline.
+For reviewed product experiments, the controlling outcome is explicit product-owner acceptance of the retained final MP4 after every enforced technical and product constraint passes. This binary human label is the calibration target for future automation; it is not fabricated by the evaluator.
 
-`timeline_alignment_f1` remains a required non-regression metric. It is micro-averaged F1 over `(scene_id, expected_visual_tag)` pairs calculated deterministically from the judge's closed-vocabulary scene observations. Pairwise preference cannot override an alignment, technical, screen-policy, or brand regression.
+Evaluator `0.6` still reports `visual_judge_win_rate`: the mean candidate credit from two blind Gemini pairwise passes with reversed A/B order. Candidate win is `1.0`, tie is `0.5`, and baseline win is `0.0`. It is a diagnostic model-preference signal, not a percentage of video quality and not the final acceptance authority.
+
+`timeline_alignment_f1` remains a required non-regression metric. It is micro-averaged F1 over `(scene_id, expected_visual_tag)` pairs calculated deterministically from the judge's closed-vocabulary scene observations. Human preference cannot override an alignment, technical, temporal, screen-policy, or brand failure.
 
 ## Secondary metrics
 
 - `timeline_alignment_f1`
+- `visual_judge_win_rate`
 - `brand_asset_fidelity`
 - `subtitle_text_token_f1`
 - `brand_text_exact_match`
@@ -33,7 +36,7 @@ Unavailable metrics must be emitted as `null` with a reason, never silently omit
 - Expected audio stream is present: 100%.
 - Aspect ratio and duration satisfy the scenario contract: 100%.
 - No corrupt frames or sustained black segments.
-- Every generated hook is sampled at 10 FPS and has zero high-severity temporal events before selection.
+- Every generated hook is sampled at 10 FPS. Reported high-severity events block automatic selection until confirmed; confirmed defects veto and confirmed false positives may be cleared with artifact-bound review evidence.
 - Every evaluated experiment retains a hash-matching `artifacts/video.mp4`.
 - Voiceover WER is at most `0.05` once ASR evaluation is enabled.
 - Subtitle safe-area compliance is 100% once frame-level subtitle detection is enabled.
@@ -52,6 +55,6 @@ Unavailable metrics must be emitted as `null` with a reason, never silently omit
 
 ## Comparison policy
 
-Use the same scenario, input artifact contract, evaluator version, and observation mode for direct comparisons. Keep a candidate automatically only if the primary metric improves and all required constraints are verified. If some required checks are still pending, the result is `provisional_requires_review` even when the primary score improves.
+Use the same scenario, input artifact contract, evaluator version, and observation mode for direct comparisons. Automated model-preference evidence may rank candidates, but a product candidate is kept only when all enforced constraints pass and either the configured automatic acceptance contract is satisfied or the product owner explicitly accepts the exact retained artifact. Pending subjective checks may be resolved by that review; enforced failures may not.
 
-Evaluator changes are research changes, not ordinary product experiments: bump the evaluator version and establish a fresh baseline.
+Evaluator measurement changes are research changes, not ordinary product experiments: bump the evaluator version and establish a fresh baseline. Acceptance-policy changes preserve the original automated metrics and require an auditable review record.

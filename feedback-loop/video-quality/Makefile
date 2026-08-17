@@ -9,7 +9,7 @@ BASELINE ?= experiments/008-baseline
 MIXED_STORYBOARD ?= evals/dataset/mixed-media-first-slice-001.json
 MIXED_OUTPUT ?= .state/prepared/mixed-media-first-slice-001
 
-.PHONY: baseline judge temporal-judge experiment experiment-start experiment-evaluate experiment-finish evaluate verify mixed-prepare mixed-render-stock mixed-rerender-runway mixed-runway
+.PHONY: baseline judge temporal-judge experiment experiment-start experiment-evaluate experiment-finish experiment-review evaluate verify mixed-prepare mixed-render-stock mixed-rerender-runway mixed-runway
 
 baseline:
 	$(PYTHON) scripts/run_experiment.py --kind baseline --slug baseline --scenario $(SCENARIO) $(if $(VIDEO),--video "$(VIDEO)",) $(if $(OBSERVATIONS),--observations "$(OBSERVATIONS)",) $(if $(PIPELINE_RECORD),--pipeline-record "$(PIPELINE_RECORD)",) $(if $(SUBTITLE),--subtitle "$(SUBTITLE)",) $(if $(JUDGE_EVIDENCE),--judge-evidence "$(JUDGE_EVIDENCE)",) $(if $(TEMPORAL_EVIDENCE),--temporal-evidence "$(TEMPORAL_EVIDENCE)",)
@@ -48,7 +48,15 @@ experiment-finish:
 	@test -n "$(EXPERIMENT)" || (echo "EXPERIMENT is required" >&2; exit 2)
 	@test -n "$(DECISION)" || (echo "DECISION=keep or DECISION=revert is required" >&2; exit 2)
 	@test -n "$(LEARNING)" || (echo "LEARNING is required" >&2; exit 2)
-	$(PYTHON) scripts/run_experiment.py --kind experiment --phase finish --experiment "$(EXPERIMENT)" --decision "$(DECISION)" --learning "$(LEARNING)" $(if $(HUMAN_REVIEW),--human-review "$(HUMAN_REVIEW)",) $(if $(REVIEWER),--reviewer "$(REVIEWER)",)
+	$(PYTHON) scripts/run_experiment.py --kind experiment --phase finish --experiment "$(EXPERIMENT)" --decision "$(DECISION)" --learning "$(LEARNING)" $(if $(HUMAN_REVIEW),--human-review "$(HUMAN_REVIEW)",) $(if $(REVIEWER),--reviewer "$(REVIEWER)",) $(if $(REVIEW_OUTCOME),--review-outcome "$(REVIEW_OUTCOME)",) $(if $(REVIEW_REASON),--review-reason "$(REVIEW_REASON)",)
+
+experiment-review:
+	@test -n "$(EXPERIMENT)" || (echo "EXPERIMENT is required" >&2; exit 2)
+	@test -n "$(REVIEW_OUTCOME)" || (echo "REVIEW_OUTCOME=accept or reject is required" >&2; exit 2)
+	@test -n "$(REVIEWER)" || (echo "REVIEWER is required" >&2; exit 2)
+	@test -n "$(REVIEW_REASON)" || (echo "REVIEW_REASON is required" >&2; exit 2)
+	@test -n "$(LEARNING)" || (echo "LEARNING is required" >&2; exit 2)
+	$(PYTHON) scripts/run_experiment.py --kind experiment --phase review --experiment "$(EXPERIMENT)" --review-outcome "$(REVIEW_OUTCOME)" --reviewer "$(REVIEWER)" --review-reason "$(REVIEW_REASON)" --learning "$(LEARNING)"
 
 evaluate:
 	@test -n "$(EXPERIMENT)" || (echo "EXPERIMENT is required" >&2; exit 2)

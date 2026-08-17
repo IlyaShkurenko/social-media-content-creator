@@ -41,3 +41,8 @@ Feature: Controlled mixed-media advertising production
     Given three generated hooks with one passing temporal screen
     When generated hook selection is requested
     Then only the passing generated hook is eligible
+
+  Scenario: [RUNWAY-2.2] A confirmed temporal false positive can be selected
+    Given a generated hook with a reviewed false-positive temporal event
+    When generated hook selection is requested
+    Then the reviewed hook is eligible

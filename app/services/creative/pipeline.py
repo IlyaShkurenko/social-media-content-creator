@@ -65,6 +65,11 @@ def build_runway_request(storyboard: Storyboard) -> RunwayVideoRequest:
         f"Camera: {hook.visual_intent.camera}. "
         "Photorealistic, authentic premium travel advertisement, natural human motion. "
         f"{screen_instruction} "
+        "Use exactly one phone with stable geometry throughout the shot. "
+        "Keep its display facing only the traveller and fully away from the camera "
+        "from the first frame to the last; do not rotate or flip the device, reveal "
+        "its display to camera, duplicate it, or make a screen appear on its back. "
+        "Preserve continuous hand-to-phone contact and physically coherent finger motion. "
         "No logos, watermarks, or subtitles."
     )
     base = hook.media_plan.base

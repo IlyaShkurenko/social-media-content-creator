@@ -191,8 +191,6 @@ def recommended_decision(
         raise ValueError("candidate and baseline use different primary metrics")
     current_value = metrics["primary"]["value"]
     baseline_value = baseline_metrics["primary"]["value"]
-    if current_value <= baseline_value:
-        return "reject_no_primary_improvement"
     candidate_alignment = metrics.get("metrics", {}).get(
         "timeline_alignment_f1"
     )
@@ -205,6 +203,8 @@ def recommended_decision(
         and candidate_alignment < baseline_alignment
     ) or metrics["constraints"].get("all_enforced_pass") is False:
         return "reject_constraint_regression"
+    if current_value <= baseline_value:
+        return "provisional_requires_review"
     if metrics["constraints"]["all_goal_constraints_verified"]:
         return "keep"
     return "provisional_requires_review"
@@ -216,6 +216,7 @@ def resolve_final_decision(
     metrics: dict[str, Any] | None,
     baseline_metrics: dict[str, Any] | None,
     human_reviewed: bool,
+    human_review_outcome: str | None = None,
 ) -> str:
     if requested == "revert":
         return "reverted"
@@ -223,17 +224,53 @@ def resolve_final_decision(
         raise ValueError("final decision must be 'keep' or 'revert'")
     if metrics is None or baseline_metrics is None:
         raise ValueError("a candidate without metrics cannot be kept")
-    current_value = metrics["primary"]["value"]
-    baseline_value = baseline_metrics["primary"]["value"]
-    if current_value <= baseline_value:
-        raise ValueError("primary metric did not improve; keep is not allowed")
     if recommended_decision(metrics, baseline_metrics) == "reject_constraint_regression":
         raise ValueError("candidate has a constraint regression; keep is not allowed")
+    current_value = metrics["primary"]["value"]
+    baseline_value = baseline_metrics["primary"]["value"]
     if metrics["constraints"]["all_goal_constraints_verified"]:
-        return "kept"
+        if current_value > baseline_value:
+            return "kept"
     if not human_reviewed:
+        if current_value <= baseline_value:
+            raise ValueError(
+                "model preference did not improve; explicit human review is required"
+            )
         raise ValueError("provisional improvement requires explicit human review")
+    if human_review_outcome not in {"accept", "reject"}:
+        raise ValueError("human review requires an explicit accept or reject outcome")
+    if human_review_outcome != "accept":
+        raise ValueError("a rejected human review cannot keep the candidate")
     return "kept_after_human_review"
+
+
+def build_human_review_record(
+    manifest: dict[str, Any],
+    *,
+    outcome: str,
+    reviewer: str,
+    reason: str,
+    reviewed_at: str | None = None,
+) -> dict[str, str]:
+    if outcome not in {"accept", "reject"}:
+        raise ValueError("human review outcome must be accept or reject")
+    reviewer = reviewer.strip()
+    reason = reason.strip()
+    if not reviewer:
+        raise ValueError("human review requires a reviewer")
+    if not reason:
+        raise ValueError("human review requires an English reason")
+    video_entry = manifest.get("candidate", {}).get("video", {})
+    artifact_sha256 = str(video_entry.get("snapshot_sha256", ""))
+    if not re.fullmatch(r"[a-f0-9]{64}", artifact_sha256):
+        raise ValueError("human review requires a retained artifact SHA-256")
+    return {
+        "outcome": outcome,
+        "reviewer": reviewer,
+        "reviewed_at": reviewed_at or utc_now(),
+        "artifact_sha256": artifact_sha256,
+        "reason": reason,
+    }
 
 
 def write_readme(
@@ -390,6 +427,18 @@ def write_staged_readme(
         )
         if final.get("reviewer"):
             lines.append(f"- Reviewer: `{final['reviewer']}`")
+        review = final.get("human_review")
+        if isinstance(review, dict):
+            lines.extend(
+                [
+                    f"- Review outcome: `{review['outcome']}`",
+                    f"- Reviewed artifact SHA-256: `{review['artifact_sha256']}`",
+                    f"- Review reason: {review['reason']}",
+                ]
+            )
+        candidate_pool = output_dir / "candidate-pool.json"
+        if candidate_pool.is_file():
+            lines.append("- Candidate provenance: `candidate-pool.json`")
         lines.append("")
     else:
         lines.extend(
@@ -546,7 +595,10 @@ def parse_args() -> argparse.Namespace:
         description="Run baseline or staged video-quality experiments"
     )
     parser.add_argument("--kind", choices=("baseline", "experiment"), required=True)
-    parser.add_argument("--phase", choices=("start", "evaluate", "finish"))
+    parser.add_argument(
+        "--phase",
+        choices=("start", "evaluate", "finish", "review"),
+    )
     parser.add_argument("--slug")
     parser.add_argument("--hypothesis")
     parser.add_argument("--scenario")
@@ -565,6 +617,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--learning")
     parser.add_argument("--human-review", choices=("YES", "NO"), default="NO")
     parser.add_argument("--reviewer")
+    parser.add_argument("--review-outcome", choices=("accept", "reject"))
+    parser.add_argument("--review-reason")
     return parser.parse_args()
 
 
@@ -882,13 +936,20 @@ def finish_experiment(args: argparse.Namespace) -> int:
         else None
     )
     human_reviewed = args.human_review == "YES"
-    if human_reviewed and not args.reviewer:
-        raise ValueError("reviewer is required when HUMAN_REVIEW=YES")
+    human_review = None
+    if human_reviewed:
+        human_review = build_human_review_record(
+            manifest,
+            outcome=_require(args.review_outcome, "review outcome"),
+            reviewer=_require(args.reviewer, "reviewer"),
+            reason=_require(args.review_reason, "review reason"),
+        )
     decision = resolve_final_decision(
         requested=_require(args.decision, "decision"),
         metrics=metrics,
         baseline_metrics=baseline_metrics,
         human_reviewed=human_reviewed,
+        human_review_outcome=(human_review or {}).get("outcome"),
     )
     learning = _require(args.learning, "learning")
     manifest["lifecycle"]["status"] = (
@@ -900,6 +961,7 @@ def finish_experiment(args: argparse.Namespace) -> int:
         "learning": learning,
         "human_reviewed": human_reviewed,
         "reviewer": args.reviewer if human_reviewed else None,
+        "human_review": human_review,
     }
     _write_manifest(output_dir, manifest)
     error_path = output_dir / "evaluator.stderr.log"
@@ -911,6 +973,64 @@ def finish_experiment(args: argparse.Namespace) -> int:
         print("next=run repository validation, commit, and push")
     else:
         print("next=revert candidate code and commit the experiment learning")
+    return 0
+
+
+def review_finished_experiment(args: argparse.Namespace) -> int:
+    """Apply later explicit product-owner review to a finished experiment."""
+
+    output_dir = _experiment_directory(_require(args.experiment, "experiment"))
+    manifest = json.loads((output_dir / "inputs.json").read_text(encoding="utf-8"))
+    if manifest.get("schema_version") != 2:
+        raise ValueError("experiment-review requires a staged schema v2 record")
+    if manifest["lifecycle"]["status"] not in {"evaluated", "reverted"}:
+        raise ValueError("only an evaluated or reverted experiment may be reviewed")
+    verify_retained_artifact(output_dir, manifest)
+
+    baseline_dir = _experiment_directory(manifest["baseline"]["experiment"])
+    baseline_metrics_path = baseline_dir / "metrics.json"
+    if sha256_file(baseline_metrics_path) != manifest["baseline"]["metrics_sha256"]:
+        raise ValueError("frozen baseline metrics changed after experiment-start")
+    baseline_metrics = json.loads(
+        baseline_metrics_path.read_text(encoding="utf-8")
+    )
+    metrics = json.loads((output_dir / "metrics.json").read_text(encoding="utf-8"))
+    review = build_human_review_record(
+        manifest,
+        outcome=_require(args.review_outcome, "review outcome"),
+        reviewer=_require(args.reviewer, "reviewer"),
+        reason=_require(args.review_reason, "review reason"),
+    )
+    requested = "keep" if review["outcome"] == "accept" else "revert"
+    decision = resolve_final_decision(
+        requested=requested,
+        metrics=metrics,
+        baseline_metrics=baseline_metrics,
+        human_reviewed=True,
+        human_review_outcome=review["outcome"],
+    )
+    previous_final = manifest.get("final")
+    if previous_final:
+        manifest.setdefault("final_history", []).append(previous_final)
+    manifest["lifecycle"]["status"] = (
+        "kept" if decision.startswith("kept") else "reverted"
+    )
+    manifest.setdefault("evaluation", {})["recommended_decision"] = (
+        "provisional_requires_review"
+    )
+    manifest["final"] = {
+        "decision": decision,
+        "finished_at": utc_now(),
+        "learning": _require(args.learning, "learning"),
+        "human_reviewed": True,
+        "reviewer": review["reviewer"],
+        "human_review": review,
+    }
+    _write_manifest(output_dir, manifest)
+    write_staged_readme(output_dir, manifest, metrics=metrics)
+    print(f"status={manifest['lifecycle']['status']}")
+    print(f"decision={decision}")
+    print("next=run repository validation, commit, and push")
     return 0
 
 
@@ -927,6 +1047,8 @@ def main() -> int:
         return evaluate_experiment(args)
     if args.phase == "finish":
         return finish_experiment(args)
+    if args.phase == "review":
+        return review_finished_experiment(args)
     raise ValueError(
         "product experiments require --phase start, evaluate, or finish"
     )

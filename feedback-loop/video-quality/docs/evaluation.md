@@ -14,7 +14,7 @@ Gemini pairwise evidence, and stored high-frequency temporal evidence. It:
 7. calculates timeline-alignment precision, recall, and F1 deterministically;
 8. compares subtitle tokens and exact canonical `tict` spelling with the stored script;
 9. evaluates every scene's declared screen policy from structured screen evidence;
-10. verifies a 10 FPS temporal screen of the generated hook and vetoes any high-severity continuity event;
+10. verifies a 10 FPS temporal screen of the generated hook and blocks reported high-severity events until confirmation;
 11. records generation latency, judge usage, conservative ledger charge, and remaining budget;
 12. records unavailable metrics explicitly.
 
@@ -28,7 +28,8 @@ so `make evaluate` is offline and reproducible.
 `visual_judge_win_rate` is the mean candidate credit from the two reversed passes:
 candidate win `1.0`, tie `0.5`, baseline win `0.0`. The self-comparison baseline
 is `0.5`. Contradictory positional wins cancel to `0.5` instead of pretending the
-candidate improved.
+candidate improved. This is a diagnostic model-preference signal, not a
+percentage of video quality and not the sole acceptance authority.
 
 `timeline_alignment_f1` keys every tag by scene ID. Observed tags must come from
 the storyboard's closed vocabulary, and only cross-pass consensus becomes metric
@@ -38,10 +39,12 @@ the primary experiment metric.
 Hard checks currently enforced are decode success, audio presence, aspect ratio,
 duration, absence of sustained black segments, evidence-frame extraction,
 subtitle safe-area compliance, automated screen policy, and available brand
-fidelity. A high-severity `object_disappearance`, `object_duplication`,
+fidelity. A reported high-severity `object_disappearance`, `object_duplication`,
 `orientation_discontinuity`, `screen_visibility_contradiction`,
 `geometry_deformation`, or `hand_interaction_discontinuity` event fails temporal
-consistency. Exact `tict` spelling remains independently scored. Timestamped ASR,
+consistency and blocks automatic selection until its cited frames are reviewed.
+A confirmed defect keeps the veto; a confirmed false positive clears only that
+event. Exact `tict` spelling remains independently scored. Timestamped ASR,
 rendered-audio pronunciation, word timing, and automatic shot-boundary error are
 still pending. A candidate cannot be automatically accepted while a required
 constraint is pending.
@@ -59,7 +62,7 @@ Screen policy is intent-aware:
 generated hook + storyboard
   -> 10 FPS timestamped strips
   -> paid versioned Gemini temporal judge
-  -> deterministic temporal veto
+  -> deterministic pending/confirmed temporal eligibility
 
 baseline MP4 + candidate MP4 + storyboard
   -> paid versioned Gemini judge (two reversed A/B passes)
@@ -70,11 +73,11 @@ baseline MP4 + candidate MP4 + storyboard
 ```
 
 The judge returns structured scene observations and rubric evidence rather than a
-single unrestricted aesthetic score. Pairwise preference is the primary research
-metric for evaluator `0.6`, but it is never the sole acceptance rule: temporal
-consistency, alignment,
-and deterministic constraints can veto it, and pending ASR/pronunciation evidence
-still requires human review.
+single unrestricted aesthetic score. Pairwise preference remains a research
+diagnostic for evaluator `0.6`. The acceptance controller can keep a technically
+compliant artifact after explicit product-owner acceptance even when model
+preference does not improve. Temporal, alignment, brand, and deterministic
+failures cannot be overridden.
 
 ## Commands
 
@@ -121,12 +124,21 @@ make experiment-finish \
   DECISION=keep \
   HUMAN_REVIEW=YES \
   REVIEWER=user \
+  REVIEW_OUTCOME=accept \
+  REVIEW_REASON="The retained final MP4 meets the advertising objective" \
   LEARNING="The bridge improved alignment and passed visual review"
+
+make experiment-review \
+  EXPERIMENT=experiments/012-screen-stable-runway-batch \
+  REVIEW_OUTCOME=accept \
+  REVIEWER=user \
+  REVIEW_REASON="Candidate 05 is acceptable as the production reference" \
+  LEARNING="Human preference overrides the uncalibrated model-preference diagnostic"
 ```
 
 `experiment-start` requires a clean worktree. It re-evaluates the selected baseline under ignored state, verifies metric equality, and then allocates the next identity. The resulting `inputs.json` schema v2 freezes the baseline hash, starting git revision, observed problem, hypothesis, planned change, expected impact, scenario hash, and plan hash before candidate code or metrics exist.
 
-`experiment-evaluate` refuses a changed plan, scenario, or baseline. It appends sanitized candidate inputs, evaluator results, candidate revision, and worktree-diff hash to the same identity. `experiment-finish` enforces keep/revert policy and records learning; it deliberately does not run git revert, commit, or push.
+`experiment-evaluate` refuses a changed plan, scenario, or baseline. It appends sanitized candidate inputs, evaluator results, candidate revision, and worktree-diff hash to the same identity. `experiment-finish` enforces keep/revert policy and records learning. `experiment-review` can apply later explicit product-owner review to an evaluated or reverted result while retaining the previous decision in history. Neither command runs git revert, commit, or push.
 
 Successful records track only `README.md`, `metrics.json`, and `inputs.json`;
 failed evaluation also retains `evaluator.stderr.log`. Video snapshots and

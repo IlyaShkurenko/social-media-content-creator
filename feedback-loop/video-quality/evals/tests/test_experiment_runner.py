@@ -11,8 +11,8 @@ from unittest import mock
 
 LOOP_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(LOOP_ROOT / "scripts"))
-import run_experiment
-import replay_experiment
+import run_experiment  # noqa: E402
+import replay_experiment  # noqa: E402
 
 
 class ComparableBaselineTests(unittest.TestCase):
@@ -154,9 +154,15 @@ class CompactExperimentRecordTests(unittest.TestCase):
     def test_provisional_keep_requires_explicit_human_review(self) -> None:
         metrics = {
             "primary": {"name": "timeline_alignment_f1", "value": 0.9},
-            "constraints": {"all_goal_constraints_verified": False},
+            "constraints": {
+                "all_enforced_pass": True,
+                "all_goal_constraints_verified": False,
+            },
         }
-        baseline = {"primary": {"name": "timeline_alignment_f1", "value": 0.8}}
+        baseline = {
+            "primary": {"name": "timeline_alignment_f1", "value": 0.8},
+            "metrics": {},
+        }
 
         with self.assertRaisesRegex(ValueError, "human review"):
             run_experiment.resolve_final_decision(
@@ -172,24 +178,81 @@ class CompactExperimentRecordTests(unittest.TestCase):
                 metrics=metrics,
                 baseline_metrics=baseline,
                 human_reviewed=True,
+                human_review_outcome="accept",
             ),
             "kept_after_human_review",
         )
 
-    def test_keep_is_rejected_without_primary_improvement(self) -> None:
+    def test_human_acceptance_can_keep_without_model_preference_improvement(self) -> None:
         metrics = {
             "primary": {"name": "timeline_alignment_f1", "value": 0.8},
-            "constraints": {"all_goal_constraints_verified": True},
+            "metrics": {"timeline_alignment_f1": 1.0},
+            "constraints": {
+                "all_enforced_pass": True,
+                "all_goal_constraints_verified": False,
+            },
         }
-        baseline = {"primary": {"name": "timeline_alignment_f1", "value": 0.8}}
+        baseline = {
+            "primary": {"name": "timeline_alignment_f1", "value": 0.8},
+            "metrics": {"timeline_alignment_f1": 1.0},
+        }
 
-        with self.assertRaisesRegex(ValueError, "primary metric did not improve"):
+        self.assertEqual(
             run_experiment.resolve_final_decision(
                 requested="keep",
                 metrics=metrics,
                 baseline_metrics=baseline,
                 human_reviewed=True,
+                human_review_outcome="accept",
+            ),
+            "kept_after_human_review",
+        )
+
+    def test_human_acceptance_cannot_override_enforced_failure(self) -> None:
+        metrics = {
+            "primary": {"name": "visual_judge_win_rate", "value": 0.25},
+            "metrics": {"timeline_alignment_f1": 1.0},
+            "constraints": {
+                "all_enforced_pass": False,
+                "all_goal_constraints_verified": False,
+            },
+        }
+        baseline = {
+            "primary": {"name": "visual_judge_win_rate", "value": 0.5},
+            "metrics": {"timeline_alignment_f1": 1.0},
+        }
+
+        with self.assertRaisesRegex(ValueError, "constraint regression"):
+            run_experiment.resolve_final_decision(
+                requested="keep",
+                metrics=metrics,
+                baseline_metrics=baseline,
+                human_reviewed=True,
+                human_review_outcome="accept",
             )
+
+    def test_human_review_record_is_bound_to_retained_artifact(self) -> None:
+        manifest = {
+            "candidate": {
+                "video": {
+                    "snapshot_path": "artifacts/video.mp4",
+                    "snapshot_sha256": "d" * 64,
+                }
+            }
+        }
+
+        record = run_experiment.build_human_review_record(
+            manifest,
+            outcome="accept",
+            reviewer="user",
+            reason="Candidate 05 is acceptable as the production reference.",
+            reviewed_at="2026-08-18T10:00:00+00:00",
+        )
+
+        self.assertEqual(record["outcome"], "accept")
+        self.assertEqual(record["artifact_sha256"], "d" * 64)
+        self.assertEqual(record["reviewer"], "user")
+        self.assertIn("Candidate 05", record["reason"])
 
     def test_sanitizer_redacts_credentials_and_normalizes_repo_paths(self) -> None:
         record = {

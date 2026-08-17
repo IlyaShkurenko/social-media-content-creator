@@ -9,6 +9,7 @@ Define the deterministic acceptance boundary for a candidate advertising-video e
 - `records/rfcs/0001-experimental-mixed-media-advertising-pipeline.md`
 - `records/rfcs/0002-versioned-gemini-video-quality-judge.md`
 - `records/rfcs/0003-temporal-screening-and-artifact-retention.md`
+- `records/rfcs/0004-human-calibrated-video-acceptance.md`
 
 ## Requirements
 
@@ -24,9 +25,9 @@ When a candidate improves the primary metric but one or more required goal const
 
 When a comparable candidate improves the primary metric and all required goal constraints are verified, the experiment decision MUST be `keep`.
 
-### EVAL-1.4 — No primary improvement is rejected
+### EVAL-1.4 — No automatic improvement requires review or rejection
 
-When a comparable candidate does not improve the primary metric, the experiment decision MUST be `reject_no_primary_improvement`, regardless of verified constraints.
+When a comparable candidate does not improve the automated preference metric, it MUST NOT be kept automatically. A candidate that passes every enforced constraint MAY advance to explicit product-owner review under EVAL-6.2; otherwise the decision MUST be `reject_no_primary_improvement`.
 
 ### EVAL-2.1 — Comparable storyboard variants
 
@@ -72,9 +73,9 @@ Every perceptual comparison MUST contain two blind passes with reversed A/B inpu
 
 The judge MUST select observed visual tags only from the union of storyboard-declared expected tags and MUST support every selection with scene identity and timestamped evidence. Deterministic evaluator code, rather than the hosted model, MUST calculate timeline-alignment and screen-policy metrics from the aggregated observations. Disagreement that prevents a reliable structured observation MUST remain explicit and fail closed.
 
-### EVAL-4.4 — Pairwise improvement cannot override regressions
+### EVAL-4.4 — Pairwise preference cannot override regressions
 
-Under evaluator `0.5`, `visual_judge_win_rate` is the primary experiment metric. A candidate with an improved primary metric MUST still be rejected as `reject_constraint_regression` when `timeline_alignment_f1` is below its comparable baseline or any enforced technical/product constraint fails. Pending required constraints continue to produce `provisional_requires_review`.
+`visual_judge_win_rate` is a diagnostic pairwise preference metric. A candidate with an improved preference MUST still be rejected as `reject_constraint_regression` when `timeline_alignment_f1` is below its comparable baseline or any enforced technical/product constraint fails. Pending required constraints continue to produce `provisional_requires_review` unless resolved by an explicit review allowed under EVAL-6.2.
 
 ### EVAL-4.5 — Paid judge calls share the iteration budget
 
@@ -92,14 +93,30 @@ Evaluator `0.6` generated-scene screening MUST sample the declared hook at 10 FP
 
 Temporal events MUST use only `object_disappearance`, `object_duplication`, `orientation_discontinuity`, `screen_visibility_contradiction`, `geometry_deformation`, or `hand_interaction_discontinuity`. Every event MUST include `low`, `medium`, or `high` severity, source timestamps, supporting frame indices, affected object, and an evidence-based reason. Deterministic evaluator code MUST calculate event counts and MUST NOT accept provider-supplied metric values.
 
-### EVAL-5.3 — Temporal failures veto generated hooks
+### EVAL-5.3 — Temporal events require confirmation before final veto
 
-Any high-severity temporal event MUST set `temporal_consistency_pass=false` and make the generated hook ineligible for selection. Missing, partial, malformed, hash-mismatched, or wrong-protocol temporal evidence MUST also fail closed. Medium and low events remain reported without independently vetoing evaluator `0.6`.
+Any reported high-severity temporal event MUST set `temporal_consistency_pass=false` and make the generated hook ineligible for automatic selection while confirmation is absent, ambiguous, or `confirmed_defect`. A review outcome of `false_positive` MAY clear only the reviewed event and make the hook eligible when no other high event remains. Missing, partial, malformed, hash-mismatched, or wrong-protocol temporal evidence MUST fail closed. The original provider evidence MUST remain immutable.
 
 ### EVAL-5.4 — Temporal evidence replays offline
 
 Historical evaluation MUST consume stored temporal evidence and MUST NOT re-extract frames or call Gemini. Candidate and baseline temporal evidence are comparable only when evaluator version, temporal schema, prompt hash, sampling rate, requested model, and provider-reported model version match.
 
+### EVAL-6.1 — Model preference is diagnostic evidence
+
+`visual_judge_win_rate` MUST remain available and reproducible, but MUST NOT be presented as a percentage of video quality or the sole product-acceptance authority. Until a versioned human-labelled calibration demonstrates alignment with the advertising objective, model preference MAY rank candidates for review but MUST NOT overrule an explicit product-owner decision that satisfies EVAL-6.2.
+
+### EVAL-6.2 — Explicit human acceptance may keep a constrained candidate
+
+The product owner MAY keep a retained candidate whose automated preference does not improve when every enforced technical and product constraint passes and no deterministic comparison metric regresses. Human acceptance MUST NOT override any failed enforced constraint. Pending subjective metrics MAY be resolved for that artifact by explicit review.
+
+### EVAL-6.3 — Human review is artifact-bound evidence
+
+A human-review override MUST record the outcome (`accept` or `reject`), reviewer identity, timestamp, retained final-video SHA-256, and an English reason. It MUST preserve the original automated metrics and provider evidence unchanged.
+
+### EVAL-6.4 — Accepted videos seed calibration
+
+Every explicitly accepted or rejected rendered video SHOULD retain its review label as calibration evidence. A future hypothesis-aware or composite automatic metric MUST introduce a new evaluator version, publish its labelled-set agreement, and establish a fresh baseline before becoming an automatic keep rule.
+
 ## Executable coverage
 
-`test/bdd/features/video_quality_acceptance.feature` covers the high-value acceptance boundary in EVAL-1.2, EVAL-1.3, EVAL-2.4, the pre-change plan freeze in EVAL-3.2, mandatory artifact verification in EVAL-3.3, order-balanced preference in EVAL-4.2, regression blocking in EVAL-4.4, and temporal veto in EVAL-5.3. Lower-level evaluator output, exact brand spelling, temporal extraction, metric calculations, lifecycle transitions, budget transitions, hash verification, and compact-record serialization remain covered by ordinary evaluator tests.
+`test/bdd/features/video_quality_acceptance.feature` covers the high-value acceptance boundary in EVAL-1.2, EVAL-1.3, EVAL-2.4, the pre-change plan freeze in EVAL-3.2, mandatory artifact verification in EVAL-3.3, order-balanced preference in EVAL-4.2, regression blocking in EVAL-4.4, temporal confirmation in EVAL-5.3, and human acceptance in EVAL-6.2. Lower-level evaluator output, exact brand spelling, temporal extraction, metric calculations, lifecycle transitions, budget transitions, hash verification, and compact-record serialization remain covered by ordinary evaluator tests.
