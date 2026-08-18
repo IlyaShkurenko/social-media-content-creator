@@ -1,7 +1,7 @@
 # 013-hypothesis-aware-candidate-orchestration
 
 - Started: `2026-08-18T11:52:59.725439+00:00`
-- Status: `requires_review`
+- Status: `accepted`
 - Start revision: `01fd020c60de8f7d05de67a0ea38a5a8c4c1ff6b`
 - Scenario: `evals/dataset/mixed-media-stock-baseline-001.json`
 
@@ -43,11 +43,20 @@ Three distinct candidates are planned reproducibly, total paid cost is preflight
 
 ## Decision
 
-`requires_product_owner_review`
+`accepted: scattered-map-pins`
+
+## Product owner review
+
+- Reviewer: `user`
+- Reviewed at: `2026-08-18T22:45:00+00:00`
+- Outcome: `scattered-map-pins` accepted as the production candidate for this campaign; `browser-tab-chaos` reviewed and judged acceptable quality but not selected (not a quality rejection). `lost-reservation-panic` remains ineligible and was not presented for review.
+- Reason (verbatim intent): preferred `scattered-map-pins` on content, while regarding both eligible candidates as acceptable overall.
+- Record: `artifacts/campaign/campaign-product-owner-review.json`
+- Retained accepted video SHA-256: `7412f0e49389cfdac8b984eae0d406dc5af691bf77cc9cb34790d756022d93ae`
 
 ## Learning
 
-Plan-first candidate generation works end to end and turns one brief into three independent, durable hypotheses and provider jobs. Event-level confirmation prevented a camera-crop false positive from vetoing a usable video, while a real disappearing-phone defect remained blocked. The remaining evaluator gap is campaign-specific hypothesis scoring: direct pairwise comparison under one fixed hook scenario is invalid across intentionally different creative hypotheses. No candidate is automatically selected or committed as accepted until the product owner reviews the exact retained MP4.
+Plan-first candidate generation works end to end and turns one brief into three independent, durable hypotheses and provider jobs. Event-level confirmation prevented a camera-crop false positive from vetoing a usable video, while a real disappearing-phone defect remained blocked. The remaining evaluator gap is campaign-specific hypothesis scoring: direct pairwise comparison under one fixed hook scenario is invalid across intentionally different creative hypotheses. No candidate was automatically selected or committed as accepted — the product owner reviewed the exact retained MP4s directly and selected `scattered-map-pins`, per this project's standing rule that human preference is the only acceptance authority for a new creative hypothesis.
 
 - Candidate provenance: `candidate-pool.json`
-- Human reviewed: `False`
+- Human reviewed: `True`
