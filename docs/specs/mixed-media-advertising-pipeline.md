@@ -8,6 +8,7 @@ Define the first implementation slice of the provider-neutral advertising pipeli
 
 - `records/rfcs/0001-experimental-mixed-media-advertising-pipeline.md`
 - `records/rfcs/0004-human-calibrated-video-acceptance.md`
+- `records/rfcs/0005-hypothesis-aware-candidate-orchestration.md`
 
 ## Contract requirements
 
@@ -25,9 +26,9 @@ The pipeline MUST validate the complete storyboard and referenced required asset
 
 The first vertical slice MUST resolve `en-US` as its content language and MUST use a compatible English narration voice. UI locale, conversation language, previous-task settings, and generic provider defaults MUST NOT override this resolved language.
 
-#### STORY-1.4 — One supplied hypothesis in the first slice
+#### STORY-1.4 — One supplied hypothesis in the legacy first slice
 
-The first vertical slice MUST accept one user-supplied advertising hypothesis and produce one canonical storyboard. Autonomous hypothesis generation and batches of up to five storyboards remain outside this slice.
+The legacy first vertical slice MUST continue to accept one user-supplied advertising hypothesis and produce one canonical storyboard. The hypothesis-aware campaign path defined by STORY-2 supersedes this limitation without removing compatibility.
 
 #### STORY-1.5 — Explicit device-screen intent
 
@@ -113,9 +114,49 @@ Every downloaded generated hook MUST receive EVAL-5 temporal evidence before sel
 
 Every generated output in the batch MUST be retained under the experiment's ignored artifact tree with provider job ID, local SHA-256, recorded charge, generation latency, temporal evidence status, and selection disposition in the tracked manifest.
 
+### STORY-2 — Hypothesis-aware concept batches
+
+#### STORY-2.1 — Three-to-five distinct concepts
+
+Given one product brief, the campaign planner MUST return the explicitly requested count of three to five concepts. Each concept MUST have a stable unique ID, distinct hypothesis statement, audience problem, target emotion, emotional arc, hook narration, product bridge, and observable quality criteria. Duplicate hypotheses or opening actions MUST be rejected before paid generation.
+
+#### STORY-2.2 — Complete timed hook intent
+
+Every concept MUST contain ordered, non-overlapping hook beats that begin at `0.0`, end at `5.0`, and describe concrete visible actions plus expected evidence. Gaps, overlaps, empty actions, or beats outside the hook range MUST fail validation.
+
+#### STORY-2.3 — Controlled storyboard compilation
+
+The compiler MUST create one validated storyboard per concept by replacing only the approved template hook. Product demonstration, product assets, CTA, brand assets, output geometry, and total duration MUST remain identical across the candidate batch.
+
+#### STORY-2.4 — English and factual planning boundary
+
+The campaign plan MUST use `en-US`, reference only supplied product facts and approved asset IDs, preserve canonical lowercase `tict`, and remain provider-neutral. Invalid or explanatory planner output MUST stop before paid work.
+
+### ADPIPE-2 — Campaign candidate orchestration
+
+#### ADPIPE-2.1 — Plan-first durable campaign
+
+The orchestrator MUST persist a sanitized campaign plan containing brief hash, concept plan, compiled storyboard hashes, candidate operation IDs, estimated costs, and initial `planned` states before provider submission.
+
+#### ADPIPE-2.2 — Whole-batch budget preflight
+
+Before submitting the first generated-media job, the orchestrator MUST verify that the sum of all planned Runway requests fits the shared iteration budget. An unaffordable batch MUST submit zero jobs.
+
+#### ADPIPE-2.3 — Independent idempotent jobs
+
+Every candidate MUST use a unique deterministic operation ID and retain its provider job ID, request hash, local output hash, charge, latency, state, and failure evidence. Completed or ambiguous operations MUST NOT be resubmitted as new generations.
+
+#### ADPIPE-2.4 — Screen before selection and rendering
+
+Every downloaded hook MUST be screened under RUNWAY-2.2. Only an eligible candidate MAY be selected and rendered into a full advertisement. If none are eligible, the campaign MUST retain all evidence and produce no final video.
+
+#### ADPIPE-2.5 — Exact shared downstream composition
+
+The selected hook MUST be composed with the batch's unchanged exact product capture, narration contract, subtitle policy, brand assets, and CTA. The final manifest MUST identify the selected concept and exact rendered-video SHA-256.
+
 ## Current behavior
 
-The legacy WebUI/API path still generates prose and stock keywords, retrieves or accepts clips, and concatenates them. An opt-in experimental path now validates a provider-neutral storyboard, compiles stock and Runway variants, reserves a shared iteration budget, downloads one generated hook, and locally composites approved product/brand layers. It does not yet generate batches of hypotheses, animate the mascot, or expose the experimental workflow through the main WebUI.
+The legacy WebUI/API path still generates prose and stock keywords, retrieves or accepts clips, and concatenates them. An opt-in experimental path validates one provider-neutral storyboard, compiles stock and Runway variants, reserves a shared iteration budget, downloads one generated hook, and locally composites approved product/brand layers. Campaign-level hypothesis planning and automatic candidate-pool execution are the next implementation slice. Mascot animation and main-WebUI exposure remain absent.
 
 ## Expected first-slice behavior
 
@@ -190,7 +231,7 @@ Planner output is untrusted input. Length limits apply to the brief, hypothesis,
 
 ## Out of scope
 
-- Autonomous generation of five advertising hypotheses.
+- More than five advertising hypotheses in one campaign.
 - Mascot animation acceptance.
 - Direct generative product-UI mode.
 - Automatic vision judgement as the sole trusted acceptance gate.
@@ -217,6 +258,12 @@ Planner output is untrusted input. Length limits apply to the brief, hypothesis,
   - RUNWAY-2.2: temporally passing hooks and confirmed temporal false positives are eligible; confirmed defects remain blocked.
 - `feedback-loop/video-quality/evals/tests/test_temporal_judge.py`
   - EVAL-5 provider-schema compatibility without live paid requests.
+- `test/bdd/features/mixed_media_pipeline.feature`
+  - STORY-2.1 / STORY-2.2: a requested concept batch is distinct and time-complete.
+  - ADPIPE-2.2: an unaffordable complete batch submits no provider jobs.
+  - ADPIPE-2.4: only screened eligible candidates may be selected.
+- `test/services/test_creative_campaign.py`
+  - strict concept parsing, duplicate rejection, controlled storyboard compilation, durable manifests, deterministic operation IDs, and scorecard null semantics.
 
 ## Unresolved non-blocking choices
 

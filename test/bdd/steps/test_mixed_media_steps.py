@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
@@ -378,3 +379,193 @@ def reviewed_hook_is_eligible(scenario_context: dict[str, Any]) -> None:
     assert [
         item["candidate_id"] for item in scenario_context["eligible_hooks"]
     ] == ["hook-reviewed"]
+
+
+def _campaign_concept(
+    concept_id: str,
+    *,
+    hypothesis: str,
+    opening_action: str,
+    target_emotion: str,
+) -> dict[str, Any]:
+    return {
+        "concept_id": concept_id,
+        "hypothesis": hypothesis,
+        "audience_problem": "Travel planning is fragmented across too many tools.",
+        "target_emotion": target_emotion,
+        "emotional_arc": "Immediate tension resolves into relief and control.",
+        "hook_setting": "a bright international airport departure hall",
+        "hook_camera": "natural handheld push-in",
+        "hook_voiceover": "Planning a trip should not feel like another job.",
+        "hook_beats": [
+            {
+                "start_seconds": 0.0,
+                "end_seconds": 2.0,
+                "visible_action": opening_action,
+                "expected_evidence": ["planning_stress_visible"],
+            },
+            {
+                "start_seconds": 2.0,
+                "end_seconds": 5.0,
+                "visible_action": "The traveller pauses, exhales, and lowers the phone.",
+                "expected_evidence": ["traveller_visible", "phone_visible"],
+            },
+        ],
+        "product_bridge": "Match the lowered phone motion into the exact tict plan.",
+        "quality_criteria": [
+            "The problem is understandable without audio in the first two seconds.",
+            "The target emotion is visibly readable.",
+        ],
+    }
+
+
+@given("a tict campaign brief requesting three concepts")
+def campaign_brief_request(scenario_context: dict[str, Any]) -> None:
+    scenario_context["campaign_brief"] = {
+        "product_name": "tict",
+        "audience": "independent travellers overwhelmed by fragmented planning",
+        "product_facts": [
+            "tict creates one trip plan from bookings, places, and next steps."
+        ],
+        "available_asset_ids": [
+            "screens/Plan_Overview_Screen.png",
+            "tict-logo.png",
+            "tict-mascot-1.png",
+        ],
+        "concept_count": 3,
+    }
+
+
+@given("the planning model returns three distinct timed concepts")
+def distinct_campaign_response(scenario_context: dict[str, Any]) -> None:
+    concepts = [
+        _campaign_concept(
+            "tab-overload",
+            hypothesis="Visible tab overload makes planning fragmentation immediate.",
+            opening_action="The traveller rapidly switches between planning tabs.",
+            target_emotion="overwhelm",
+        ),
+        _campaign_concept(
+            "missed-detail",
+            hypothesis="A missed booking detail creates relatable travel anxiety.",
+            opening_action="The traveller notices a conflicting booking time.",
+            target_emotion="anxiety",
+        ),
+        _campaign_concept(
+            "decision-fatigue",
+            hypothesis="Visible decision fatigue makes one clear plan feel valuable.",
+            opening_action="The traveller compares several notes and closes her eyes.",
+            target_emotion="frustration",
+        ),
+    ]
+    scenario_context["campaign_response"] = json.dumps(
+        {
+            "schema_version": "1.0",
+            "product_name": "tict",
+            "content_language": "en-US",
+            "concepts": concepts,
+        }
+    )
+
+
+@given("the planning model returns a concept with overlapping hook beats")
+def overlapping_campaign_response(scenario_context: dict[str, Any]) -> None:
+    distinct_campaign_response(scenario_context)
+    payload = json.loads(scenario_context["campaign_response"])
+    payload["concepts"][0]["hook_beats"][1]["start_seconds"] = 1.5
+    scenario_context["campaign_response"] = json.dumps(payload)
+
+
+@when("the campaign hypotheses are planned")
+def plan_campaign_hypotheses(scenario_context: dict[str, Any]) -> None:
+    from app.services.creative.campaign import (
+        CampaignBrief,
+        CampaignPlanningError,
+        plan_hypotheses,
+    )
+
+    try:
+        scenario_context["campaign"] = plan_hypotheses(
+            CampaignBrief.model_validate(scenario_context["campaign_brief"]),
+            response_generator=lambda _: scenario_context["campaign_response"],
+        )
+    except CampaignPlanningError as exc:
+        scenario_context["campaign_error"] = str(exc)
+
+
+@then("the campaign contains three distinct concepts")
+def campaign_has_three_concepts(scenario_context: dict[str, Any]) -> None:
+    concepts = scenario_context["campaign"].concepts
+    assert len(concepts) == 3
+    assert len({concept.concept_id for concept in concepts}) == 3
+    assert len({concept.hypothesis for concept in concepts}) == 3
+
+
+@then("every concept covers the complete five-second hook")
+def campaign_covers_hook(scenario_context: dict[str, Any]) -> None:
+    for concept in scenario_context["campaign"].concepts:
+        assert concept.hook_beats[0].start_seconds == 0.0
+        assert concept.hook_beats[-1].end_seconds == 5.0
+
+
+@then("campaign planning is rejected before paid generation")
+def campaign_rejected_before_generation(scenario_context: dict[str, Any]) -> None:
+    assert "overlap" in scenario_context["campaign_error"]
+
+
+@given("three planned Runway hooks exceed the shared remaining budget")
+def unaffordable_candidate_pool(
+    tmp_path: Path,
+    scenario_context: dict[str, Any],
+) -> None:
+    from app.services.creative.campaign import build_campaign_plan
+
+    campaign_brief_request(scenario_context)
+    distinct_campaign_response(scenario_context)
+    plan_campaign_hypotheses(scenario_context)
+    template = validate_storyboard(storyboard_payload_v11())
+    plan = build_campaign_plan(
+        scenario_context["campaign"],
+        template_storyboard=template,
+        operation_prefix="bdd-campaign",
+    )
+    ledger = IterationBudgetLedger(
+        tmp_path / "budget.sqlite3",
+        scope_id="bdd-campaign",
+        cap_microusd=1_000_000,
+    )
+
+    class FakeAdapter:
+        def __init__(self) -> None:
+            self.budget_ledger = ledger
+            self.submit_calls = 0
+
+        def submit(self, request, *, operation_id):
+            del request, operation_id
+            self.submit_calls += 1
+            raise AssertionError("batch preflight must run before submit")
+
+    scenario_context["campaign_plan"] = plan
+    scenario_context["campaign_adapter"] = FakeAdapter()
+    scenario_context["campaign_output"] = tmp_path / "campaign"
+
+
+@when("candidate-pool execution is requested")
+def execute_unaffordable_pool(scenario_context: dict[str, Any]) -> None:
+    from app.services.creative.campaign import execute_candidate_pool
+
+    try:
+        execute_candidate_pool(
+            scenario_context["campaign_plan"],
+            adapter=scenario_context["campaign_adapter"],
+            output_dir=scenario_context["campaign_output"],
+            screen_hook=lambda *_: {"temporal_consistency_pass": True},
+        )
+    except BudgetExceededError as exc:
+        scenario_context["campaign_error"] = str(exc)
+
+
+@then("no Runway candidate is submitted")
+def no_candidate_submitted(scenario_context: dict[str, Any]) -> None:
+    assert "iteration budget exceeded" in scenario_context["campaign_error"]
+    assert scenario_context["campaign_adapter"].submit_calls == 0

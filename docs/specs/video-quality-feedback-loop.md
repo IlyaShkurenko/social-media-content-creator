@@ -10,6 +10,7 @@ Define the deterministic acceptance boundary for a candidate advertising-video e
 - `records/rfcs/0002-versioned-gemini-video-quality-judge.md`
 - `records/rfcs/0003-temporal-screening-and-artifact-retention.md`
 - `records/rfcs/0004-human-calibrated-video-acceptance.md`
+- `records/rfcs/0005-hypothesis-aware-candidate-orchestration.md`
 
 ## Requirements
 
@@ -116,6 +117,18 @@ A human-review override MUST record the outcome (`accept` or `reject`), reviewer
 ### EVAL-6.4 — Accepted videos seed calibration
 
 Every explicitly accepted or rejected rendered video SHOULD retain its review label as calibration evidence. A future hypothesis-aware or composite automatic metric MUST introduce a new evaluator version, publish its labelled-set agreement, and establish a fresh baseline before becoming an automatic keep rule.
+
+### EVAL-7.1 — Separated candidate scorecard dimensions
+
+Candidate-pool evaluation MUST report hypothesis match, target-emotion strength, first-two-second hook clarity, hook-to-product bridge coherence, storyboard action alignment, temporal eligibility, audiovisual correctness, product/brand fidelity, CTA clarity, and human acceptance as separate fields. An unavailable dimension MUST be `null` with a reason.
+
+### EVAL-7.2 — Eligibility precedes subjective ranking
+
+A candidate with failed enforced technical, temporal, product, or brand constraints MUST be excluded before subjective diagnostic ranking. Diagnostic scores MUST NOT make an ineligible candidate selectable.
+
+### EVAL-7.3 — Uncalibrated ranking cannot auto-keep
+
+Until the scorecard demonstrates agreement against artifact-bound human labels under a versioned evaluator, it MAY order eligible candidates for review but MUST NOT automatically keep a final advertisement. Final acceptance continues to follow EVAL-6.2 and EVAL-6.3.
 
 ## Executable coverage
 

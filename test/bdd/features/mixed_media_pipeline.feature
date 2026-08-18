@@ -46,3 +46,21 @@ Feature: Controlled mixed-media advertising production
     Given a generated hook with a reviewed false-positive temporal event
     When generated hook selection is requested
     Then the reviewed hook is eligible
+
+  Scenario: [STORY-2.1] The campaign planner returns the requested distinct concepts
+    Given a tict campaign brief requesting three concepts
+    And the planning model returns three distinct timed concepts
+    When the campaign hypotheses are planned
+    Then the campaign contains three distinct concepts
+    And every concept covers the complete five-second hook
+
+  Scenario: [STORY-2.2] Overlapping hook beats are rejected before generation
+    Given a tict campaign brief requesting three concepts
+    And the planning model returns a concept with overlapping hook beats
+    When the campaign hypotheses are planned
+    Then campaign planning is rejected before paid generation
+
+  Scenario: [ADPIPE-2.2] An unaffordable candidate batch submits no Runway jobs
+    Given three planned Runway hooks exceed the shared remaining budget
+    When candidate-pool execution is requested
+    Then no Runway candidate is submitted
