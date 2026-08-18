@@ -1,0 +1,16 @@
+{
+  "product_name": "tict",
+  "audience": "Independent travellers who feel overwhelmed by fragmented trip planning across bookings, notes, maps, and browser tabs.",
+  "product_facts": [
+    "tict turns bookings, saved places, and next steps into one clear trip plan.",
+    "The approved product demonstration uses an exact captured tict screen and is composited locally.",
+    "The advertisement must not claim that generated or generic phone UI is tict."
+  ],
+  "available_asset_ids": [
+    "screens/Plan_Overview_Screen.png",
+    "tict-logo.png",
+    "tict-mascot-1.png"
+  ],
+  "content_language": "en-US",
+  "concept_count": 3
+}

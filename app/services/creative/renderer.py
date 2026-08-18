@@ -64,6 +64,70 @@ class SubtitleLayout:
         }
 
 
+@dataclass(frozen=True)
+class LayoutBox:
+    x: int
+    y: int
+    width: int
+    height: int
+
+    @property
+    def top(self) -> int:
+        return self.y
+
+    @property
+    def right(self) -> int:
+        return self.x + self.width
+
+    @property
+    def bottom(self) -> int:
+        return self.y + self.height
+
+    @property
+    def center_x(self) -> float:
+        return self.x + self.width / 2
+
+    @property
+    def center_y(self) -> float:
+        return self.y + self.height / 2
+
+    def contains(self, other: "LayoutBox") -> bool:
+        return (
+            self.x <= other.x
+            and self.y <= other.y
+            and other.right <= self.right
+            and other.bottom <= self.bottom
+        )
+
+
+@dataclass(frozen=True)
+class CtaLayout:
+    canvas_width: int
+    canvas_height: int
+    safe_area: LayoutBox
+    stack: LayoutBox
+    logo: LayoutBox
+    hero: LayoutBox
+    headline: LayoutBox
+    action: LayoutBox
+    headline_text: str
+    action_text: str
+    headline_font_size: int
+    action_font_size: int
+
+
+@dataclass(frozen=True)
+class _PreparedCtaLayout:
+    layout: CtaLayout
+    logo_image: Image.Image
+    hero_image: Image.Image
+    headline_font: ImageFont.FreeTypeFont
+    headline_wrapped: str
+    headline_text_bbox: tuple[int, int, int, int]
+    action_font: ImageFont.FreeTypeFont
+    action_text_bbox: tuple[int, int, int, int]
+
+
 def _font_path(name: str) -> Path:
     root = Path(__file__).resolve().parents[3]
     return root / "resource" / "fonts" / name
@@ -76,6 +140,13 @@ def _font(size: int, *, bold: bool = False) -> ImageFont.FreeTypeFont:
 
 def _contain(image: Image.Image, maximum: tuple[int, int]) -> Image.Image:
     return ImageOps.contain(image, maximum, method=Image.Resampling.LANCZOS)
+
+
+def _trim_transparent(image: Image.Image) -> Image.Image:
+    alpha_bounds = image.getchannel("A").getbbox()
+    if alpha_bounds is None:
+        raise StoryboardValidationError("brand asset has no visible pixels")
+    return image.crop(alpha_bounds)
 
 
 def _paste_center(canvas: Image.Image, image: Image.Image, *, y: int) -> None:
@@ -155,75 +226,414 @@ def _render_product_card(
     return canvas
 
 
+def _brand_layer_for_role(
+    scene: StoryboardScene,
+    role: str,
+    *,
+    legacy_name_fragment: str,
+):
+    explicit = next(
+        (
+            layer
+            for layer in scene.media_plan.overlays
+            if layer.kind == "brand_asset"
+            and layer.asset_id
+            and layer.role == role
+        ),
+        None,
+    )
+    if explicit is not None:
+        return explicit
+    return next(
+        (
+            layer
+            for layer in scene.media_plan.overlays
+            if layer.kind == "brand_asset"
+            and layer.asset_id
+            and legacy_name_fragment in layer.asset_id.lower()
+        ),
+        None,
+    )
+
+
+def _wrap_text_for_width(
+    draw: ImageDraw.ImageDraw,
+    text: str,
+    *,
+    font: ImageFont.FreeTypeFont,
+    max_width: int,
+) -> str:
+    lines: list[str] = []
+    current = ""
+    for word in text.split():
+        candidate = f"{current} {word}".strip()
+        bounds = draw.textbbox((0, 0), candidate, font=font)
+        if current and bounds[2] - bounds[0] > max_width:
+            lines.append(current)
+            current = word
+        else:
+            current = candidate
+    if current:
+        lines.append(current)
+    return "\n".join(lines)
+
+
+def _fit_text_block(
+    text: str,
+    *,
+    max_width: int,
+    max_height: int,
+    maximum_font_size: int,
+    minimum_font_size: int,
+    multiline: bool,
+) -> tuple[ImageFont.FreeTypeFont, str, tuple[int, int, int, int]]:
+    measurement = ImageDraw.Draw(Image.new("RGBA", (1, 1), (0, 0, 0, 0)))
+    for font_size in range(maximum_font_size, minimum_font_size - 1, -1):
+        font = _font(font_size, bold=True)
+        wrapped = (
+            _wrap_text_for_width(
+                measurement,
+                text,
+                font=font,
+                max_width=max_width,
+            )
+            if multiline
+            else text
+        )
+        bounds = measurement.multiline_textbbox(
+            (0, 0),
+            wrapped,
+            font=font,
+            align="center",
+            spacing=max(4, round(font_size * 0.16)),
+        )
+        if bounds[2] - bounds[0] <= max_width and bounds[3] - bounds[1] <= max_height:
+            return font, wrapped, bounds
+    raise StoryboardValidationError(
+        f"brand copy does not fit the portrait safe area: {text!r}"
+    )
+
+
+def _prepare_cta_layout(
+    scene: StoryboardScene,
+    *,
+    asset_root: Path,
+    size: tuple[int, int],
+) -> _PreparedCtaLayout:
+    canvas_width, canvas_height = size
+    if canvas_width <= 0 or canvas_height <= 0:
+        raise StoryboardValidationError("brand canvas dimensions must be positive")
+    logo_layer = _brand_layer_for_role(
+        scene,
+        "logo",
+        legacy_name_fragment="logo",
+    )
+    hero_layer = _brand_layer_for_role(
+        scene,
+        "hero",
+        legacy_name_fragment="mascot",
+    )
+    if logo_layer is None or hero_layer is None:
+        raise StoryboardValidationError(
+            "cta requires managed brand assets with logo and hero roles"
+        )
+    headline_text = scene.onscreen_text.strip()
+    action_text = scene.call_to_action.strip()
+    if not headline_text or not action_text:
+        raise StoryboardValidationError(
+            "cta requires storyboard-owned headline and call_to_action copy"
+        )
+    intent_by_id = (
+        {
+            item.element_id: item
+            for item in scene.layout_intent.elements
+        }
+        if scene.layout_intent is not None
+        else {}
+    )
+    scale_factors = {"small": 0.82, "medium": 1.0, "large": 1.15}
+
+    def scale_for(element_id: str) -> float:
+        intent = intent_by_id.get(element_id)
+        return scale_factors[intent.scale] if intent is not None else 1.0
+
+    with Image.open(resolve_managed_asset(asset_root, logo_layer.asset_id or "")) as raw:
+        logo_source = _trim_transparent(raw.convert("RGBA"))
+    with Image.open(
+        resolve_managed_asset(asset_root, hero_layer.asset_id or "")
+    ) as raw:
+        hero_source = _trim_transparent(raw.convert("RGBA"))
+
+    horizontal_margin = max(1, round(canvas_width * 0.07))
+    vertical_margin = max(1, round(canvas_height * 0.06))
+    safe_area = LayoutBox(
+        x=horizontal_margin,
+        y=vertical_margin,
+        width=canvas_width - horizontal_margin * 2,
+        height=canvas_height - vertical_margin * 2,
+    )
+    if safe_area.width <= 0 or safe_area.height <= 0:
+        raise StoryboardValidationError("brand canvas is too small for its safe area")
+
+    logo = _contain(
+        logo_source,
+        (
+            round(safe_area.width * 0.66 * scale_for("logo")),
+            round(canvas_height * 0.12 * scale_for("logo")),
+        ),
+    )
+    hero = _contain(
+        hero_source,
+        (
+            round(safe_area.width * 0.72 * scale_for("hero")),
+            round(canvas_height * 0.25 * scale_for("hero")),
+        ),
+    )
+    headline_scale = scale_for("headline")
+    headline_font, headline_wrapped, headline_bounds = _fit_text_block(
+        headline_text,
+        max_width=round(safe_area.width * 0.94),
+        max_height=round(canvas_height * 0.16),
+        maximum_font_size=max(1, round(canvas_width * 0.067 * headline_scale)),
+        minimum_font_size=max(1, round(canvas_width * 0.04 * headline_scale)),
+        multiline=True,
+    )
+    action_horizontal_padding = round(canvas_width * 0.07)
+    action_scale = scale_for("action")
+    action_font, _, action_bounds = _fit_text_block(
+        action_text,
+        max_width=safe_area.width - action_horizontal_padding * 2,
+        max_height=round(canvas_height * 0.075),
+        maximum_font_size=max(1, round(canvas_width * 0.046 * action_scale)),
+        minimum_font_size=max(1, round(canvas_width * 0.04 * action_scale)),
+        multiline=False,
+    )
+    headline_width = round(headline_bounds[2] - headline_bounds[0])
+    headline_height = round(headline_bounds[3] - headline_bounds[1])
+    action_text_width = round(action_bounds[2] - action_bounds[0])
+    action_text_height = round(action_bounds[3] - action_bounds[1])
+    action_width = min(
+        safe_area.width,
+        max(
+            round(canvas_width * 0.58),
+            action_text_width + action_horizontal_padding * 2,
+        ),
+    )
+    action_height = max(
+        round(canvas_height * 0.075),
+        action_text_height + round(canvas_height * 0.036),
+    )
+
+    if intent_by_id:
+        vertical_anchors = {
+            "top": 0.0,
+            "upper": 0.25,
+            "center": 0.5,
+            "lower": 0.75,
+            "bottom": 1.0,
+        }
+
+        def intended_box(element_id: str, width: int, height: int) -> LayoutBox:
+            intent = intent_by_id[element_id]
+            horizontal_positions = {
+                "left": safe_area.x,
+                "center": safe_area.x + (safe_area.width - width) // 2,
+                "right": safe_area.right - width,
+            }
+            anchor = vertical_anchors[intent.vertical_region]
+            if intent.vertical_region == "top":
+                y = safe_area.y
+            elif intent.vertical_region == "bottom":
+                y = safe_area.bottom - height
+            else:
+                y = safe_area.y + round(safe_area.height * anchor - height / 2)
+            return LayoutBox(
+                x=horizontal_positions[intent.horizontal_alignment],
+                y=y,
+                width=width,
+                height=height,
+            )
+
+        logo_box = intended_box("logo", logo.width, logo.height)
+        hero_box = intended_box("hero", hero.width, hero.height)
+        headline_box = intended_box(
+            "headline",
+            headline_width,
+            headline_height,
+        )
+        action_box = intended_box("action", action_width, action_height)
+    else:
+        block_heights = (
+            logo.height,
+            hero.height,
+            headline_height,
+            action_height,
+        )
+        minimum_gap = max(1, round(canvas_height * 0.025))
+        maximum_gap = max(minimum_gap, round(canvas_height * 0.075))
+        remaining_for_gaps = safe_area.height - sum(block_heights)
+        if remaining_for_gaps < minimum_gap * 3:
+            raise StoryboardValidationError(
+                "brand content does not fit the portrait safe area without overlap"
+            )
+        gap = min(maximum_gap, max(minimum_gap, remaining_for_gaps // 3))
+        stack_height = sum(block_heights) + gap * 3
+        cursor_y = safe_area.y + (safe_area.height - stack_height) // 2
+
+        def centered_box(width: int, height: int) -> LayoutBox:
+            nonlocal cursor_y
+            box = LayoutBox(
+                x=(canvas_width - width) // 2,
+                y=cursor_y,
+                width=width,
+                height=height,
+            )
+            cursor_y = box.bottom + gap
+            return box
+
+        logo_box = centered_box(logo.width, logo.height)
+        hero_box = centered_box(hero.width, hero.height)
+        headline_box = centered_box(headline_width, headline_height)
+        action_box = centered_box(action_width, action_height)
+
+    element_boxes = (logo_box, hero_box, headline_box, action_box)
+    if not all(safe_area.contains(box) for box in element_boxes):
+        raise StoryboardValidationError(
+            "brand layout intent places content outside the portrait safe area"
+        )
+    for index, first in enumerate(element_boxes):
+        for second in element_boxes[index + 1 :]:
+            separated = (
+                first.right <= second.x
+                or second.right <= first.x
+                or first.bottom <= second.y
+                or second.bottom <= first.y
+            )
+            if not separated:
+                raise StoryboardValidationError(
+                    "brand layout intent produces overlapping elements"
+                )
+    stack = LayoutBox(
+        x=min(logo_box.x, hero_box.x, headline_box.x, action_box.x),
+        y=logo_box.y,
+        width=max(logo_box.right, hero_box.right, headline_box.right, action_box.right)
+        - min(logo_box.x, hero_box.x, headline_box.x, action_box.x),
+        height=action_box.bottom - logo_box.y,
+    )
+    layout = CtaLayout(
+        canvas_width=canvas_width,
+        canvas_height=canvas_height,
+        safe_area=safe_area,
+        stack=stack,
+        logo=logo_box,
+        hero=hero_box,
+        headline=headline_box,
+        action=action_box,
+        headline_text=headline_text,
+        action_text=action_text,
+        headline_font_size=headline_font.size,
+        action_font_size=action_font.size,
+    )
+    return _PreparedCtaLayout(
+        layout=layout,
+        logo_image=logo,
+        hero_image=hero,
+        headline_font=headline_font,
+        headline_wrapped=headline_wrapped,
+        headline_text_bbox=headline_bounds,
+        action_font=action_font,
+        action_text_bbox=action_bounds,
+    )
+
+
+def measure_cta_layout(
+    scene: StoryboardScene,
+    *,
+    asset_root: Path,
+    size: tuple[int, int] = (720, 1280),
+) -> CtaLayout:
+    """Measure a reusable portrait end card without writing an artifact."""
+
+    return _prepare_cta_layout(
+        scene,
+        asset_root=asset_root,
+        size=size,
+    ).layout
+
+
+def _draw_text_in_box(
+    draw: ImageDraw.ImageDraw,
+    *,
+    box: LayoutBox,
+    text: str,
+    font: ImageFont.FreeTypeFont,
+    text_bbox: tuple[int, int, int, int],
+    fill: str,
+    spacing: int = 4,
+) -> None:
+    text_width = text_bbox[2] - text_bbox[0]
+    text_height = text_bbox[3] - text_bbox[1]
+    draw.multiline_text(
+        (
+            box.x + (box.width - text_width) / 2 - text_bbox[0],
+            box.y + (box.height - text_height) / 2 - text_bbox[1],
+        ),
+        text,
+        font=font,
+        fill=fill,
+        align="center",
+        spacing=spacing,
+    )
+
+
 def _render_cta_card(
     scene: StoryboardScene,
     *,
     asset_root: Path,
     size: tuple[int, int],
 ) -> Image.Image:
+    prepared = _prepare_cta_layout(
+        scene,
+        asset_root=asset_root,
+        size=size,
+    )
+    layout = prepared.layout
     canvas = Image.new("RGBA", size, _BACKGROUND)
-    logo_layer = next(
-        (
-            layer
-            for layer in scene.media_plan.overlays
-            if layer.kind == "brand_asset"
-            and layer.asset_id
-            and "logo" in layer.asset_id.lower()
-        ),
-        None,
+    canvas.alpha_composite(
+        prepared.logo_image,
+        (layout.logo.x, layout.logo.y),
     )
-    mascot_layer = next(
-        (
-            layer
-            for layer in scene.media_plan.overlays
-            if layer.kind == "brand_asset"
-            and layer.asset_id
-            and "mascot" in layer.asset_id.lower()
-        ),
-        None,
-    )
-    if logo_layer is None or mascot_layer is None:
-        raise StoryboardValidationError(
-            "cta requires approved managed logo and mascot assets"
-        )
-
-    with Image.open(resolve_managed_asset(asset_root, logo_layer.asset_id or "")) as raw:
-        logo = _contain(raw.convert("RGBA"), (430, 150))
-    with Image.open(
-        resolve_managed_asset(asset_root, mascot_layer.asset_id or "")
-    ) as raw:
-        mascot = _contain(raw.convert("RGBA"), (440, 500))
-
-    _paste_center(canvas, logo, y=100)
-    _paste_center(canvas, mascot, y=340)
-    _draw_centered_text(
-        canvas,
-        scene.onscreen_text,
-        y=900,
-        font=_font(48, bold=True),
+    canvas.alpha_composite(
+        prepared.hero_image,
+        (layout.hero.x, layout.hero.y),
     )
     draw = ImageDraw.Draw(canvas)
-    button_width = 390
-    button_height = 86
-    button_x = (size[0] - button_width) // 2
-    button_y = 1030
+    _draw_text_in_box(
+        draw,
+        box=layout.headline,
+        text=prepared.headline_wrapped,
+        font=prepared.headline_font,
+        text_bbox=prepared.headline_text_bbox,
+        fill=_TEXT,
+        spacing=max(4, round(prepared.headline_font.size * 0.16)),
+    )
+    corner_radius = layout.action.height // 2
     draw.rounded_rectangle(
-        (button_x, button_y, button_x + button_width, button_y + button_height),
-        radius=43,
+        (
+            layout.action.x,
+            layout.action.y,
+            layout.action.right,
+            layout.action.bottom,
+        ),
+        radius=corner_radius,
         fill=_YELLOW,
     )
-    button_text = "Create your trip"
-    button_font = _font(26, bold=True)
-    text_box = draw.textbbox((0, 0), button_text, font=button_font)
-    text_width = text_box[2] - text_box[0]
-    text_height = text_box[3] - text_box[1]
-    draw.text(
-        (
-            button_x + (button_width - text_width) / 2,
-            button_y + (button_height - text_height) / 2 - text_box[1],
-        ),
-        button_text,
-        font=button_font,
+    _draw_text_in_box(
+        draw,
+        box=layout.action,
+        text=layout.action_text,
+        font=prepared.action_font,
+        text_bbox=prepared.action_text_bbox,
         fill=_TEXT,
     )
     return canvas

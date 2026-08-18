@@ -74,6 +74,10 @@ Visible brand copy and subtitles MUST use the canonical lowercase spelling `tict
 
 An `approved_product_ui` scene MUST resolve at least one approved `product_capture` layer and MUST NOT ask a generative provider to invent the product interface. A `non_product_context` scene MAY show a generic non-tict screen when consistent with the declared action. A `screen_hidden` scene MUST compile an instruction that keeps device displays away from the camera. `unconstrained` MUST NOT imply product identity.
 
+#### BRAND-1.6 — Adaptive deterministic brand layout
+
+The local brand renderer MUST derive end-card placement, spacing, typography, and action sizing from the output geometry, measured visual bounds, and validated semantic layout intent supplied by the storyboard. Layout intent MUST address elements by semantic ID and express relative vertical region, horizontal alignment, and scale without provider-specific pixels. The renderer MUST honor that intent rather than replacing it with generic stack centering. Logo, hero asset, headline, and action MUST remain inside a portrait safe area without overlap and preserve source proportions; an impossible layout MUST fail preflight. Action copy MUST come from the storyboard rather than a product-specific renderer literal. The same layout contract MUST support alternate approved assets, copy lengths, portrait resolutions, and valid compositions without per-asset pixel-coordinate changes. Storyboards without semantic layout intent MAY use the measured automatic flow only as an explicit compatibility fallback.
+
 ### RUNWAY-1 — Budgeted generated-video adapter
 
 #### RUNWAY-1.1 — Accepted first benchmark
@@ -109,6 +113,10 @@ A temporal-selection experiment MUST request between three and five independent 
 #### RUNWAY-2.2 — Screen before selection
 
 Every downloaded generated hook MUST receive EVAL-5 temporal evidence before selection. A hook with missing or invalid evidence MUST be ineligible. A reported high event MUST remain ineligible until reviewed; `confirmed_defect` or `ambiguous` confirmation remains ineligible, while a `false_positive` confirmation MAY clear only that event. Selection MUST return only eligible hooks; if none pass, the batch MUST finish without silently substituting stock or a rejected generation.
+
+An explicit temporal-provider failure after complete evidence-frame extraction
+MAY be cleared only by the complete artifact review defined by EVAL-5.3. This
+does not permit a manual pass to override an actual reported defect.
 
 #### RUNWAY-2.3 — Retain every generated candidate
 
@@ -156,7 +164,7 @@ The selected hook MUST be composed with the batch's unchanged exact product capt
 
 ## Current behavior
 
-The legacy WebUI/API path still generates prose and stock keywords, retrieves or accepts clips, and concatenates them. An opt-in experimental path validates one provider-neutral storyboard, compiles stock and Runway variants, reserves a shared iteration budget, downloads one generated hook, and locally composites approved product/brand layers. Campaign-level hypothesis planning and automatic candidate-pool execution are the next implementation slice. Mascot animation and main-WebUI exposure remain absent.
+The legacy WebUI/API path still generates prose and stock keywords, retrieves or accepts clips, and concatenates them. The opt-in experimental path now validates a product brief, plans three to five provider-neutral hypotheses, compiles independent Runway hooks against one controlled storyboard template, preflights the complete batch cost, retains each provider job and MP4, applies artifact-bound temporal review, and renders every eligible hook with exact product/brand layers. Calibrated campaign-specific subjective ranking, mascot animation, and main-WebUI exposure remain absent.
 
 ## Expected first-slice behavior
 
@@ -250,6 +258,9 @@ Planner output is untrusted input. Length limits apply to the brief, hypothesis,
   - BRAND-1.4: canonical subtitle spelling remains separate from provider-specific pronunciation text.
 - `test/services/test_storyboard.py`
   - STORY-1.1, STORY-1.2, STORY-1.3, ADPIPE-1.3, BRAND-1.3.
+- `test/services/test_creative_renderer.py`
+  - BRAND-1.1: exact product and brand source assets remain unchanged.
+  - BRAND-1.6: measured end-card elements scale, honor storyboard-supplied relative regions and alignments, remain non-overlapping inside the safe area, and use storyboard-owned action copy at multiple portrait resolutions.
 - `test/services/test_generation_budget.py`
   - RUNWAY-1.2, RUNWAY-1.3, RUNWAY-1.4.
 - `test/services/test_runway.py`

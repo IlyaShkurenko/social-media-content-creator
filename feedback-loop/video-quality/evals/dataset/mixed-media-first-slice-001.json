@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.1",
+  "schema_version": "1.2",
   "storyboard_id": "mixed-media-first-slice-001",
   "content_language": "en-US",
   "aspect_ratio": "9:16",
@@ -92,17 +92,49 @@
           {
             "kind": "brand_asset",
             "asset_id": "tict-logo.png",
+            "role": "logo",
             "placement": "upper_center"
           },
           {
             "kind": "brand_asset",
             "asset_id": "tict-mascot-1.png",
+            "role": "hero",
             "placement": "center"
           }
         ]
       },
       "voiceover": "Plan less. Travel more with tict.",
       "onscreen_text": "Plan less. Travel more.",
+      "call_to_action": "Create your trip",
+      "layout_intent": {
+        "mode": "portrait_regions",
+        "elements": [
+          {
+            "element_id": "logo",
+            "vertical_region": "top",
+            "horizontal_alignment": "center",
+            "scale": "medium"
+          },
+          {
+            "element_id": "hero",
+            "vertical_region": "center",
+            "horizontal_alignment": "center",
+            "scale": "large"
+          },
+          {
+            "element_id": "headline",
+            "vertical_region": "lower",
+            "horizontal_alignment": "center",
+            "scale": "medium"
+          },
+          {
+            "element_id": "action",
+            "vertical_region": "bottom",
+            "horizontal_alignment": "center",
+            "scale": "medium"
+          }
+        ]
+      },
       "expected_evidence": [
         "approved_logo_visible",
         "approved_mascot_visible",

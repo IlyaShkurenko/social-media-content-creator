@@ -98,6 +98,13 @@ Temporal events MUST use only `object_disappearance`, `object_duplication`, `ori
 
 Any reported high-severity temporal event MUST set `temporal_consistency_pass=false` and make the generated hook ineligible for automatic selection while confirmation is absent, ambiguous, or `confirmed_defect`. A review outcome of `false_positive` MAY clear only the reviewed event and make the hook eligible when no other high event remains. Missing, partial, malformed, hash-mismatched, or wrong-protocol temporal evidence MUST fail closed. The original provider evidence MUST remain immutable.
 
+If frame extraction and hashing complete but the temporal provider explicitly
+returns no result, one artifact-bound review MAY clear only the synthetic
+`screening-unavailable` event. The review MUST identify its reviewer and time,
+state a reason, cite retained evidence, and attest to every sampled frame by
+matching `reviewed_frame_count` to `sampled_frame_count`. It MUST NOT clear a
+reported temporal defect; each such event still requires its own confirmation.
+
 ### EVAL-5.4 — Temporal evidence replays offline
 
 Historical evaluation MUST consume stored temporal evidence and MUST NOT re-extract frames or call Gemini. Candidate and baseline temporal evidence are comparable only when evaluator version, temporal schema, prompt hash, sampling rate, requested model, and provider-reported model version match.

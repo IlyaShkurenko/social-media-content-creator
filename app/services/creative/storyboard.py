@@ -48,6 +48,7 @@ class MediaLayer(CreativeModel):
     intent: str | None = None
     asset_id: str | None = None
     placement: str | None = None
+    role: Literal["logo", "hero"] | None = None
     provider: str | None = None
     model: str | None = None
     mode: str | None = None
@@ -59,6 +60,18 @@ class MediaPlan(CreativeModel):
     overlays: list[MediaLayer] = Field(default_factory=list)
 
 
+class LayoutElementIntent(CreativeModel):
+    element_id: str = Field(min_length=1, pattern=r"^[a-z][a-z0-9_-]*$")
+    vertical_region: Literal["top", "upper", "center", "lower", "bottom"]
+    horizontal_alignment: Literal["left", "center", "right"] = "center"
+    scale: Literal["small", "medium", "large"] = "medium"
+
+
+class SceneLayoutIntent(CreativeModel):
+    mode: Literal["portrait_regions"] = "portrait_regions"
+    elements: list[LayoutElementIntent] = Field(min_length=1)
+
+
 class StoryboardScene(CreativeModel):
     scene_id: str = Field(min_length=1)
     start_seconds: float = Field(ge=0)
@@ -68,11 +81,13 @@ class StoryboardScene(CreativeModel):
     media_plan: MediaPlan
     voiceover: str = ""
     onscreen_text: str = ""
+    call_to_action: str = ""
+    layout_intent: SceneLayoutIntent | None = None
     expected_evidence: list[str] = Field(default_factory=list)
 
 
 class Storyboard(CreativeModel):
-    schema_version: Literal["1.0", "1.1"]
+    schema_version: Literal["1.0", "1.1", "1.2"]
     storyboard_id: str = Field(min_length=1)
     content_language: str = Field(min_length=1)
     aspect_ratio: str = Field(min_length=1)
@@ -154,7 +169,7 @@ def validate_storyboard(payload: Storyboard | dict) -> Storyboard:
             raise StoryboardValidationError(
                 f"scene {scene.scene_id!r} exceeds the target duration"
             )
-        if storyboard.schema_version == "1.1":
+        if storyboard.schema_version in {"1.1", "1.2"}:
             policy = scene.visual_intent.screen_content_policy
             if policy is None:
                 raise StoryboardValidationError(
@@ -173,8 +188,48 @@ def validate_storyboard(payload: Storyboard | dict) -> Storyboard:
                     f"scene {scene.scene_id!r} with product_capture must declare "
                     "approved_product_ui"
                 )
+            if scene.purpose == "cta" and not scene.call_to_action.strip():
+                raise StoryboardValidationError(
+                    f"scene {scene.scene_id!r} must declare call_to_action copy"
+                )
+            for layer in layers:
+                if layer.role is not None and layer.kind != "brand_asset":
+                    raise StoryboardValidationError(
+                        f"scene {scene.scene_id!r} assigns a brand role to a "
+                        f"non-brand layer"
+                    )
+            if storyboard.schema_version == "1.2" and scene.purpose == "cta":
+                if scene.layout_intent is None:
+                    raise StoryboardValidationError(
+                        f"scene {scene.scene_id!r} must declare layout_intent"
+                    )
+                element_ids = [
+                    item.element_id for item in scene.layout_intent.elements
+                ]
+                if len(element_ids) != len(set(element_ids)):
+                    raise StoryboardValidationError(
+                        f"scene {scene.scene_id!r} has duplicate layout element IDs"
+                    )
+                required_layout_ids = {
+                    "headline",
+                    "action",
+                    *(
+                        layer.role
+                        for layer in layers
+                        if layer.kind == "brand_asset" and layer.role is not None
+                    ),
+                }
+                if set(element_ids) != required_layout_ids:
+                    raise StoryboardValidationError(
+                        f"scene {scene.scene_id!r} layout elements must be exactly "
+                        f"{sorted(required_layout_ids)}"
+                    )
             for pronunciation in storyboard.brand_pronunciations:
-                for copy in (scene.voiceover, scene.onscreen_text):
+                for copy in (
+                    scene.voiceover,
+                    scene.onscreen_text,
+                    scene.call_to_action,
+                ):
                     matches = re.findall(
                         rf"(?<!\w){re.escape(pronunciation.canonical)}(?!\w)",
                         copy,

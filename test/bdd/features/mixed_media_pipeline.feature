@@ -47,6 +47,12 @@ Feature: Controlled mixed-media advertising production
     When generated hook selection is requested
     Then the reviewed hook is eligible
 
+  Scenario: [RUNWAY-2.2] Complete frame review can clear provider unavailability
+    Given a generated hook whose temporal provider is unavailable after frame extraction
+    And every extracted temporal frame receives a passing artifact review
+    When generated hook selection is requested
+    Then the reviewed hook is eligible
+
   Scenario: [STORY-2.1] The campaign planner returns the requested distinct concepts
     Given a tict campaign brief requesting three concepts
     And the planning model returns three distinct timed concepts

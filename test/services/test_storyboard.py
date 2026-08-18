@@ -83,6 +83,7 @@ def valid_payload() -> dict:
                 },
                 "voiceover": "Start planning your next trip today.",
                 "onscreen_text": "Plan less. Travel more.",
+                "call_to_action": "Create your trip",
                 "expected_evidence": ["cta"],
             },
         ],
@@ -224,4 +225,31 @@ def test_brand_1_4_uppercase_visible_brand_copy_is_rejected() -> None:
     )
     payload["scenes"][1]["voiceover"] = "TICT keeps the trip in one place."
     with pytest.raises(StoryboardValidationError, match="canonical lowercase"):
+        validate_storyboard(payload)
+
+
+def test_brand_1_6_v11_cta_requires_storyboard_owned_action_copy() -> None:
+    payload = valid_payload()
+    payload["schema_version"] = "1.1"
+    for scene in payload["scenes"]:
+        scene["visual_intent"]["screen_content_policy"] = "unconstrained"
+    payload["scenes"][1]["visual_intent"]["screen_content_policy"] = (
+        "approved_product_ui"
+    )
+    payload["scenes"][2]["call_to_action"] = ""
+
+    with pytest.raises(StoryboardValidationError, match="call_to_action"):
+        validate_storyboard(payload)
+
+
+def test_brand_1_6_v12_cta_requires_semantic_layout_intent() -> None:
+    payload = valid_payload()
+    payload["schema_version"] = "1.2"
+    for scene in payload["scenes"]:
+        scene["visual_intent"]["screen_content_policy"] = "unconstrained"
+    payload["scenes"][1]["visual_intent"]["screen_content_policy"] = (
+        "approved_product_ui"
+    )
+
+    with pytest.raises(StoryboardValidationError, match="layout_intent"):
         validate_storyboard(payload)

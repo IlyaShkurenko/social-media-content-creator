@@ -35,6 +35,16 @@ class PreparedCreativeRun:
     estimated_runway_cost_microusd: int
 
 
+def _clip_prompt_field(value: str, max_chars: int) -> str:
+    """Keep provider prompts bounded without cutting through a word."""
+
+    compact = " ".join(value.split())
+    if len(compact) <= max_chars:
+        return compact
+    clipped = compact[: max_chars - 1].rsplit(" ", 1)[0].rstrip(" ,;:.")
+    return f"{clipped}."
+
+
 def build_runway_request(storyboard: Storyboard) -> RunwayVideoRequest:
     """Compile the controlled hook intent into the first Runway benchmark."""
 
@@ -42,35 +52,45 @@ def build_runway_request(storyboard: Storyboard) -> RunwayVideoRequest:
     plans = compile_comparison_plans(storyboard)
     hook = plans["runway-candidate"].scenes[0]
     policy = hook.visual_intent.screen_content_policy or "unconstrained"
+    brand_name = (
+        storyboard.brand_pronunciations[0].canonical
+        if storyboard.brand_pronunciations
+        else "the advertised product"
+    )
     screen_instruction = {
         "approved_product_ui": (
-            "Do not invent application UI; keep the device display blank or "
-            "occluded so the approved product capture can be composited locally."
+            "Do not invent app UI. Keep displays blank or hidden for local composition."
         ),
         "non_product_context": (
-            "A generic non-product phone interface may be visible when required "
-            "by the action. It must not resemble tict, claim tict identity, or "
-            "contain readable text."
+            "A generic non-product phone interface may be visible only when the "
+            f"action requires it; it must not resemble {brand_name} or contain "
+            "readable text."
         ),
         "screen_hidden": (
-            "Keep every device screen facing away from the camera or fully hidden."
+            "Keep every device screen fully hidden from the camera."
         ),
         "unconstrained": (
-            "Any incidental device screen must not claim tict identity."
+            f"Any incidental screen must not claim {brand_name} identity."
         ),
     }[policy]
+    setting = _clip_prompt_field(hook.visual_intent.setting, 120)
+    action = _clip_prompt_field(hook.visual_intent.subject_action, 430)
+    camera = _clip_prompt_field(hook.visual_intent.camera, 140)
+    device_terms = ("phone", "smartphone", "device")
+    has_handheld_device = any(
+        term in f"{setting} {action}".lower() for term in device_terms
+    )
+    geometry_instruction = (
+        "Exactly one stable device; its display never faces camera. No flips, "
+        "duplicates, back-screen, or broken hand contact."
+        if has_handheld_device
+        else "Keep object geometry and physical contact stable."
+    )
     prompt = (
-        f"{hook.visual_intent.setting}. "
-        f"{hook.visual_intent.subject_action}. "
-        f"Camera: {hook.visual_intent.camera}. "
-        "Photorealistic, authentic premium travel advertisement, natural human motion. "
+        f"{setting}. Action timeline: {action}. Camera: {camera}. "
+        "Photoreal premium travel ad; natural human motion. "
         f"{screen_instruction} "
-        "Use exactly one phone with stable geometry throughout the shot. "
-        "Keep its display facing only the traveller and fully away from the camera "
-        "from the first frame to the last; do not rotate or flip the device, reveal "
-        "its display to camera, duplicate it, or make a screen appear on its back. "
-        "Preserve continuous hand-to-phone contact and physically coherent finger motion. "
-        "No logos, watermarks, or subtitles."
+        f"{geometry_instruction} No logos, watermarks, or subtitles."
     )
     base = hook.media_plan.base
     return RunwayVideoRequest(

@@ -48,6 +48,10 @@ def test_story_1_4_prompt_keeps_user_hypothesis_and_english_contract() -> None:
     assert "Do not invent another hypothesis" in prompt
     assert 'canonical lowercase "tict"' in prompt
     assert "screen_content_policy" in prompt
+    assert 'schema_version="1.2"' in prompt
+    assert "layout_intent" in prompt
+    assert "top/upper/center/lower/bottom" in prompt
+    assert "never emit pixel coordinates" in prompt
 
 
 def test_adpipe_1_1_planner_returns_typed_storyboard_from_llm_json() -> None:
@@ -56,6 +60,8 @@ def test_adpipe_1_1_planner_returns_typed_storyboard_from_llm_json() -> None:
     assert storyboard.storyboard_id == "mixed-media-first-slice-001"
     assert storyboard.hypothesis == brief().hypothesis
     assert storyboard.scenes[1].media_plan.overlays[0].kind == "product_capture"
+    assert storyboard.scenes[2].layout_intent is not None
+    assert storyboard.scenes[2].layout_intent.elements[0].element_id == "logo"
 
 
 def test_story_1_4_planner_rejects_hypothesis_drift() -> None:

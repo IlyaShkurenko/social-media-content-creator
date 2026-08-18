@@ -54,10 +54,21 @@ def test_story_1_5_runway_prompt_respects_non_product_screen_policy() -> None:
 
 def test_runway_2_2_runway_prompt_preserves_single_hidden_phone_geometry() -> None:
     prompt = build_runway_request(storyboard()).prompt_text
-    assert "Use exactly one phone with stable geometry" in prompt
-    assert "fully away from the camera from the first frame to the last" in prompt
-    assert "do not rotate or flip the device" in prompt
-    assert "Preserve continuous hand-to-phone contact" in prompt
+    assert "Exactly one stable device" in prompt
+    assert "display never faces camera" in prompt
+    assert "No flips, duplicates, back-screen, or broken hand contact" in prompt
+
+
+def test_runway_2_2_runway_prompt_always_fits_provider_limit() -> None:
+    changed = storyboard().model_copy(deep=True)
+    changed.scenes[0].visual_intent.subject_action = " ".join(
+        ["The traveller rapidly switches between planning tools"] * 80
+    )
+
+    prompt = build_runway_request(changed).prompt_text
+
+    assert len(prompt) <= 1000
+    assert prompt.endswith("No logos, watermarks, or subtitles.")
 
 
 def test_brand_1_3_prepare_run_fails_before_generation_for_missing_asset(

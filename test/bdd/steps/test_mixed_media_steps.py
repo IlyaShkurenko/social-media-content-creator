@@ -100,6 +100,7 @@ def storyboard_payload(*, overlap: bool = False) -> dict[str, Any]:
                 },
                 "voiceover": "Start planning your next trip today.",
                 "onscreen_text": "Plan less. Travel more.",
+                "call_to_action": "Create your trip",
                 "expected_evidence": ["logo_visible", "cta_visible"],
             },
         ],
@@ -358,6 +359,38 @@ def reviewed_temporal_false_positive(scenario_context: dict[str, Any]) -> None:
     ]
 
 
+@given(
+    "a generated hook whose temporal provider is unavailable after frame extraction"
+)
+def unavailable_temporal_provider(scenario_context: dict[str, Any]) -> None:
+    scenario_context["generated_hooks"] = [
+        {
+            "candidate_id": "hook-provider-unavailable",
+            "temporal_consistency_pass": False,
+            "sampled_frame_count": 50,
+            "temporal_events": [
+                {
+                    "event_id": "screening-unavailable",
+                    "severity": "high",
+                    "reason": "The temporal provider returned HTTP 503.",
+                }
+            ],
+        }
+    ]
+
+
+@given("every extracted temporal frame receives a passing artifact review")
+def complete_temporal_artifact_review(scenario_context: dict[str, Any]) -> None:
+    scenario_context["generated_hooks"][0]["artifact_review"] = {
+        "outcome": "pass",
+        "reviewer": "artifact-reviewer",
+        "reviewed_at": "2026-08-18T12:42:15Z",
+        "reason": "All timestamped 10 FPS frames show continuous motion.",
+        "reviewed_frame_count": 50,
+        "evidence_frames": ["review/hook-10fps-contact.jpg"],
+    }
+
+
 @when("generated hook selection is requested")
 def request_temporal_selection(scenario_context: dict[str, Any]) -> None:
     from app.services.creative.temporal import eligible_temporal_candidates
@@ -376,9 +409,10 @@ def only_passing_hook_is_eligible(scenario_context: dict[str, Any]) -> None:
 
 @then("the reviewed hook is eligible")
 def reviewed_hook_is_eligible(scenario_context: dict[str, Any]) -> None:
-    assert [
-        item["candidate_id"] for item in scenario_context["eligible_hooks"]
-    ] == ["hook-reviewed"]
+    assert len(scenario_context["eligible_hooks"]) == 1
+    assert scenario_context["eligible_hooks"][0]["candidate_id"] == (
+        scenario_context["generated_hooks"][0]["candidate_id"]
+    )
 
 
 def _campaign_concept(

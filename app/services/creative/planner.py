@@ -45,11 +45,17 @@ Product facts:
 Approved managed asset IDs:
 {assets or "- none"}
 
-Create exactly one {brief.target_duration_seconds}-second {brief.aspect_ratio} storyboard in {brief.content_language}.
+Create exactly one schema_version="1.2" {brief.target_duration_seconds}-second
+{brief.aspect_ratio} storyboard in {brief.content_language}.
 Use exactly three ordered scenes: a 0-5 second hook, a 5-11 second product_demo,
 and an 11-{brief.target_duration_seconds} second CTA. Describe concrete settings,
 subject actions, camera behavior, voiceover, on-screen text, expected visual evidence,
-an explicit screen_content_policy, and a layered media plan. Use approved_product_ui
+storyboard-owned call_to_action copy for the CTA, an explicit screen_content_policy,
+and a layered media plan. Assign role="logo" and role="hero" to the corresponding
+brand assets. For the CTA, declare layout_intent mode="portrait_regions" with
+one entry for each of logo, hero, headline, and action. Use semantic vertical
+regions top/upper/center/lower/bottom, horizontal alignment left/center/right,
+and scale small/medium/large; never emit pixel coordinates. Use approved_product_ui
 only with an approved product_capture, non_product_context for a generic pre-product
 screen, screen_hidden when the display must face away, and unconstrained when no
 device screen matters. Product captures, logos, and mascots must reference only

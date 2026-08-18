@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "experiment": "013-hypothesis-aware-candidate-orchestration",
+  "planner": {
+    "provider": "google-gemini",
+    "model": "gemini-3.6-flash",
+    "requested_concept_count": 3,
+    "validated_concept_count": 3,
+    "content_language": "en-US"
+  },
+  "generation_policy": {
+    "provider": "runway",
+    "model": "gen4.5",
+    "duration_seconds": 5,
+    "independent_provider_jobs": true,
+    "shared_product_and_cta_composition": true
+  },
+  "candidates": [
+    {
+      "candidate_id": "browser-tab-chaos",
+      "operation_id": "experiment-013-browser-tab-chaos",
+      "provider_job_id": "f7df3eb5-0465-4720-8de3-78378558a03a",
+      "hook_video_sha256": "a1cc893a1a0f21464f93c4c8b3b628cbcada9b5db5b746eae867e1a63e867570",
+      "final_video_sha256": "fb48ec133c903e1bb6e74c77e06b6dab1a511fc787f57ebca7802d4e9022ef5f",
+      "generation_latency_seconds": 116.902,
+      "generation_cost_usd": 0.6,
+      "temporal_status": "provider_unavailable_complete_artifact_review_pass",
+      "reported_high_severity_events": null,
+      "disposition": "eligible_rendered_pending_product_owner_review",
+      "review": "Gemini returned HTTP 503 twice without billing. All 50 retained 10 FPS frames were reviewed and showed continuous motion with no high-severity defect."
+    },
+    {
+      "candidate_id": "lost-reservation-panic",
+      "operation_id": "experiment-013-lost-reservation-panic",
+      "provider_job_id": "177a0999-71ad-4127-b0b1-3ac0ebe3ed1f",
+      "hook_video_sha256": "336d9b43c925c6ff4090453ddc34779613b746a1db5d9d94fd61f6aadfe22d8d",
+      "final_video_sha256": null,
+      "generation_latency_seconds": 165.623,
+      "generation_cost_usd": 0.6,
+      "temporal_status": "complete_confirmed_defect",
+      "reported_high_severity_events": 1,
+      "disposition": "rejected_temporal_screen",
+      "review": "The phone disappears from raised hands between 1.7 and 1.8 seconds without a continuous stowing motion."
+    },
+    {
+      "candidate_id": "scattered-map-pins",
+      "operation_id": "experiment-013-scattered-map-pins",
+      "provider_job_id": "9b5b6e39-e481-4602-bbc9-e8ff2a1c1c67",
+      "hook_video_sha256": "6611f508c64e89457e12cf915492e6ee81bf6bba05f5f5ba8fa7ee1941262b8a",
+      "final_video_sha256": "7412f0e49389cfdac8b984eae0d406dc5af691bf77cc9cb34790d756022d93ae",
+      "generation_latency_seconds": 139.171,
+      "generation_cost_usd": 0.6,
+      "temporal_status": "complete_false_positive_confirmed",
+      "reported_high_severity_events": 1,
+      "disposition": "eligible_rendered_pending_product_owner_review",
+      "review": "The reported phone disappearance was a camera-crop false positive: the phone remains at the right edge through F42 and exits during a continuous push-in at F43."
+    }
+  ],
+  "eligible_candidate_ids": [
+    "browser-tab-chaos",
+    "scattered-map-pins"
+  ],
+  "selected_candidate_id": null,
+  "automatic_selection": null,
+  "cross_hypothesis_pairwise_diagnostic": {
+    "candidate_id": "scattered-map-pins",
+    "visual_judge_win_rate": 0.0,
+    "usable_for_hook_alignment": false,
+    "reason": "Evaluator 0.6 used the legacy fixed airport hook scenario and penalized the intentionally different map hypothesis. Shared product, CTA, audiovisual, editing, and professional-finish dimensions scored 4-5 out of 5."
+  },
+  "campaign_paid_cost_usd": 2.009682,
+  "iteration_charged_usd": 5.992588,
+  "remaining_iteration_budget_usd": 4.007412,
+  "final_decision": "pending_product_owner_review"
+}

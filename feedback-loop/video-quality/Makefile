@@ -9,7 +9,7 @@ BASELINE ?= experiments/008-baseline
 MIXED_STORYBOARD ?= evals/dataset/mixed-media-first-slice-001.json
 MIXED_OUTPUT ?= .state/prepared/mixed-media-first-slice-001
 
-.PHONY: baseline judge temporal-judge experiment experiment-start experiment-evaluate experiment-finish experiment-review evaluate verify mixed-prepare mixed-render-stock mixed-rerender-runway mixed-runway
+.PHONY: baseline judge temporal-judge experiment experiment-start experiment-evaluate experiment-finish experiment-review evaluate verify mixed-prepare mixed-render-stock mixed-rerender-runway mixed-runway campaign-run campaign-finalize
 
 baseline:
 	$(PYTHON) scripts/run_experiment.py --kind baseline --slug baseline --scenario $(SCENARIO) $(if $(VIDEO),--video "$(VIDEO)",) $(if $(OBSERVATIONS),--observations "$(OBSERVATIONS)",) $(if $(PIPELINE_RECORD),--pipeline-record "$(PIPELINE_RECORD)",) $(if $(SUBTITLE),--subtitle "$(SUBTITLE)",) $(if $(JUDGE_EVIDENCE),--judge-evidence "$(JUDGE_EVIDENCE)",) $(if $(TEMPORAL_EVIDENCE),--temporal-evidence "$(TEMPORAL_EVIDENCE)",)
@@ -88,3 +88,14 @@ mixed-rerender-runway:
 mixed-runway:
 	@test "$(CONFIRM_PAID)" = "YES" || (echo "CONFIRM_PAID=YES is required" >&2; exit 2)
 	$(PYTHON) scripts/run_mixed_media.py --storyboard "$(MIXED_STORYBOARD)" --output "$(MIXED_OUTPUT)" --execute-runway --confirm-paid YES --narrate
+
+campaign-run:
+	@test "$(CONFIRM_PAID)" = "YES" || (echo "CONFIRM_PAID=YES is required" >&2; exit 2)
+	@test -n "$(CAMPAIGN_OUTPUT)" || (echo "CAMPAIGN_OUTPUT is required" >&2; exit 2)
+	@test -n "$(OPERATION_PREFIX)" || (echo "OPERATION_PREFIX is required" >&2; exit 2)
+	$(PYTHON) scripts/run_campaign.py --output "$(CAMPAIGN_OUTPUT)" --operation-prefix "$(OPERATION_PREFIX)" $(if $(CAMPAIGN_CONCEPTS),--concepts "$(CAMPAIGN_CONCEPTS)",) --execute-paid --confirm-paid YES
+
+campaign-finalize:
+	@test -n "$(CAMPAIGN_OUTPUT)" || (echo "CAMPAIGN_OUTPUT is required" >&2; exit 2)
+	@test -n "$(CAMPAIGN_REVIEW)" || (echo "CAMPAIGN_REVIEW is required" >&2; exit 2)
+	$(PYTHON) scripts/finalize_campaign.py --output "$(CAMPAIGN_OUTPUT)" --review "$(CAMPAIGN_REVIEW)"

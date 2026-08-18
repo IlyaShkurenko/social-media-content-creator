@@ -74,6 +74,11 @@ ambiguous, or confirmed-defect evidence makes it ineligible. A confirmed false
 positive follows RFC-0004. Only an eligible candidate may be rendered with the
 shared narration, exact product capture, subtitles, music policy, and CTA.
 
+When frame extraction succeeds but the external temporal provider explicitly
+returns no result, a complete artifact-bound review of every sampled frame may
+clear only the synthetic provider-unavailable event. It cannot override a
+reported temporal defect, whose cited frames require separate confirmation.
+
 ### 6. Ranking dimensions are explicit diagnostics
 
 Candidate scorecards separate:

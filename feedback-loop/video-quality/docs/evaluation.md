@@ -134,7 +134,16 @@ make experiment-review \
   REVIEWER=user \
   REVIEW_REASON="Candidate 05 is acceptable as the production reference" \
   LEARNING="Human preference overrides the uncalibrated model-preference diagnostic"
+
+make campaign-finalize \
+  CAMPAIGN_OUTPUT=experiments/<campaign>/artifacts/campaign \
+  CAMPAIGN_REVIEW=experiments/<campaign>/artifacts/campaign/review/temporal-confirmations.json
 ```
+
+`campaign-finalize` is idempotent. It applies artifact-bound event confirmations,
+verifies that cited evidence stays inside the managed campaign tree, reuses valid
+existing renders, emits all EVAL-7.1 scorecard dimensions, and renders only
+eligible candidates. It does not select or accept a subjective winner.
 
 `experiment-start` requires a clean worktree. It re-evaluates the selected baseline under ignored state, verifies metric equality, and then allocates the next identity. The resulting `inputs.json` schema v2 freezes the baseline hash, starting git revision, observed problem, hypothesis, planned change, expected impact, scenario hash, and plan hash before candidate code or metrics exist.
 
