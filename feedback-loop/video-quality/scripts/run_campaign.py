@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import sys
@@ -8,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from google import genai
-from google.genai import _transformers, errors, types
+from google.genai import errors
 
 
 LOOP_ROOT = Path(__file__).resolve().parents[1]
@@ -18,14 +19,24 @@ if str(REPO_ROOT) not in sys.path:
 if str(LOOP_ROOT) not in sys.path:
     sys.path.insert(0, str(LOOP_ROOT))
 
-from app.services.creative.budget import IterationBudgetLedger  # noqa: E402
+from app.services.creative.budget import (  # noqa: E402
+    BudgetSnapshot,
+    IterationBudgetLedger,
+)
 from app.services.creative.campaign import (  # noqa: E402
     CampaignBrief,
     HypothesisBatch,
-    HypothesisBatchResponse,
     build_campaign_plan,
     execute_candidate_pool,
     plan_hypotheses,
+)
+from app.services.creative.campaign_preflight import (  # noqa: E402
+    PLANNER_OPERATION_SUFFIX,
+    CampaignPreflightReport,
+    TemporalPreflightContract,
+    build_campaign_preflight,
+    build_gemini_concept_config,
+    require_matching_preflight,
 )
 from app.services.creative.narration import generate_scene_narration  # noqa: E402
 from app.services.creative.renderer import render_mixed_media_video  # noqa: E402
@@ -34,11 +45,22 @@ from app.services.creative.storyboard import validate_storyboard  # noqa: E402
 from evals.gemini_judge import (  # noqa: E402
     JUDGE_MODEL,
     actual_usage_cost_microusd,
+    is_definite_nonbillable_gemini_error,
     sanitize_judge_evidence,
     sha256_text,
 )
+from evals import temporal_judge as temporal_judge_module  # noqa: E402
 from evals.temporal_judge import (  # noqa: E402
+    EVENT_TYPES as TEMPORAL_EVENT_TYPES,
+    EVALUATOR_VERSION as TEMPORAL_EVALUATOR_VERSION,
+    FRAMES_PER_STRIP as TEMPORAL_FRAMES_PER_STRIP,
+    MAX_OUTPUT_TOKENS as TEMPORAL_MAX_OUTPUT_TOKENS,
     GeminiTemporalJudge,
+    MAXIMUM_COST_MICROUSD as TEMPORAL_MAXIMUM_COST_MICROUSD,
+    TEMPORAL_SAMPLE_FPS,
+    TEMPORAL_SCHEMA_VERSION,
+    TemporalJudgeResponse,
+    validate_existing_temporal_evidence,
 )
 
 
@@ -72,6 +94,24 @@ def _write_text(path: Path, value: str) -> None:
     temporary.replace(path)
 
 
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _sha256_json(payload: Any) -> str:
+    encoded = json.dumps(
+        payload,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
 def _resolve_file(value: str | Path, *, label: str) -> Path:
     path = Path(value)
     resolved = (path if path.is_absolute() else LOOP_ROOT / path).resolve()
@@ -88,6 +128,23 @@ def _resolve_output(value: str | Path) -> Path:
     return resolved
 
 
+def _configured_runway_contract() -> tuple[str, str]:
+    config_path = REPO_ROOT / "config.toml"
+    if not config_path.is_file():
+        return RunwayAdapter.BASE_URL, RunwayAdapter.API_VERSION
+    from app.config import config
+
+    runway_base_url = str(
+        config.app.get("runway_base_url", RunwayAdapter.BASE_URL)
+        or RunwayAdapter.BASE_URL
+    ).strip()
+    runway_api_version = str(
+        config.app.get("runway_api_version", RunwayAdapter.API_VERSION)
+        or RunwayAdapter.API_VERSION
+    ).strip()
+    return runway_base_url, runway_api_version
+
+
 def _configured_keys() -> tuple[str, str, str, str]:
     from app.config import config
 
@@ -99,15 +156,38 @@ def _configured_keys() -> tuple[str, str, str, str]:
         raise RuntimeError("Gemini API key is not configured")
     if not runway_key:
         raise RuntimeError("Runway API key is not configured")
-    runway_base_url = str(
-        config.app.get("runway_base_url", RunwayAdapter.BASE_URL)
-        or RunwayAdapter.BASE_URL
-    ).strip()
-    runway_api_version = str(
-        config.app.get("runway_api_version", RunwayAdapter.API_VERSION)
-        or RunwayAdapter.API_VERSION
-    ).strip()
+    runway_base_url, runway_api_version = _configured_runway_contract()
     return gemini_key, runway_key, runway_base_url, runway_api_version
+
+
+def _read_budget_snapshot(database_path: Path) -> BudgetSnapshot:
+    """Read the existing iteration ledger without opening a write transaction."""
+
+    return IterationBudgetLedger.read_only_audit(
+        database_path,
+        scope_id=ITERATION_SCOPE_ID,
+        cap_microusd=ITERATION_CAP_MICROUSD,
+    ).snapshot
+
+
+def _temporal_preflight_contract(gemini_model: str) -> TemporalPreflightContract:
+    implementation_path = Path(temporal_judge_module.__file__).resolve()
+    return TemporalPreflightContract(
+        evaluator_version=TEMPORAL_EVALUATOR_VERSION,
+        evidence_schema_version=TEMPORAL_SCHEMA_VERSION,
+        response_schema_sha256=_sha256_json(
+            TemporalJudgeResponse.model_json_schema()
+        ),
+        implementation_sha256=_sha256_file(implementation_path),
+        sample_fps=TEMPORAL_SAMPLE_FPS,
+        frames_per_strip=TEMPORAL_FRAMES_PER_STRIP,
+        max_output_tokens=TEMPORAL_MAX_OUTPUT_TOKENS,
+        event_types=list(TEMPORAL_EVENT_TYPES),
+        model=gemini_model,
+        scene_id="hook",
+        start_seconds=0.0,
+        end_seconds=5.0,
+    )
 
 
 class BudgetedGeminiConceptPlanner:
@@ -126,33 +206,36 @@ class BudgetedGeminiConceptPlanner:
         self.last_record: dict[str, Any] | None = None
 
     def __call__(self, prompt: str) -> str:
-        # Schema transformation is local. Keep it outside the provider-outcome
-        # guard so an incompatible contract cannot be recorded as a paid call.
-        _transformers.t_schema(
-            getattr(self.client, "_api_client", None),
-            HypothesisBatchResponse,
-        )
+        existing = self.ledger.find_operation(self.operation_id)
+        if existing is not None:
+            raise RuntimeError(
+                f"Gemini planner operation {self.operation_id!r} is already "
+                f"{existing.status}; automatic paid resubmission is blocked"
+            )
         self.ledger.ensure_available(PLANNER_MAXIMUM_COST_MICROUSD)
         try:
             response = self.client.models.generate_content(
                 model=self.model,
                 contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    response_schema=HypothesisBatchResponse,
-                    max_output_tokens=8192,
-                    thinking_config=types.ThinkingConfig(
-                        include_thoughts=False,
-                        thinking_level="medium",
-                    ),
-                ),
+                config=build_gemini_concept_config(),
             )
         except errors.APIError as exc:
             detail = str(getattr(exc, "message", "") or "").strip()[:500]
+            if is_definite_nonbillable_gemini_error(exc):
+                raise RuntimeError(
+                    "Gemini rejected concept planning before returning a billable "
+                    f"result (HTTP {exc.code}); no charge was recorded"
+                    + (f": {detail}" if detail else "")
+                ) from exc
+            self.ledger.record_manual_charge(
+                self.operation_id,
+                PLANNER_MAXIMUM_COST_MICROUSD,
+                "Gemini concept planner; ambiguous HTTP "
+                f"{exc.code}, worst-case charge",
+            )
             raise RuntimeError(
-                "Gemini rejected concept planning before returning a billable "
-                f"result (HTTP {exc.code}); no charge was recorded"
-                + (f": {detail}" if detail else "")
+                "Gemini concept-planning outcome is ambiguous; the worst-case "
+                "charge was recorded and the request was not retried"
             ) from exc
         except Exception as exc:
             self.ledger.record_manual_charge(
@@ -237,14 +320,45 @@ def _load_or_plan_concepts(
         source_record = {"mode": "replay", "source": str(concept_path)}
         planner = None
     else:
-        planner = BudgetedGeminiConceptPlanner(
-            api_key=gemini_key,
-            ledger=ledger,
-            operation_id=f"{args.operation_prefix}-gemini-concepts-v5",
-            model=args.gemini_model,
-        )
-        raw = planner(build_hypothesis_prompt_for_record(brief))
-        source_record = {"mode": "generated", **(planner.last_record or {})}
+        operation_id = f"{args.operation_prefix}-{PLANNER_OPERATION_SUFFIX}"
+        prompt = build_hypothesis_prompt_for_record(brief)
+        raw_path = output_dir / "concept-planning-raw.json"
+        record_path = output_dir / "concept-planning.json"
+        existing_files = (raw_path.exists(), record_path.exists())
+        if any(existing_files) and not all(existing_files):
+            raise RuntimeError(
+                "concept-planning checkpoint is incomplete; paid planning will not "
+                "be retried automatically"
+            )
+        if all(existing_files):
+            raw = raw_path.read_text(encoding="utf-8")
+            source_record = json.loads(record_path.read_text(encoding="utf-8"))
+            expected = {
+                "mode": "generated",
+                "operation_id": operation_id,
+                "requested_model": args.gemini_model,
+                "prompt_sha256": sha256_text(prompt),
+            }
+            for key, value in expected.items():
+                if source_record.get(key) != value:
+                    raise RuntimeError(
+                        f"concept-planning checkpoint has stale {key}; paid planning "
+                        "will not be retried automatically"
+                    )
+            if ledger.find_operation(operation_id) is None:
+                raise RuntimeError(
+                    "concept-planning checkpoint has no matching durable ledger entry"
+                )
+            planner = None
+        else:
+            planner = BudgetedGeminiConceptPlanner(
+                api_key=gemini_key,
+                ledger=ledger,
+                operation_id=operation_id,
+                model=args.gemini_model,
+            )
+            raw = planner(prompt)
+            source_record = {"mode": "generated", **(planner.last_record or {})}
 
     # Preserve the exact provider result before strict domain validation so a
     # rejected planning call remains reproducible evidence for the experiment.
@@ -275,12 +389,18 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--operation-prefix", required=True)
     parser.add_argument("--gemini-model", default=JUDGE_MODEL)
     parser.add_argument("--budget-database", default=str(DEFAULT_BUDGET_DATABASE))
+    parser.add_argument("--preflight-only", action="store_true")
+    parser.add_argument("--require-preflight")
     parser.add_argument("--execute-paid", action="store_true")
     parser.add_argument("--confirm-paid", default="")
     args = parser.parse_args()
     if args.execute_paid and args.confirm_paid != "YES":
         parser.error("paid execution requires --confirm-paid YES")
-    if not args.execute_paid and not args.concepts:
+    if args.execute_paid and not args.require_preflight:
+        parser.error("paid execution requires --require-preflight")
+    if args.preflight_only and args.execute_paid:
+        parser.error("--preflight-only and --execute-paid are mutually exclusive")
+    if not args.execute_paid and not args.preflight_only and not args.concepts:
         parser.error("plan-only mode requires --concepts to avoid an implicit paid call")
     return args
 
@@ -310,6 +430,66 @@ def main() -> int:
     budget_path = Path(args.budget_database)
     if not budget_path.is_absolute():
         budget_path = (LOOP_ROOT / budget_path).resolve()
+    budget_snapshot = _read_budget_snapshot(budget_path)
+    runway_base_url, runway_api_version = _configured_runway_contract()
+    temporal_contract = _temporal_preflight_contract(args.gemini_model)
+    planning_mode = "replay" if args.concepts else "live"
+    replay_batch: HypothesisBatch | None = None
+    if args.concepts:
+        concept_path = _resolve_file(args.concepts, label="concept batch")
+        concept_raw = concept_path.read_text(encoding="utf-8")
+        replay_batch = plan_hypotheses(
+            brief,
+            response_generator=lambda _: concept_raw,
+        )
+    current_preflight = build_campaign_preflight(
+        brief=brief,
+        template_storyboard=storyboard,
+        asset_root=asset_root,
+        operation_prefix=args.operation_prefix,
+        gemini_model=args.gemini_model,
+        planning_mode=planning_mode,
+        budget_snapshot=budget_snapshot,
+        planner_maximum_cost_microusd=PLANNER_MAXIMUM_COST_MICROUSD,
+        temporal_maximum_cost_microusd=TEMPORAL_MAXIMUM_COST_MICROUSD,
+        runway_base_url=runway_base_url,
+        runway_api_version=runway_api_version,
+        temporal_contract=temporal_contract,
+        concepts=replay_batch,
+        orchestrator_sha256=_sha256_file(Path(__file__).resolve()),
+    )
+    if args.preflight_only:
+        preflight_path = output_dir / "campaign-preflight.json"
+        _write_json(preflight_path, current_preflight.model_dump(mode="json"))
+        print(json.dumps(current_preflight.model_dump(mode="json"), indent=2))
+        return 0
+
+    if args.execute_paid:
+        stored_path = _resolve_file(
+            args.require_preflight,
+            label="campaign preflight",
+        )
+        stored_preflight = CampaignPreflightReport.model_validate(
+            json.loads(stored_path.read_text(encoding="utf-8"))
+        )
+        require_matching_preflight(
+            stored_preflight_id=stored_preflight.preflight_id,
+            current_preflight_id=current_preflight.preflight_id,
+        )
+        if stored_preflight.stage != current_preflight.stage:
+            raise RuntimeError("campaign preflight stage does not match execution")
+
+    if not args.execute_paid:
+        assert replay_batch is not None
+        plan = build_campaign_plan(
+            replay_batch,
+            template_storyboard=storyboard,
+            operation_prefix=args.operation_prefix,
+        )
+        _write_json(output_dir / "campaign-plan.json", plan.model_dump(mode="json"))
+        print(json.dumps(plan.model_dump(mode="json"), indent=2))
+        return 0
+
     ledger = IterationBudgetLedger(
         budget_path,
         scope_id=ITERATION_SCOPE_ID,
@@ -323,16 +503,32 @@ def main() -> int:
         ledger=ledger,
         output_dir=output_dir,
     )
+    generation_preflight = build_campaign_preflight(
+        brief=brief,
+        template_storyboard=storyboard,
+        asset_root=asset_root,
+        operation_prefix=args.operation_prefix,
+        gemini_model=args.gemini_model,
+        planning_mode=planning_mode,
+        budget_snapshot=ledger.snapshot(),
+        planner_maximum_cost_microusd=PLANNER_MAXIMUM_COST_MICROUSD,
+        temporal_maximum_cost_microusd=TEMPORAL_MAXIMUM_COST_MICROUSD,
+        runway_base_url=runway_base_url,
+        runway_api_version=runway_api_version,
+        temporal_contract=temporal_contract,
+        concepts=batch,
+        orchestrator_sha256=_sha256_file(Path(__file__).resolve()),
+    )
+    _write_json(
+        output_dir / "generation-preflight.json",
+        generation_preflight.model_dump(mode="json"),
+    )
     plan = build_campaign_plan(
         batch,
         template_storyboard=storyboard,
         operation_prefix=args.operation_prefix,
     )
     _write_json(output_dir / "campaign-plan.json", plan.model_dump(mode="json"))
-    if not args.execute_paid:
-        print(json.dumps(plan.model_dump(mode="json"), indent=2))
-        return 0
-
     adapter = RunwayAdapter(
         api_key=runway_key,
         budget_ledger=ledger,
@@ -357,21 +553,41 @@ def main() -> int:
             ]
         )
         evidence_path = output_dir / "temporal" / f"{candidate.candidate_id}.json"
+        failure_path = (
+            output_dir / "temporal" / f"{candidate.candidate_id}.failure.json"
+        )
+        operation_id = f"{args.operation_prefix}-{candidate.candidate_id}-temporal"
         try:
-            evidence = temporal.inspect(
-                video_path=video_path,
-                scene_id="hook",
-                scene_description=description,
-                start_seconds=0.0,
-                end_seconds=5.0,
-                working_dir=output_dir
-                / "temporal"
-                / f"{candidate.candidate_id}-strips",
-                operation_id=(
-                    f"{args.operation_prefix}-{candidate.candidate_id}-temporal"
-                ),
-            )
-            _write_json(evidence_path, evidence)
+            if evidence_path.is_file():
+                loaded = json.loads(evidence_path.read_text(encoding="utf-8"))
+                if not isinstance(loaded, dict):
+                    raise ValueError(
+                        "existing temporal evidence must contain one JSON object"
+                    )
+                evidence = validate_existing_temporal_evidence(
+                    loaded,
+                    video_path=video_path,
+                    scene_id="hook",
+                    scene_description=description,
+                    start_seconds=0.0,
+                    end_seconds=5.0,
+                    operation_id=operation_id,
+                    model=args.gemini_model,
+                    budget_ledger=ledger,
+                )
+            else:
+                evidence = temporal.inspect(
+                    video_path=video_path,
+                    scene_id="hook",
+                    scene_description=description,
+                    start_seconds=0.0,
+                    end_seconds=5.0,
+                    working_dir=output_dir
+                    / "temporal"
+                    / f"{candidate.candidate_id}-strips",
+                    operation_id=operation_id,
+                )
+                _write_json(evidence_path, evidence)
             events = evidence["events"]
             return {
                 "temporal_consistency_pass": not any(
@@ -387,7 +603,7 @@ def main() -> int:
                 "error_type": type(exc).__name__,
                 "error": str(exc),
             }
-            _write_json(evidence_path, failure)
+            _write_json(failure_path, failure)
             return {
                 "temporal_consistency_pass": False,
                 "temporal_events": [
@@ -397,7 +613,7 @@ def main() -> int:
                         "reason": "Temporal screening did not return valid evidence.",
                     }
                 ],
-                "temporal_evidence": str(evidence_path),
+                "temporal_evidence": str(failure_path),
                 "temporal_status": "failed_closed",
             }
 

@@ -6,7 +6,9 @@ Build an autonomous, reproducible production loop that turns a tict advertising 
 
 For reviewed product experiments, the controlling outcome is explicit product-owner acceptance of the retained final MP4 after every enforced technical and product constraint passes. This binary human label is the calibration target for future automation; it is not fabricated by the evaluator.
 
-Evaluator `0.6` still reports `visual_judge_win_rate`: the mean candidate credit from two blind Gemini pairwise passes with reversed A/B order. Candidate win is `1.0`, tie is `0.5`, and baseline win is `0.0`. It is a diagnostic model-preference signal, not a percentage of video quality and not the final acceptance authority.
+Candidate semantic evaluator `1.2` reviews one final MP4 against that candidate's own hypothesis and compiled storyboard. It emits closed evidence-backed statuses for hypothesis match, target emotion, first-two-second clarity, hook-to-product bridge coherence, and compiled-action alignment; deterministic local mapping is `1.0`, `0.5`, `0.0`, or `null`. Evidence citations are constrained to the compiled hook, exact first-two-second interval, or hook/product bridge window as appropriate. Different concept contracts are not directly comparable.
+
+Invariant evaluator `1.0` retains two blind passes with reversed A/B order, but evaluates only the shared product-demo and CTA contract. Its candidate credit and per-dimension values are diagnostic calibration signals, not percentages of overall video quality and not final acceptance authority. Legacy evaluator `0.6` remains historical evidence only and MUST NOT score a new hook against another concept's fixed scenario.
 
 `timeline_alignment_f1` remains a required non-regression metric. It is micro-averaged F1 over `(scene_id, expected_visual_tag)` pairs calculated deterministically from the judge's closed-vocabulary scene observations. Human preference cannot override an alignment, technical, temporal, screen-policy, or brand failure.
 
@@ -14,6 +16,14 @@ Evaluator `0.6` still reports `visual_judge_win_rate`: the mean candidate credit
 
 - `timeline_alignment_f1`
 - `visual_judge_win_rate`
+- `hypothesis_match`
+- `target_emotion_strength`
+- `first_two_seconds_hook_clarity`
+- `hook_to_product_bridge_coherence`
+- `storyboard_action_alignment`
+- `audiovisual_correctness`
+- `product_brand_fidelity`
+- `cta_clarity`
 - `brand_asset_fidelity`
 - `subtitle_text_token_f1`
 - `brand_text_exact_match`
@@ -55,6 +65,6 @@ Unavailable metrics must be emitted as `null` with a reason, never silently omit
 
 ## Comparison policy
 
-Use the same scenario, input artifact contract, evaluator version, and observation mode for direct comparisons. Automated model-preference evidence may rank candidates, but a product candidate is kept only when all enforced constraints pass and either the configured automatic acceptance contract is satisfied or the product owner explicitly accepts the exact retained artifact. Pending subjective checks may be resolved by that review; enforced failures may not.
+Use the same scenario, input artifact contract, evaluator version, and observation mode for direct comparisons. Candidate-specific hook scores are comparable only under the same concept-contract hash. Distinct hypotheses may be compared only on their declared shared downstream invariant contract; selecting among their different creative premises remains a product-review decision until calibrated against artifact-bound labels. A product candidate is kept only when all enforced constraints pass and either the configured automatic acceptance contract is satisfied or the product owner explicitly accepts the exact retained artifact. Pending subjective checks may be resolved by that review; enforced failures may not.
 
 Evaluator measurement changes are research changes, not ordinary product experiments: bump the evaluator version and establish a fresh baseline. Acceptance-policy changes preserve the original automated metrics and require an auditable review record.

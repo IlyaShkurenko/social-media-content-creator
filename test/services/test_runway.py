@@ -21,13 +21,17 @@ class FakeResponse:
         *,
         status_code: int = 200,
         content: bytes = b"video",
+        json_error: Exception | None = None,
     ) -> None:
         self._payload = payload or {}
         self.status_code = status_code
         self.content = content
         self.text = "provider response"
+        self.json_error = json_error
 
     def json(self) -> dict[str, Any]:
+        if self.json_error is not None:
+            raise self.json_error
         return self._payload
 
     def raise_for_status(self) -> None:
@@ -48,15 +52,20 @@ class FakeResponse:
 class FakeSession:
     def __init__(self) -> None:
         self.posts: list[dict[str, Any]] = []
+        self.gets: list[dict[str, Any]] = []
         self.status_payloads: list[dict[str, Any]] = []
         self.downloads: dict[str, bytes] = {}
         self.post_response = FakeResponse({"id": "job-123"})
+        self.post_error: Exception | None = None
 
     def post(self, url: str, **kwargs):
         self.posts.append({"url": url, **kwargs})
+        if self.post_error is not None:
+            raise self.post_error
         return self.post_response
 
     def get(self, url: str, **kwargs):
+        self.gets.append({"url": url, **kwargs})
         if url.startswith("https://download.example/"):
             return FakeResponse(content=self.downloads[url])
         if self.status_payloads:
@@ -110,6 +119,9 @@ def test_runway_1_5_submit_records_job_without_persisting_secret(tmp_path: Path)
     assert len(session.posts) == 1
     assert session.posts[0]["json"]["model"] == "gen4.5"
     assert session.posts[0]["json"]["duration"] == 5
+    assert session.posts[0]["headers"]["X-Runway-Version"] == "2024-11-06"
+    assert session.posts[0]["headers"]["Authorization"] == "Bearer test-secret"
+    assert session.posts[0]["allow_redirects"] is False
     assert "test-secret" not in str(job.to_record())
     assert adapter.budget_ledger.snapshot().charged_microusd == 600_000
 
@@ -121,6 +133,110 @@ def test_submit_failure_before_job_releases_reservation(tmp_path: Path) -> None:
     with pytest.raises(RunwayProviderError):
         adapter.submit(request(), operation_id="hook-1")
     assert adapter.budget_ledger.snapshot().remaining_microusd == 10_000_000
+
+
+@pytest.mark.parametrize(
+    "base_url",
+    [
+        "http://api.dev.runwayml.com",
+        "https://api.dev.runwayml.com.evil.example",
+        "https://user:secret@api.dev.runwayml.com",
+        "https://api.dev.runwayml.com/v1",
+        "https://api.dev.runwayml.com?redirect=evil",
+        "https://api.dev.runwayml.com:8443",
+    ],
+)
+def test_runway_bearer_key_is_only_sent_to_official_https_origin(
+    tmp_path: Path,
+    base_url: str,
+) -> None:
+    budget = IterationBudgetLedger(
+        tmp_path / "budget.sqlite3",
+        scope_id="iteration-001",
+        cap_microusd=10_000_000,
+    )
+
+    with pytest.raises(ValueError, match="official HTTPS API origin"):
+        RunwayAdapter(
+            api_key="test-secret",
+            budget_ledger=budget,
+            session=FakeSession(),
+            base_url=base_url,
+        )
+
+
+def test_runway_api_version_fails_closed_before_sending_key(tmp_path: Path) -> None:
+    budget = IterationBudgetLedger(
+        tmp_path / "budget.sqlite3",
+        scope_id="iteration-001",
+        cap_microusd=10_000_000,
+    )
+
+    with pytest.raises(ValueError, match="unsupported Runway API version"):
+        RunwayAdapter(
+            api_key="test-secret",
+            budget_ledger=budget,
+            session=FakeSession(),
+            api_version="2099-01-01",
+        )
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        FakeResponse(status_code=200),
+        FakeResponse(
+            status_code=200,
+            json_error=ValueError("malformed JSON"),
+        ),
+        FakeResponse(status_code=503),
+        FakeResponse(status_code=429),
+    ],
+)
+def test_ambiguous_submit_retains_budget_and_blocks_duplicate_retry(
+    tmp_path: Path,
+    response: FakeResponse,
+) -> None:
+    session = FakeSession()
+    session.post_response = response
+    adapter = make_adapter(tmp_path, session)
+
+    with pytest.raises(RunwayProviderError, match="retained"):
+        adapter.submit(request(), operation_id="hook-ambiguous")
+
+    snapshot = adapter.budget_ledger.snapshot()
+    assert snapshot.reserved_microusd == 600_000
+    assert snapshot.remaining_microusd == 9_400_000
+    with pytest.raises(RunwayProviderError, match="resubmission is blocked"):
+        adapter.submit(request(), operation_id="hook-ambiguous")
+    assert len(session.posts) == 1
+
+
+def test_network_submit_failure_retains_budget_and_blocks_duplicate_retry(
+    tmp_path: Path,
+) -> None:
+    session = FakeSession()
+    session.post_error = TimeoutError("unknown provider outcome")
+    adapter = make_adapter(tmp_path, session)
+
+    with pytest.raises(RunwayProviderError, match="outcome is unknown"):
+        adapter.submit(request(), operation_id="hook-timeout")
+
+    assert adapter.budget_ledger.snapshot().reserved_microusd == 600_000
+    with pytest.raises(RunwayProviderError, match="resubmission is blocked"):
+        adapter.submit(request(), operation_id="hook-timeout")
+    assert len(session.posts) == 1
+
+
+def test_submitted_operation_is_not_resubmitted(tmp_path: Path) -> None:
+    session = FakeSession()
+    adapter = make_adapter(tmp_path, session)
+    adapter.submit(request(), operation_id="hook-1")
+
+    with pytest.raises(RunwayProviderError, match="already submitted"):
+        adapter.submit(request(), operation_id="hook-1")
+
+    assert len(session.posts) == 1
 
 
 def test_runway_1_4_polling_does_not_resubmit_generation(tmp_path: Path) -> None:
@@ -138,6 +254,7 @@ def test_runway_1_4_polling_does_not_resubmit_generation(tmp_path: Path) -> None
     completed = adapter.wait(job, timeout_seconds=30, poll_interval_seconds=5)
     assert completed.status == "SUCCEEDED"
     assert len(session.posts) == 1
+    assert all(call["allow_redirects"] is False for call in session.gets)
 
 
 def test_runway_1_6_output_is_downloaded_without_signed_url_in_record(

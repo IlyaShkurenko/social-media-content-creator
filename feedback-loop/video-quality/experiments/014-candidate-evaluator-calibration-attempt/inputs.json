@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "kind": "candidate_evaluator_calibration_attempt",
+  "lifecycle": {
+    "status": "blocked",
+    "decision": "blocked_provider_unavailable",
+    "baseline_established": false,
+    "acceptance_authority": false,
+    "product_improvement_claim": false
+  },
+  "required_evaluator_versions": {
+    "candidate": "1.2.0",
+    "invariant": "1.0.0"
+  },
+  "artifacts": {
+    "reference": {
+      "role": "accepted_reference",
+      "source_path": "feedback-loop/video-quality/experiments/012-screen-stable-runway-batch/artifacts/video.mp4",
+      "sha256": "bd3a17ef31339160eb19062568e6f4c0aac3e17ec8afbfa2007f841aeae13c52",
+      "duration_ms": 15000
+    },
+    "candidate": {
+      "role": "pending_product_owner_review",
+      "source_path": "feedback-loop/video-quality/experiments/013-hypothesis-aware-candidate-orchestration/artifacts/campaign/renders/scattered-map-pins/final.mp4",
+      "sha256": "7412f0e49389cfdac8b984eae0d406dc5af691bf77cc9cb34790d756022d93ae",
+      "duration_ms": 15000
+    }
+  },
+  "candidate_contract": {
+    "encoding": "gzip+base64+canonical-json",
+    "source_path": "feedback-loop/video-quality/experiments/013-hypothesis-aware-candidate-orchestration/artifacts/campaign/campaign-plan.json",
+    "source_sha256": "26b3f7198457c2f35ee37e34be0e0abcd8f13cb98ca027bae48ba7961f760243",
+    "content_sha256": "69cadbf332d541e4b8eb56dea7935148edc318117e0767d6554d93fa364223ac",
+    "content_gzip_base64": "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"
+  },
+  "shared_invariant_contract": {
+    "encoding": "gzip+base64+canonical-json",
+    "source_path": "feedback-loop/video-quality/evals/dataset/mixed-media-stock-baseline-001.json",
+    "source_sha256": "2c66b606c90eaaa3db9d550aeed3672b595da86d9812b547b969ac151e5b21da",
+    "content_sha256": "f8369261a23239d4e1f5db6e178353bb99f4105ad665d57648a4a8c9c65b820e",
+    "content_gzip_base64": "H4sIAAAAAAAC/31SwWrDMAz9FeNzCA2sg+a60+69jWFUW6QGx/ZsuU0p+ffJLU07uu3op6f3pGedJeSImlQCskH2ctN3r7KRUIwNKuFXsQmN7CkVbOQugTcKckbKT0UTjj5TQhhV1ugxy/7jLA1mnWxkcc/q2z0KnECTgBhTOKAR2/e3rSCmCH6mg8WjsFnkPasJh4PduVPLAyEbZ9TBG9btunbF0FQnR6MIhmomb5qKLG9UrDrYzP3I7dVARQf+AWOyKUwknEhdrVB+NtLySkvR4Bgqt6QYMj4XeDtEr3gwQk8qBmf1iWnLLDd+sZVNkOi+x7pdzc1vGS3puDAEwaGLEbIOJHKJMSQSwaPQDiEJDc4JYpKu/c9Rrf+Pqho8ZLLgV7+HSrZ+cKg0wQLesmLsR0TX91/JFM8QHwpYz8fzlEn925mVTbmcpL9XznKE6bJR18jRclbdS7uZ528SyzyMxAIAAA=="
+  },
+  "evidence": {
+    "candidate": {
+      "encoding": "gzip+base64+canonical-json",
+      "source_path": "feedback-loop/video-quality/experiments/013-hypothesis-aware-candidate-orchestration/artifacts/campaign/judges/scattered-map-pins-semantic-v1.1.json",
+      "source_sha256": "20e5a1fc61bcfe3052efdba10ad11455e144c41a5b62b37b0d480d782ba077d9",
+      "content_sha256": "56ec612fd7d87b2f7c21ec33b93659930ce0d5a34105d86948c4ef39866476ac",
+      "content_gzip_base64": "H4sIAAAAAAAC/41XyXLcNhD9FRQvuWhU3BffXHGc5JK4yk4uqRQLBBpDWEOCIcAZTVz69zyQnEWLFekgzYAguvstjda3oJnkllzw7lsgWj5uSdadFqOZrAzeRVGRlDeBGWjkTpu+1lgMaM93E3dm3ERRuBG8l1pyR5swSjZWcOdoJLnp+LAZdG83+yi4CYaR1E5vW1d3/F53U3cVJQvxcxOM1HHd635bW4GIVxuSKkyrKHy4CYTpBQ1uyeN5rOCyw7Y8znLsUlmTiKIRPM3yKIqFTHiscq7wpyhUg8UwycKMp3mRqiYqlYzzOCZRpVmayEIuZ7qRi6tDcxFnQlRZAQSyWKSUU6OqmFdUhpVsmkLmcVVEpLKQYyHNY5HLUGRxmFVxFnMcKnVHvfWgotyRrGdA6dG62h1MbQlBpa1bY+5qseOjdkfwcQuc5iVn6mE0ckJSzajBYC1MCyxQ/GnbcTCuJastIHeiXZcteDs2ho+yRkU+PAcvPXKBBsLb7CZwXgWups7Mj63DqVvXzk9BwZn9ek+jzx9wRLc4GzV1RtLuan1LHRjdJLf5Ru24bbHFNJbG/aImv/28qz4LqT7jvUrHdNeEpqkqJIkkFk1VVULEgiIBFvMkTjOZprHkaSSoKopUJKrhMeVCpmEpQHuUR2I5cq8ljR5zsk4DIJrxmPgO0cHBMw+AocH0lhbpfe1+/omPyv1Y/b69/6389LXefzy8P+DoyfIt+XPN5IYJZJo70By8S73E11JOa1kZe7xb3d952Z+WETHHsnFI5rRWpGH08ODT+GdCxt6lHuuXMT7l+hZJAQAPxaybv75d04Oz/9QWiDCxm7zRmFEMYIm7I+uNI8tMzzgbOLoDgwOZ7jqSGlDujgyh9nS0bNjx3nuaobkYe4vkgDYK4N1Qd75WWP/hb58yt3PILy2xoT1aLRB4OfsUXpium3o88LGltmbc8l7/S5K5UQ+XUPs5ayRx0K4FDazn49K/fHzEdhMiBx263sNb7PQqRB/0SMIxgTAK7F5y94jMRTNnGIyIjLcalC7JGphkr+nA/vj1OSjZU1A+dwZexpscHcMHfimW6dXkfYdAPiXUr/snofFuj1Y+Hpk1APV7iDzrHK8i8At8a5EQ751PBnFtOym1oydiQcWQi0/10Go83RstaFmVEpK1nlV+hKrozOVzbHALPE3gsxiJ+it0Zsh5zy4CeRH7NwD/AV2wRwecJeeRHHBFscEAWe+GRyK0fO9/AzuL4JKhJLPb4z3tZiWieJwEiU3jtWRfYmCpDyZfxWinrgNrqz08FcYrzq4yODvw5JSVdj4MP1gsEu9fksACG3csY2tvuA2uYs/GuER+j1OHjTSHns3Cta05WNY+Ix/YwW391jvxkQA4Oqq1544h0H580kv9r1xKr4rvyyknpONealAellnF+Lo0Bm8LHHzDGngW7K7qoXsHkJTC5bXAeknqTSr8dDKjh4QtlyfT6IDQwTmc4kL7hjp7lbxGlnr9Rt74fc9jJU9F+dHsdh57Py5dSLmowJKbhiVep2db0T3CPKnVZwlAdAMrrmmdsrGPNDnw0WlPbb2q87sDwqtMfVw0coJnT55du14UV06a98/Z2XlgBBnT7MC1W/3P/fHhyUF6MQA80eJC37YrMzfMXw342ptT9Ws9Vzj4l5EYXHok+RomD1fzgYXUOn4ZV0KZ50XRVCLMZNbEZZk3KlSYWDC7hFEWS4o5V0VYcnwu06bIQhGmKi1kGsdh3viwy5HnuSq6ygSX4rAjR49dNA8pnb73s7G/kzfzGLABogJzehhtXpydrw64pJ8WokjTpFQUYYSKSql4WOYhxWFSlTkVSZZRlAqVxo3AnB1KjjUqmyTC1Kv8ADf3q1pO6/8QM23ZPPIvT86xijSKVUhplZSVUJKLsqnKlDiFmN9yKTKu8ipqVFFg9hZNkhZVKIssD+NYVgmn4OE/07cOf88MAAA="
+    },
+    "invariant": {
+      "encoding": "gzip+base64+canonical-json",
+      "source_path": "feedback-loop/video-quality/experiments/013-hypothesis-aware-candidate-orchestration/artifacts/campaign/judges/scattered-map-pins-invariant-v1.json",
+      "source_sha256": "b7b87fb1128a4fc1d03de8ac0c1ff371ce443b08108ddf5895a6a4862fb657fb",
+      "content_sha256": "ac81c98be42a30bcb7e8c9af4872fe7612d74c9851bcda2b710ff30a8c316152",
+      "content_gzip_base64": "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"
+    }
+  },
+  "related_costs": [
+    {
+      "operation_id": "evaluator-100-candidate-013-scattered-map-pins-v1",
+      "charged_microusd": 11936,
+      "accounting": "conservative_manual_charge",
+      "outcome": "superseded_measurement",
+      "reason": "Candidate evaluator 1.0.0 exposed superseded raw concept actions and was replaced by evaluator 1.1.0."
+    },
+    {
+      "operation_id": "evaluator-100-invariant-013-scattered-map-pins-v1-pass-1-duplicate-retry",
+      "charged_microusd": 57000,
+      "accounting": "conservative_manual_charge",
+      "outcome": "ambiguous_duplicate_response",
+      "reason": "A provider response was returned but exact usage evidence was lost before ledger recording, so the fail-closed maximum was retained."
+    }
+  ],
+  "blocker": {
+    "required_invariant_pass_count": 2,
+    "completed_invariant_pass_count": 1,
+    "missing_pass_ids": [
+      "candidate-a"
+    ],
+    "reason": "Repeated provider HTTP 503 high-demand responses prevented the reversed invariant pass; no position-balanced result exists."
+  }
+}

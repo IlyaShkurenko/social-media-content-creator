@@ -58,3 +58,26 @@ Feature: Video-quality experiment acceptance
     And the product owner explicitly accepts the retained final video
     When the reviewed final decision is calculated
     Then the reviewed keep is rejected for a constraint regression
+
+  Scenario: [EVAL-7.1] Render completion does not invent semantic quality scores
+    Given an eligible rendered candidate without semantic judge evidence
+    When its campaign scorecard is finalized
+    Then only temporal eligibility has a measured score
+    And audiovisual brand and CTA semantic scores remain unavailable
+
+  Scenario: [EVAL-7.4] A hook is judged against its own creative contract
+    Given a map-fragmentation candidate with its own hypothesis and storyboard
+    When its candidate-specific judge prompt is built
+    Then the prompt requires the map-fragmentation contract
+    And the prompt does not require the unrelated airport hook
+
+  Scenario: [EVAL-7.5] Cross-concept comparison contains only shared downstream invariants
+    Given a shared downstream contract and an unrelated airport hook
+    When its shared-invariant judge prompt is built
+    Then the prompt requires the exact product demonstration and CTA
+    And the prompt excludes airport hook requirements
+
+  Scenario: [EVAL-7.6] A semantic evaluator change requires fresh compatible evidence
+    Given candidate evidence from a superseded semantic evaluator version
+    When a new evaluator baseline validates that evidence
+    Then baseline establishment is rejected as version-incompatible

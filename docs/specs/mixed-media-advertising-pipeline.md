@@ -9,6 +9,7 @@ Define the first implementation slice of the provider-neutral advertising pipeli
 - `records/rfcs/0001-experimental-mixed-media-advertising-pipeline.md`
 - `records/rfcs/0004-human-calibrated-video-acceptance.md`
 - `records/rfcs/0005-hypothesis-aware-candidate-orchestration.md`
+- `records/rfcs/0006-evidence-bound-candidate-evaluation.md`
 
 ## Contract requirements
 
@@ -152,7 +153,7 @@ Before submitting the first generated-media job, the orchestrator MUST verify th
 
 #### ADPIPE-2.3 — Independent idempotent jobs
 
-Every candidate MUST use a unique deterministic operation ID and retain its provider job ID, request hash, local output hash, charge, latency, state, and failure evidence. Completed or ambiguous operations MUST NOT be resubmitted as new generations.
+Every candidate MUST use a unique deterministic operation ID and retain its provider job ID, request hash, local output hash, charge, latency, state, and failure evidence. Completed or ambiguous operations MUST NOT be resubmitted as new generations. A rerun MUST reuse a hash-matching terminal candidate without provider work and MUST resume polling a known submitted provider job without resubmitting it. A stale state, mismatched artifact hash, or ambiguous reservation without a provider job ID MUST fail closed.
 
 #### ADPIPE-2.4 — Screen before selection and rendering
 
@@ -162,9 +163,31 @@ Every downloaded hook MUST be screened under RUNWAY-2.2. Only an eligible candid
 
 The selected hook MUST be composed with the batch's unchanged exact product capture, narration contract, subtitle policy, brand assets, and CTA. The final manifest MUST identify the selected concept and exact rendered-video SHA-256.
 
+#### ADPIPE-2.6 — Exact offline preflight gates paid execution
+
+The campaign MUST produce an offline `planner_ready` preflight before a paid
+planning request and an exact `generation_ready` preflight before the first
+Runway request. Preflight MUST validate the real provider transport schema,
+every compiled Runway request and payload, the 1000-character prompt limit,
+managed assets, deterministic operation identities, fail-closed pricing, and
+the complete worst-case campaign cost including planning, generation, and
+temporal screening. It MUST perform no network call and create no budget
+operation. Paid execution MUST recompute and match the preflight's semantic hash
+from current code and inputs; a missing or stale report MUST submit no provider
+request.
+
+#### ADPIPE-2.7 — Auditable conservative budget reconciliation
+
+A charged provider submission whose exact usage evidence cannot be recovered
+MAY be reconciled to an explicit conservative manual charge without changing
+its amount or provider job identifier. Reconciliation MUST retain an English
+reason, MUST be idempotent only for the same reason, and MUST NOT release the
+charge. Budget audit is read-only by default and MUST NOT infer a transition
+from operation age or provider description alone.
+
 ## Current behavior
 
-The legacy WebUI/API path still generates prose and stock keywords, retrieves or accepts clips, and concatenates them. The opt-in experimental path now validates a product brief, plans three to five provider-neutral hypotheses, compiles independent Runway hooks against one controlled storyboard template, preflights the complete batch cost, retains each provider job and MP4, applies artifact-bound temporal review, and renders every eligible hook with exact product/brand layers. Calibrated campaign-specific subjective ranking, mascot animation, and main-WebUI exposure remain absent.
+The legacy WebUI/API path still generates prose and stock keywords, retrieves or accepts clips, and concatenates them. The opt-in experimental path now validates a product brief, plans three to five provider-neutral hypotheses, compiles independent Runway hooks against one controlled storyboard template, gates paid calls with exact offline preflight hashes, retains each provider job and MP4, applies artifact-bound temporal review, renders every eligible hook with exact product/brand layers, judges hook semantics against each candidate's own compiled contract, and compares only shared downstream invariants across concepts. Calibrated automatic campaign ranking, mascot animation, and main-WebUI exposure remain absent.
 
 ## Expected first-slice behavior
 
@@ -275,6 +298,12 @@ Planner output is untrusted input. Length limits apply to the brief, hypothesis,
   - ADPIPE-2.4: only screened eligible candidates may be selected.
 - `test/services/test_creative_campaign.py`
   - strict concept parsing, duplicate rejection, controlled storyboard compilation, durable manifests, deterministic operation IDs, and scorecard null semantics.
+- `test/bdd/features/mixed_media_pipeline.feature`
+  - ADPIPE-2.6: a stale semantic preflight blocks paid execution without a provider request.
+- `test/services/test_campaign_preflight.py`
+  - ADPIPE-2.6: exact Gemini schema transport, prompt compilation, asset hashing, full-cost accounting, zero network/ledger mutation, and stale-hash rejection.
+- `test/services/test_generation_budget.py`
+  - ADPIPE-2.7: submitted-to-manual-charge reconciliation preserves conservative spend and audit provenance.
 
 ## Unresolved non-blocking choices
 

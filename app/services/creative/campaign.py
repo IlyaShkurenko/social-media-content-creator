@@ -4,13 +4,15 @@ import hashlib
 import json
 import re
 import time
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Literal
 
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError, model_validator
 
 from app.services.creative.pipeline import build_runway_request
 from app.services.creative.runway import (
+    RunwayJob,
     RunwayVideoRequest,
     estimate_runway_cost_microusd,
 )
@@ -128,6 +130,16 @@ class CampaignPlan(CreativeModel):
 class ScoreDimension(CreativeModel):
     value: float | None = Field(default=None, ge=0, le=1)
     unavailable_reason: str | None = None
+
+    @model_validator(mode="after")
+    def require_value_or_reason(self) -> "ScoreDimension":
+        reason = (self.unavailable_reason or "").strip()
+        if self.value is None and not reason:
+            raise ValueError("an unavailable score dimension requires a reason")
+        if self.value is not None and reason:
+            raise ValueError("a measured score dimension cannot be unavailable")
+        self.unavailable_reason = reason or None
+        return self
 
 
 class CandidateScorecard(CreativeModel):
@@ -451,6 +463,296 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _request_sha256(request: RunwayVideoRequest) -> str:
+    payload = json.dumps(
+        request.model_dump(mode="json"),
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+@dataclass(frozen=True)
+class _CandidateResumeState:
+    kind: Literal["new", "submitted", "terminal"]
+    record: dict[str, Any] | None = None
+    job: RunwayJob | None = None
+
+
+def _read_candidate_state(path: Path, *, candidate_id: str) -> dict[str, Any]:
+    try:
+        resolved_path = path.resolve(strict=True)
+    except OSError as exc:
+        raise CampaignPlanningError(
+            f"candidate {candidate_id!r} has unreadable durable state"
+        ) from exc
+    if not resolved_path.is_relative_to(path.parent.resolve()):
+        raise CampaignPlanningError(
+            f"candidate {candidate_id!r} durable state is outside managed output"
+        )
+    try:
+        payload = json.loads(resolved_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise CampaignPlanningError(
+            f"candidate {candidate_id!r} has unreadable durable state"
+        ) from exc
+    if not isinstance(payload, dict):
+        raise CampaignPlanningError(
+            f"candidate {candidate_id!r} durable state must be an object"
+        )
+    return payload
+
+
+def _require_matching_state_field(
+    record: dict[str, Any],
+    *,
+    key: str,
+    expected: Any,
+    candidate_id: str,
+) -> None:
+    if record.get(key) != expected:
+        raise CampaignPlanningError(
+            f"candidate {candidate_id!r} has stale or mismatched {key} in durable state"
+        )
+
+
+def _validate_ledger_operation(
+    candidate: CampaignCandidatePlan,
+    operation: Any,
+) -> None:
+    if operation.amount_microusd != candidate.estimated_cost_microusd:
+        raise CampaignPlanningError(
+            f"candidate {candidate.candidate_id!r} ledger amount does not match its plan"
+        )
+    if operation.status != "submitted":
+        raise CampaignPlanningError(
+            f"candidate {candidate.candidate_id!r} has ambiguous ledger state "
+            f"{operation.status!r}; automatic execution is blocked"
+        )
+    if not isinstance(operation.provider_job_id, str) or not operation.provider_job_id:
+        raise CampaignPlanningError(
+            f"candidate {candidate.candidate_id!r} submitted ledger operation has no "
+            "provider job ID"
+        )
+
+
+def _validate_terminal_record(
+    candidate: CampaignCandidatePlan,
+    record: dict[str, Any],
+    *,
+    managed_output: Path,
+) -> None:
+    state = record["state"]
+    expected_eligible = state == "eligible"
+    if record.get("eligible") is not expected_eligible:
+        raise CampaignPlanningError(
+            f"candidate {candidate.candidate_id!r} terminal eligibility is inconsistent"
+        )
+    if record.get("provider_status") != "SUCCEEDED":
+        raise CampaignPlanningError(
+            f"candidate {candidate.candidate_id!r} terminal provider status is stale"
+        )
+    screening = record.get("screening")
+    if not isinstance(screening, dict):
+        raise CampaignPlanningError(
+            f"candidate {candidate.candidate_id!r} terminal state has no screening"
+        )
+    if screening.get("candidate_id") != candidate.candidate_id:
+        raise CampaignPlanningError(
+            f"candidate {candidate.candidate_id!r} screening identity is mismatched"
+        )
+    if temporal_candidate_is_eligible(screening) is not expected_eligible:
+        raise CampaignPlanningError(
+            f"candidate {candidate.candidate_id!r} terminal screening eligibility is invalid"
+        )
+
+    raw_video_path = record.get("video_path")
+    if not isinstance(raw_video_path, str) or not raw_video_path.strip():
+        raise CampaignPlanningError(
+            f"candidate {candidate.candidate_id!r} terminal state has no video path"
+        )
+    candidate_dir = (
+        managed_output / "candidates" / candidate.candidate_id
+    ).resolve()
+    unresolved_video = Path(raw_video_path)
+    if not unresolved_video.is_absolute():
+        unresolved_video = managed_output / unresolved_video
+    try:
+        video_path = unresolved_video.resolve(strict=True)
+    except OSError as exc:
+        raise CampaignPlanningError(
+            f"candidate {candidate.candidate_id!r} terminal video is missing"
+        ) from exc
+    if not video_path.is_file() or not video_path.is_relative_to(candidate_dir):
+        raise CampaignPlanningError(
+            f"candidate {candidate.candidate_id!r} terminal video is outside managed output"
+        )
+    recorded_sha256 = record.get("video_sha256")
+    if (
+        not isinstance(recorded_sha256, str)
+        or re.fullmatch(r"[0-9a-f]{64}", recorded_sha256) is None
+        or _sha256(video_path) != recorded_sha256
+    ):
+        raise CampaignPlanningError(
+            f"candidate {candidate.candidate_id!r} terminal video hash is mismatched"
+        )
+
+
+def _load_candidate_resume_state(
+    candidate: CampaignCandidatePlan,
+    *,
+    managed_output: Path,
+    budget_ledger: Any,
+) -> _CandidateResumeState:
+    state_path = managed_output / f"{candidate.candidate_id}.state.json"
+    operation = budget_ledger.find_operation(candidate.operation_id)
+    if not state_path.exists():
+        if state_path.is_symlink():
+            raise CampaignPlanningError(
+                f"candidate {candidate.candidate_id!r} has an invalid durable state link"
+            )
+        if operation is None:
+            return _CandidateResumeState(kind="new")
+        _validate_ledger_operation(candidate, operation)
+        reconstructed_record = {
+            "candidate_id": candidate.candidate_id,
+            "concept_id": candidate.concept_id,
+            "operation_id": candidate.operation_id,
+            "state": "submitted",
+            "estimated_cost_microusd": candidate.estimated_cost_microusd,
+            "request_sha256": _request_sha256(candidate.request),
+            "provider_job_id": operation.provider_job_id,
+        }
+        return _CandidateResumeState(
+            kind="submitted",
+            record=reconstructed_record,
+            job=RunwayJob(
+                provider_job_id=operation.provider_job_id,
+                operation_id=candidate.operation_id,
+                request=candidate.request,
+                estimated_cost_microusd=candidate.estimated_cost_microusd,
+            ),
+        )
+
+    record = _read_candidate_state(
+        state_path,
+        candidate_id=candidate.candidate_id,
+    )
+    _require_matching_state_field(
+        record,
+        key="candidate_id",
+        expected=candidate.candidate_id,
+        candidate_id=candidate.candidate_id,
+    )
+    _require_matching_state_field(
+        record,
+        key="concept_id",
+        expected=candidate.concept_id,
+        candidate_id=candidate.candidate_id,
+    )
+    _require_matching_state_field(
+        record,
+        key="operation_id",
+        expected=candidate.operation_id,
+        candidate_id=candidate.candidate_id,
+    )
+    _require_matching_state_field(
+        record,
+        key="estimated_cost_microusd",
+        expected=candidate.estimated_cost_microusd,
+        candidate_id=candidate.candidate_id,
+    )
+    _require_matching_state_field(
+        record,
+        key="request_sha256",
+        expected=_request_sha256(candidate.request),
+        candidate_id=candidate.candidate_id,
+    )
+    if operation is None:
+        raise CampaignPlanningError(
+            f"candidate {candidate.candidate_id!r} has durable state without a ledger "
+            "operation; automatic execution is blocked"
+        )
+    _validate_ledger_operation(candidate, operation)
+
+    state = record.get("state")
+    if state == "submitting":
+        recorded_provider_job_id = record.get("provider_job_id")
+        if recorded_provider_job_id not in {None, operation.provider_job_id}:
+            raise CampaignPlanningError(
+                f"candidate {candidate.candidate_id!r} has stale or mismatched "
+                "provider_job_id in durable state"
+            )
+        reconstructed_record = dict(record)
+        reconstructed_record.update(
+            {
+                "state": "submitted",
+                "provider_job_id": operation.provider_job_id,
+            }
+        )
+        return _CandidateResumeState(
+            kind="submitted",
+            record=reconstructed_record,
+            job=RunwayJob(
+                provider_job_id=operation.provider_job_id,
+                operation_id=candidate.operation_id,
+                request=candidate.request,
+                estimated_cost_microusd=candidate.estimated_cost_microusd,
+            ),
+        )
+    _require_matching_state_field(
+        record,
+        key="provider_job_id",
+        expected=operation.provider_job_id,
+        candidate_id=candidate.candidate_id,
+    )
+
+    if state == "submitted":
+        return _CandidateResumeState(
+            kind="submitted",
+            record=record,
+            job=RunwayJob(
+                provider_job_id=operation.provider_job_id,
+                operation_id=candidate.operation_id,
+                request=candidate.request,
+                estimated_cost_microusd=candidate.estimated_cost_microusd,
+            ),
+        )
+    if state in {"eligible", "screened_out"}:
+        _validate_terminal_record(
+            candidate,
+            record,
+            managed_output=managed_output,
+        )
+        return _CandidateResumeState(kind="terminal", record=record)
+    raise CampaignPlanningError(
+        f"candidate {candidate.candidate_id!r} has ambiguous durable state {state!r}; "
+        "automatic execution is blocked"
+    )
+
+
+def _validate_runway_job(
+    candidate: CampaignCandidatePlan,
+    job: RunwayJob,
+    *,
+    require_succeeded: bool,
+) -> None:
+    if (
+        job.operation_id != candidate.operation_id
+        or job.request != candidate.request
+        or job.estimated_cost_microusd != candidate.estimated_cost_microusd
+        or not job.provider_job_id.strip()
+    ):
+        raise CampaignPlanningError(
+            f"candidate {candidate.candidate_id!r} provider job does not match its plan"
+        )
+    if require_succeeded and job.status != "SUCCEEDED":
+        raise CampaignPlanningError(
+            f"candidate {candidate.candidate_id!r} provider job did not succeed"
+        )
+
+
 def execute_candidate_pool(
     plan: CampaignPlan,
     *,
@@ -461,27 +763,112 @@ def execute_candidate_pool(
     """Execute a preflighted pool and persist each candidate's durable state."""
 
     managed_output = output_dir.resolve()
-    managed_output.mkdir(parents=True, exist_ok=True)
-    _write_json(managed_output / "campaign-plan.json", plan.model_dump(mode="json"))
+    plan_path = managed_output / "campaign-plan.json"
+    if plan_path.exists():
+        try:
+            stored_plan = CampaignPlan.model_validate_json(
+                plan_path.read_text(encoding="utf-8")
+            )
+        except (OSError, ValidationError) as exc:
+            raise CampaignPlanningError(
+                "existing durable campaign plan is unreadable or invalid"
+            ) from exc
+        if stored_plan != plan:
+            raise CampaignPlanningError(
+                "existing durable campaign plan does not match the requested plan"
+            )
+    elif any(
+        (managed_output / f"{candidate.candidate_id}.state.json").exists()
+        or adapter.budget_ledger.find_operation(candidate.operation_id) is not None
+        for candidate in plan.candidates
+    ):
+        raise CampaignPlanningError(
+            "existing candidate state has no matching durable campaign plan"
+        )
+    resume_states = [
+        _load_candidate_resume_state(
+            candidate,
+            managed_output=managed_output,
+            budget_ledger=adapter.budget_ledger,
+        )
+        for candidate in plan.candidates
+    ]
+    new_cost_microusd = sum(
+        candidate.estimated_cost_microusd
+        for candidate, resume_state in zip(
+            plan.candidates,
+            resume_states,
+            strict=True,
+        )
+        if resume_state.kind == "new"
+    )
+    # Submitted jobs have already consumed their conservative ledger amount.
+    # Check the whole genuinely-new batch before making any provider call.
+    if new_cost_microusd:
+        adapter.budget_ledger.ensure_available(new_cost_microusd)
 
-    # This check is intentionally atomic at batch scope and happens before submit.
-    adapter.budget_ledger.ensure_available(plan.total_estimated_cost_microusd)
+    managed_output.mkdir(parents=True, exist_ok=True)
+    _write_json(plan_path, plan.model_dump(mode="json"))
 
     records: list[dict[str, Any]] = []
-    for candidate in plan.candidates:
+    for candidate, resume_state in zip(
+        plan.candidates,
+        resume_states,
+        strict=True,
+    ):
+        if resume_state.kind == "terminal":
+            assert resume_state.record is not None
+            records.append(resume_state.record)
+            continue
+
         started_at = time.monotonic()
-        record: dict[str, Any] = {
-            "candidate_id": candidate.candidate_id,
-            "concept_id": candidate.concept_id,
-            "operation_id": candidate.operation_id,
-            "state": "submitting",
-            "estimated_cost_microusd": candidate.estimated_cost_microusd,
-        }
-        try:
-            job = adapter.submit(
-                candidate.request,
-                operation_id=candidate.operation_id,
+        if resume_state.kind == "submitted":
+            assert resume_state.record is not None
+            assert resume_state.job is not None
+            record = dict(resume_state.record)
+            job: RunwayJob | None = resume_state.job
+            record.pop("last_error", None)
+            record.pop("last_error_type", None)
+            record.pop("last_attempt_latency_seconds", None)
+        else:
+            record = {
+                "candidate_id": candidate.candidate_id,
+                "concept_id": candidate.concept_id,
+                "operation_id": candidate.operation_id,
+                "state": "submitting",
+                "estimated_cost_microusd": candidate.estimated_cost_microusd,
+                "request_sha256": _request_sha256(candidate.request),
+            }
+            job = None
+            _write_json(
+                managed_output / f"{candidate.candidate_id}.state.json",
+                record,
             )
+        try:
+            if job is None:
+                job = adapter.submit(
+                    candidate.request,
+                    operation_id=candidate.operation_id,
+                )
+                _validate_runway_job(
+                    candidate,
+                    job,
+                    require_succeeded=False,
+                )
+                ledger_operation = adapter.budget_ledger.find_operation(
+                    candidate.operation_id
+                )
+                if ledger_operation is None:
+                    raise CampaignPlanningError(
+                        f"candidate {candidate.candidate_id!r} submitted without a "
+                        "durable ledger operation"
+                    )
+                _validate_ledger_operation(candidate, ledger_operation)
+                if ledger_operation.provider_job_id != job.provider_job_id:
+                    raise CampaignPlanningError(
+                        f"candidate {candidate.candidate_id!r} provider job differs "
+                        "from its durable ledger operation"
+                    )
             record.update(
                 {
                     "state": "submitted",
@@ -493,11 +880,41 @@ def execute_candidate_pool(
                 record,
             )
             completed = adapter.wait(job)
+            _validate_runway_job(
+                candidate,
+                completed,
+                require_succeeded=True,
+            )
+            if completed.provider_job_id != job.provider_job_id:
+                raise CampaignPlanningError(
+                    f"candidate {candidate.candidate_id!r} completed provider job "
+                    "identity changed"
+                )
             downloaded = adapter.download_outputs(
                 completed,
                 managed_output / "candidates" / candidate.candidate_id,
             )
+            if not downloaded:
+                raise CampaignPlanningError(
+                    f"candidate {candidate.candidate_id!r} produced no downloaded video"
+                )
             primary_video = downloaded[0]
+            candidate_dir = (
+                managed_output / "candidates" / candidate.candidate_id
+            ).resolve()
+            try:
+                primary_video = primary_video.resolve(strict=True)
+            except OSError as exc:
+                raise CampaignPlanningError(
+                    f"candidate {candidate.candidate_id!r} downloaded video is missing"
+                ) from exc
+            if (
+                not primary_video.is_file()
+                or not primary_video.is_relative_to(candidate_dir)
+            ):
+                raise CampaignPlanningError(
+                    f"candidate {candidate.candidate_id!r} downloaded outside managed output"
+                )
             screening = screen_hook(candidate, primary_video)
             screening_record = {
                 "candidate_id": candidate.candidate_id,
@@ -516,14 +933,34 @@ def execute_candidate_pool(
                 }
             )
         except Exception as exc:
-            record.update(
-                {
-                    "state": "failed",
-                    "error_type": type(exc).__name__,
-                    "error": str(exc),
-                    "latency_seconds": round(time.monotonic() - started_at, 3),
-                }
-            )
+            operation = adapter.budget_ledger.find_operation(candidate.operation_id)
+            if (
+                operation is not None
+                and operation.status == "submitted"
+                and isinstance(operation.provider_job_id, str)
+                and operation.provider_job_id
+            ):
+                record.update(
+                    {
+                        "state": "submitted",
+                        "provider_job_id": operation.provider_job_id,
+                        "last_error_type": type(exc).__name__,
+                        "last_error": str(exc),
+                        "last_attempt_latency_seconds": round(
+                            time.monotonic() - started_at,
+                            3,
+                        ),
+                    }
+                )
+            else:
+                record.update(
+                    {
+                        "state": "failed",
+                        "error_type": type(exc).__name__,
+                        "error": str(exc),
+                        "latency_seconds": round(time.monotonic() - started_at, 3),
+                    }
+                )
             records.append(record)
             _write_json(
                 managed_output / f"{candidate.candidate_id}.state.json",

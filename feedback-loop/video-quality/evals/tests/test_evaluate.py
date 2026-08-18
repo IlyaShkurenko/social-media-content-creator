@@ -9,7 +9,7 @@ LOOP_ROOT = Path(__file__).resolve().parents[2]
 if str(LOOP_ROOT) not in sys.path:
     sys.path.insert(0, str(LOOP_ROOT))
 
-from evals.evaluate import (
+from evals.evaluate import (  # noqa: E402
     aggregate_candidate_observations,
     calculate_visual_judge_win_rate,
     calculate_screen_policy_metrics,

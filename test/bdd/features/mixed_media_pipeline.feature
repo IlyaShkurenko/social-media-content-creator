@@ -70,3 +70,9 @@ Feature: Controlled mixed-media advertising production
     Given three planned Runway hooks exceed the shared remaining budget
     When candidate-pool execution is requested
     Then no Runway candidate is submitted
+
+  Scenario: [ADPIPE-2.6] A stale campaign preflight blocks paid execution
+    Given an offline campaign preflight for the current semantic inputs
+    And the campaign inputs change after preflight
+    When paid campaign preflight is verified
+    Then campaign execution is blocked before provider submission

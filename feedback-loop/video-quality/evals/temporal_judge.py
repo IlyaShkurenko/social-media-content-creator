@@ -25,6 +25,7 @@ from app.services.creative.budget import IterationBudgetLedger  # noqa: E402
 from evals.gemini_judge import (  # noqa: E402
     JUDGE_MODEL,
     actual_usage_cost_microusd,
+    is_definite_nonbillable_gemini_error,
     sanitize_judge_evidence,
     sha256_file,
     sha256_text,
@@ -73,6 +74,95 @@ class TemporalJudgeResponse(BaseModel):
     summary: str = Field(min_length=1)
     inspected_frame_count: int = Field(ge=1)
     events: list[TemporalEvent]
+
+
+def validate_existing_temporal_evidence(
+    evidence: dict[str, Any],
+    *,
+    video_path: Path,
+    scene_id: str,
+    scene_description: str,
+    start_seconds: float,
+    end_seconds: float,
+    operation_id: str,
+    model: str,
+    budget_ledger: IterationBudgetLedger,
+) -> dict[str, Any]:
+    """Validate a complete paid temporal checkpoint for zero-cost replay."""
+
+    expected = {
+        "schema_version": TEMPORAL_SCHEMA_VERSION,
+        "evaluator_version": EVALUATOR_VERSION,
+        "observation_mode": "gemini_temporal_strips_v1",
+        "status": "complete",
+        "video_sha256": sha256_file(video_path),
+        "scene_id": scene_id,
+        "scene_range_seconds": [start_seconds, end_seconds],
+        "sample_fps": TEMPORAL_SAMPLE_FPS,
+        "requested_model": model,
+    }
+    for key, value in expected.items():
+        if evidence.get(key) != value:
+            raise ValueError(f"existing temporal evidence has stale {key}")
+
+    frame_count = evidence.get("sampled_frame_count")
+    if not isinstance(frame_count, int) or frame_count <= 0:
+        raise ValueError("existing temporal evidence has invalid sampled_frame_count")
+    expected_frame_count = round((end_seconds - start_seconds) * TEMPORAL_SAMPLE_FPS)
+    if frame_count != expected_frame_count:
+        raise ValueError("existing temporal evidence has an unexpected frame count")
+    strip_hashes = evidence.get("strip_hashes")
+    if (
+        not isinstance(strip_hashes, list)
+        or len(strip_hashes) != (frame_count + FRAMES_PER_STRIP - 1) // FRAMES_PER_STRIP
+        or any(
+            not isinstance(value, str)
+            or len(value) != 64
+            or any(character not in "0123456789abcdef" for character in value)
+            for value in strip_hashes
+        )
+    ):
+        raise ValueError("existing temporal evidence has invalid strip hashes")
+    prompt = build_temporal_prompt(
+        scene_id=scene_id,
+        scene_description=scene_description,
+        sample_fps=TEMPORAL_SAMPLE_FPS,
+        frame_count=frame_count,
+    )
+    if evidence.get("prompt_sha256") != sha256_text(prompt):
+        raise ValueError("existing temporal evidence has stale prompt_sha256")
+
+    response = TemporalJudgeResponse.model_validate(evidence.get("response"))
+    response_events = [item.model_dump(mode="json") for item in response.events]
+    if evidence.get("events") != response_events:
+        raise ValueError("existing temporal evidence events differ from its response")
+    if response.inspected_frame_count != frame_count:
+        raise ValueError("existing temporal response has an unexpected frame count")
+    valid_indices = set(range(frame_count))
+    for event in response.events:
+        if not set(event.frame_indices).issubset(valid_indices):
+            raise ValueError("existing temporal evidence cites an unknown frame")
+        if (
+            event.end_seconds < event.start_seconds
+            or event.start_seconds < start_seconds
+            or event.end_seconds > end_seconds
+        ):
+            raise ValueError("existing temporal evidence cites an invalid time range")
+
+    budget = evidence.get("budget")
+    if not isinstance(budget, dict) or budget.get("operation_id") != operation_id:
+        raise ValueError("existing temporal evidence has stale budget operation")
+    charged = budget.get("charged_microusd")
+    operation = budget_ledger.find_operation(operation_id)
+    if (
+        not isinstance(charged, int)
+        or charged <= 0
+        or operation is None
+        or operation.status not in {"manual_charge", "submitted"}
+        or operation.amount_microusd != charged
+    ):
+        raise ValueError("existing temporal evidence does not match the paid ledger")
+    return sanitize_judge_evidence(evidence)
 
 
 def _font(size: int) -> ImageFont.FreeTypeFont:
@@ -278,6 +368,12 @@ class GeminiTemporalJudge:
         working_dir: Path,
         operation_id: str,
     ) -> dict[str, Any]:
+        existing_operation = self.budget_ledger.find_operation(operation_id)
+        if existing_operation is not None:
+            raise RuntimeError(
+                f"temporal operation {operation_id!r} is already "
+                f"{existing_operation.status}; automatic paid resubmission is blocked"
+            )
         frames = extract_temporal_frames(
             video_path,
             output_dir=working_dir / "frames",
@@ -322,9 +418,19 @@ class GeminiTemporalJudge:
                 ),
             )
         except errors.APIError as exc:
+            if is_definite_nonbillable_gemini_error(exc):
+                raise RuntimeError(
+                    "Gemini rejected the temporal request before returning a "
+                    f"billable result (HTTP {exc.code}); no charge was recorded"
+                ) from exc
+            self.budget_ledger.record_manual_charge(
+                operation_id,
+                MAXIMUM_COST_MICROUSD,
+                f"{description}; ambiguous HTTP {exc.code}, worst-case charge",
+            )
             raise RuntimeError(
-                "Gemini rejected the temporal request before returning a "
-                f"billable result (HTTP {exc.code}); no charge was recorded"
+                "Gemini temporal submission outcome is ambiguous; a worst-case "
+                f"charge was recorded under operation {operation_id!r}"
             ) from exc
         except Exception as exc:
             self.budget_ledger.record_manual_charge(
@@ -474,33 +580,53 @@ def main() -> int:
             f"screen policy: {intent['screen_content_policy']}",
         ]
     )
-    from app.config import config
-
-    api_key = str(config.app.get("gemini_api_key", "") or "").strip()
-    api_key = api_key or os.getenv("GEMINI_API_KEY", "").strip()
-    if not api_key:
-        raise RuntimeError("Gemini API key is not configured")
     ledger = IterationBudgetLedger(
         Path(args.budget_database),
         scope_id=ITERATION_SCOPE_ID,
         cap_microusd=ITERATION_CAP_MICROUSD,
     )
-    judge = GeminiTemporalJudge(
-        api_key=api_key,
-        budget_ledger=ledger,
-        model=args.model,
-    )
-    working_dir = output.parent / f"{output.stem}-strips"
-    evidence = judge.inspect(
-        video_path=video_path,
-        scene_id=args.scene_id,
-        scene_description=description,
-        start_seconds=float(scene["start_seconds"]),
-        end_seconds=float(scene["end_seconds"]),
-        working_dir=working_dir,
-        operation_id=args.operation_id,
-    )
-    _write_json(output, evidence)
+    start_seconds = float(scene["start_seconds"])
+    end_seconds = float(scene["end_seconds"])
+    if output.exists():
+        if not output.is_file():
+            raise ValueError("existing temporal output is not a file")
+        loaded = json.loads(output.read_text(encoding="utf-8"))
+        if not isinstance(loaded, dict):
+            raise ValueError("existing temporal output must contain one JSON object")
+        evidence = validate_existing_temporal_evidence(
+            loaded,
+            video_path=video_path,
+            scene_id=args.scene_id,
+            scene_description=description,
+            start_seconds=start_seconds,
+            end_seconds=end_seconds,
+            operation_id=args.operation_id,
+            model=args.model,
+            budget_ledger=ledger,
+        )
+    else:
+        from app.config import config
+
+        api_key = str(config.app.get("gemini_api_key", "") or "").strip()
+        api_key = api_key or os.getenv("GEMINI_API_KEY", "").strip()
+        if not api_key:
+            raise RuntimeError("Gemini API key is not configured")
+        judge = GeminiTemporalJudge(
+            api_key=api_key,
+            budget_ledger=ledger,
+            model=args.model,
+        )
+        working_dir = output.parent / f"{output.stem}-strips"
+        evidence = judge.inspect(
+            video_path=video_path,
+            scene_id=args.scene_id,
+            scene_description=description,
+            start_seconds=start_seconds,
+            end_seconds=end_seconds,
+            working_dir=working_dir,
+            operation_id=args.operation_id,
+        )
+        _write_json(output, evidence)
     print(
         json.dumps(
             {

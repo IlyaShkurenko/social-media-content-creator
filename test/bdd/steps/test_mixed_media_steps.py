@@ -603,3 +603,35 @@ def execute_unaffordable_pool(scenario_context: dict[str, Any]) -> None:
 def no_candidate_submitted(scenario_context: dict[str, Any]) -> None:
     assert "iteration budget exceeded" in scenario_context["campaign_error"]
     assert scenario_context["campaign_adapter"].submit_calls == 0
+
+
+@given("an offline campaign preflight for the current semantic inputs")
+def current_campaign_preflight(scenario_context: dict[str, Any]) -> None:
+    scenario_context["stored_preflight_id"] = "a" * 64
+    scenario_context["current_preflight_id"] = "a" * 64
+
+
+@given("the campaign inputs change after preflight")
+def mutate_campaign_inputs(scenario_context: dict[str, Any]) -> None:
+    scenario_context["current_preflight_id"] = "b" * 64
+
+
+@when("paid campaign preflight is verified")
+def verify_paid_campaign_preflight(scenario_context: dict[str, Any]) -> None:
+    from app.services.creative.campaign_preflight import (
+        CampaignPreflightError,
+        require_matching_preflight,
+    )
+
+    try:
+        require_matching_preflight(
+            stored_preflight_id=scenario_context["stored_preflight_id"],
+            current_preflight_id=scenario_context["current_preflight_id"],
+        )
+    except CampaignPreflightError as exc:
+        scenario_context["campaign_preflight_error"] = str(exc)
+
+
+@then("campaign execution is blocked before provider submission")
+def stale_preflight_blocks_execution(scenario_context: dict[str, Any]) -> None:
+    assert "stale" in scenario_context["campaign_preflight_error"].lower()

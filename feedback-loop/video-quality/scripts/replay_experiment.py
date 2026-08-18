@@ -49,6 +49,33 @@ def comparable_metrics(metrics: dict) -> dict:
     return comparable
 
 
+def replay_candidate_evaluator_baseline(
+    *,
+    experiment: Path,
+    manifest: dict,
+) -> dict:
+    """Rebuild an evaluator baseline from embedded evidence without I/O providers."""
+
+    from record_candidate_evaluator_baseline import (
+        rebuild_candidate_evaluator_baseline_metrics,
+    )
+
+    return rebuild_candidate_evaluator_baseline_metrics(
+        manifest,
+        experiment=experiment,
+    )
+
+
+def replay_candidate_evaluator_attempt(manifest: dict) -> dict:
+    """Rebuild an incomplete evaluator-research record without provider calls."""
+
+    from candidate_evaluator_attempt import (
+        rebuild_candidate_evaluator_attempt_metrics,
+    )
+
+    return rebuild_candidate_evaluator_attempt_metrics(manifest)
+
+
 def main() -> int:
     args = parse_args()
     experiment_raw = Path(args.experiment)
@@ -60,6 +87,45 @@ def main() -> int:
     if LOOP_ROOT.resolve() not in experiment.parents or not experiment.is_dir():
         raise ValueError(f"experiment must stay inside {LOOP_ROOT}: {experiment}")
     manifest = json.loads((experiment / "inputs.json").read_text(encoding="utf-8"))
+    if manifest.get("kind") == "candidate_evaluator_calibration_attempt":
+        if not args.verify_only:
+            raise ValueError(
+                "candidate evaluator calibration attempts are immutable; "
+                "use --verify-only"
+            )
+        stored_metrics_path = experiment / "metrics.json"
+        if not stored_metrics_path.is_file():
+            raise ValueError(f"experiment has no stored metrics: {experiment}")
+        rebuilt = replay_candidate_evaluator_attempt(manifest)
+        stored = json.loads(stored_metrics_path.read_text(encoding="utf-8"))
+        if comparable_metrics(stored) != comparable_metrics(rebuilt):
+            raise ValueError(
+                "replayed metrics differ from the stored calibration attempt"
+            )
+        print(f"verified={experiment.relative_to(LOOP_ROOT)}")
+        print(f"decision={stored['decision']}")
+        print("baseline_established=false")
+        print("acceptance_authority=false")
+        return 0
+    if manifest.get("kind") == "candidate_evaluator_baseline":
+        if not args.verify_only:
+            raise ValueError(
+                "candidate evaluator baselines are immutable; use --verify-only"
+            )
+        stored_metrics_path = experiment / "metrics.json"
+        if not stored_metrics_path.is_file():
+            raise ValueError(f"experiment has no stored metrics: {experiment}")
+        rebuilt = replay_candidate_evaluator_baseline(
+            experiment=experiment,
+            manifest=manifest,
+        )
+        stored = json.loads(stored_metrics_path.read_text(encoding="utf-8"))
+        if comparable_metrics(stored) != comparable_metrics(rebuilt):
+            raise ValueError("replayed metrics differ from the stored evaluator baseline")
+        print(f"verified={experiment.relative_to(LOOP_ROOT)}")
+        print(f"decision={stored['decision']}")
+        print("acceptance_authority=false")
+        return 0
     scenario = verified_path(LOOP_ROOT, manifest["scenario"])
     candidate = manifest.get("candidate", manifest)
     if not candidate.get("video"):

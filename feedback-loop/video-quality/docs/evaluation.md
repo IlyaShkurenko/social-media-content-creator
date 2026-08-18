@@ -91,6 +91,36 @@ make temporal-judge \
   TEMPORAL_OUTPUT=.state/temporal/hook.json \
   OPERATION_ID=unique-temporal-id
 
+make candidate-judge \
+  CONFIRM_PAID=YES \
+  CANDIDATE_CONCEPT=experiments/<campaign>/artifacts/campaign/campaign-plan.json \
+  CANDIDATE_STORYBOARD=experiments/<campaign>/artifacts/campaign/campaign-plan.json \
+  CANDIDATE_ID=scattered-map-pins \
+  CANDIDATE_VIDEO=feedback-loop/video-quality/experiments/<campaign>/artifacts/campaign/renders/scattered-map-pins/final.mp4 \
+  CANDIDATE_JUDGE_OUTPUT=.state/judges/scattered-map-pins-semantic.json \
+  OPERATION_ID=unique-semantic-id
+
+make invariant-judge \
+  CONFIRM_PAID=YES \
+  BASELINE_VIDEO=path/to/shared-downstream-baseline.mp4 \
+  CANDIDATE_VIDEO=feedback-loop/video-quality/experiments/<campaign>/artifacts/campaign/renders/scattered-map-pins/final.mp4 \
+  INVARIANT_JUDGE_OUTPUT=.state/judges/scattered-map-pins-invariant.json \
+  OPERATION_PREFIX=unique-invariant-id
+
+make candidate-evaluator-baseline \
+  EVALUATOR_BASELINE_EXPERIMENT=014-candidate-evaluator-baseline \
+  CAMPAIGN_PLAN=feedback-loop/video-quality/experiments/<campaign>/artifacts/campaign/campaign-plan.json \
+  REFERENCE_VIDEO=feedback-loop/video-quality/experiments/<accepted-reference>/artifacts/video.mp4 \
+  CANDIDATE_VIDEO=feedback-loop/video-quality/experiments/<campaign>/artifacts/campaign/renders/<candidate>/final.mp4 \
+  CANDIDATE_JUDGE_EVIDENCE=feedback-loop/video-quality/experiments/<campaign>/artifacts/campaign/judges/<candidate>-semantic.json \
+  INVARIANT_JUDGE_EVIDENCE=feedback-loop/video-quality/experiments/<campaign>/artifacts/campaign/judges/<candidate>-invariant.json \
+  CANDIDATE_LABEL=pending \
+  REVIEWER=user \
+  REFERENCE_REASON="The exact reference MP4 was previously accepted" \
+  CANDIDATE_REASON="Exact candidate MP4 review is still pending"
+
+make budget-audit
+
 make judge \
   CONFIRM_PAID=YES \
   BASELINE_VIDEO=path/to/baseline.mp4 \
@@ -137,13 +167,61 @@ make experiment-review \
 
 make campaign-finalize \
   CAMPAIGN_OUTPUT=experiments/<campaign>/artifacts/campaign \
-  CAMPAIGN_REVIEW=experiments/<campaign>/artifacts/campaign/review/temporal-confirmations.json
+  CAMPAIGN_REVIEW=experiments/<campaign>/artifacts/campaign/review/temporal-confirmations.json \
+  CAMPAIGN_INVARIANT_SCENARIO=evals/dataset/mixed-media-stock-baseline-001.json \
+  CAMPAIGN_BUDGET_DATABASE=.state/mixed-media-iteration-001.sqlite3 \
+  CAMPAIGN_CANDIDATE_EVIDENCE=".state/judges/candidate-a-semantic.json .state/judges/candidate-b-semantic.json" \
+  CAMPAIGN_INVARIANT_EVIDENCE=".state/judges/candidate-a-invariant.json .state/judges/candidate-b-invariant.json"
 ```
+
+`candidate-judge` is operation-idempotent. A complete output is reused only
+after its concept, compiled storyboard, exact MP4, evaluator/model contract,
+deterministic scores, and ledger charge all validate. A ledger operation with
+no matching complete output is treated as an ambiguous paid outcome and is
+never submitted again. Explicit non-retryable 4xx rejection is non-billable;
+timeouts, conflicts, rate limits, server failures, and unknown transport
+outcomes are charged at the preflight worst case and block retry.
 
 `campaign-finalize` is idempotent. It applies artifact-bound event confirmations,
 verifies that cited evidence stays inside the managed campaign tree, reuses valid
-existing renders, emits all EVAL-7.1 scorecard dimensions, and renders only
-eligible candidates. It does not select or accept a subjective winner.
+existing renders, emits all EVAL-7.1 scorecard dimensions under an independent
+scorecard evaluator version, and renders only eligible candidates. Render
+completion, managed source assets, and subtitle geometry remain technical facts;
+they do not invent audiovisual, final-frame brand, or CTA semantic scores. It
+does not select or accept a subjective winner. Review identities and all supplied
+evidence schemas, contract hashes, and exact retained-MP4 hashes are validated
+before any campaign state file is changed or any new render begins. The explicit
+campaign budget database supplies the budget snapshot written to the summary.
+
+Candidate semantic evidence uses independent evaluator `1.2.0`, is evaluated
+against that candidate's own concept, and supplies the five hook dimensions.
+For action alignment, only the compiled hook storyboard is model-visible and
+authoritative; superseded raw concept beats are still hash-bound but cannot leak
+into the scoring prompt. Semantic citations are validated against deterministic
+time domains derived from that compiled storyboard: hook dimensions stay inside
+the hook, first-two-second clarity stays within `0-2000 ms`, and bridge evidence
+stays within one second of either side of the hook/product boundary. Version
+`1.2.0` remains diagnostic until a fresh labelled evaluator baseline is complete.
+Invariant evidence contains two reversed
+A/B passes over only the shared product-demo and CTA contract; the finalizer maps
+the candidate by exact MP4 SHA in each pass and averages a dimension only when
+both candidate-labelled values are available. Candidate ID, schema, evaluator,
+status, observation mode, and exact retained-video hashes are checked fail
+closed. The semantic evidence must also match the exact campaign-plan concept,
+storyboard, and compiled-contract hashes. The invariant evidence must match the
+explicit managed scenario (the Make target defaults to `EXPERIMENT_SCENARIO`)
+and its derived shared-contract hash. Missing evidence leaves its dimensions
+explicitly `null`. Each scorecard
+retains evidence-file hashes, prompt/contract hashes, provider response IDs,
+per-pass invariant values, and the independent scorecard evaluator version.
+
+Paid evaluator commands are checkpoint-aware. Re-running a command with a
+complete output validates the exact video, contract, model, operation ID, and
+ledger charge and then exits without uploading or calling the model. If a
+matching paid operation exists but its complete evidence is absent, automatic
+retry is blocked. Permanent 4xx rejections (except 408/409/425/429) record no
+charge; transient 4xx, 5xx, timeouts, and transport failures retain one
+worst-case charge because provider acceptance cannot be disproved.
 
 `experiment-start` requires a clean worktree. It re-evaluates the selected baseline under ignored state, verifies metric equality, and then allocates the next identity. The resulting `inputs.json` schema v2 freezes the baseline hash, starting git revision, observed problem, hypothesis, planned change, expected impact, scenario hash, and plan hash before candidate code or metrics exist.
 

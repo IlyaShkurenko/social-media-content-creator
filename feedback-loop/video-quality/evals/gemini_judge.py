@@ -40,6 +40,7 @@ COST_SAFETY_MULTIPLIER = 1.25
 MODEL_PRICING_USD_PER_MILLION_TOKENS = {
     JUDGE_MODEL: {"input": 1.50, "output": 7.50},
 }
+_AMBIGUOUS_GEMINI_HTTP_CODES = frozenset({408, 409, 425, 429})
 RUBRIC_NAMES = (
     "editing_continuity",
     "storyboard_alignment",
@@ -47,6 +48,22 @@ RUBRIC_NAMES = (
     "product_demo_clarity",
     "professional_finish",
 )
+
+
+def is_definite_nonbillable_gemini_error(exc: errors.APIError) -> bool:
+    """Return whether Gemini explicitly rejected a request before acceptance.
+
+    Server failures, timeouts, conflicts, and rate-limit responses do not prove
+    that the provider failed before accepting billable work. Those outcomes are
+    therefore charged conservatively and must not be retried under the same
+    operation contract.
+    """
+
+    try:
+        status = int(exc.code)
+    except (TypeError, ValueError):
+        return False
+    return 400 <= status < 500 and status not in _AMBIGUOUS_GEMINI_HTTP_CODES
 
 
 class CriterionScore(BaseModel):
@@ -317,9 +334,19 @@ class GeminiVideoJudge:
                 ),
             )
         except errors.APIError as exc:
+            if is_definite_nonbillable_gemini_error(exc):
+                raise RuntimeError(
+                    "Gemini rejected the judge request before returning a billable "
+                    f"result (HTTP {exc.code}); no charge was recorded"
+                ) from exc
+            self.budget_ledger.record_manual_charge(
+                operation_id,
+                maximum_cost_microusd,
+                f"{description}; ambiguous HTTP {exc.code}, worst-case charge",
+            )
             raise RuntimeError(
-                "Gemini rejected the judge request before returning a billable "
-                f"result (HTTP {exc.code}); no charge was recorded"
+                "Gemini judge submission outcome is ambiguous; a worst-case charge "
+                f"was recorded under operation {operation_id!r} and was not retried"
             ) from exc
         except Exception as exc:
             self.budget_ledger.record_manual_charge(
@@ -386,6 +413,25 @@ class GeminiVideoJudge:
         operation_prefix: str,
         checkpoint: Callable[[dict[str, Any]], None] | None = None,
     ) -> dict[str, Any]:
+        if not operation_prefix.strip():
+            raise ValueError("judge operation_prefix is required")
+        existing_operations = {
+            operation_id: self.budget_ledger.find_operation(operation_id)
+            for operation_id in (
+                f"{operation_prefix}-pass-1",
+                f"{operation_prefix}-pass-2",
+            )
+        }
+        existing = [
+            operation
+            for operation in existing_operations.values()
+            if operation is not None
+        ]
+        if existing:
+            raise RuntimeError(
+                "legacy pairwise judge operation already exists; automatic paid "
+                "resubmission is blocked and stored evidence must be replayed offline"
+            )
         prompt = build_judge_prompt(scenario)
         baseline_sha256 = sha256_file(baseline_video)
         candidate_sha256 = sha256_file(candidate_video)

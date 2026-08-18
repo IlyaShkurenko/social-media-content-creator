@@ -11,6 +11,7 @@ Define the deterministic acceptance boundary for a candidate advertising-video e
 - `records/rfcs/0003-temporal-screening-and-artifact-retention.md`
 - `records/rfcs/0004-human-calibrated-video-acceptance.md`
 - `records/rfcs/0005-hypothesis-aware-candidate-orchestration.md`
+- `records/rfcs/0006-evidence-bound-candidate-evaluation.md`
 
 ## Requirements
 
@@ -81,6 +82,12 @@ The judge MUST select observed visual tags only from the union of storyboard-dec
 ### EVAL-4.5 — Paid judge calls share the iteration budget
 
 Every Gemini inference pass MUST check a fail-closed maximum cost against scope `mixed-media-iteration-001` before submission without creating a durable reservation. A returned provider response records its usage-based charge; an ambiguous outcome records the fail-closed maximum as a worst-case charge. The evidence MUST report the preflight maximum, recorded charge, token usage when available, estimated actual cost, and remaining shared budget. No judge call may retry automatically after an ambiguous submission failure.
+Only an explicit permanent 4xx rejection other than `408`, `409`, `425`, or
+`429` MAY be treated as non-billable. A timeout, conflict, rate limit, 5xx,
+transport failure, or missing provider response is ambiguous and MUST retain one
+conservative charge under its deterministic operation ID. A complete,
+hash-matching evidence checkpoint MAY be replayed without a new provider call;
+an operation without such evidence MUST block automatic retry.
 
 ### EVAL-4.6 — Offline replay and comparability
 
@@ -129,6 +136,11 @@ Every explicitly accepted or rejected rendered video SHOULD retain its review la
 
 Candidate-pool evaluation MUST report hypothesis match, target-emotion strength, first-two-second hook clarity, hook-to-product bridge coherence, storyboard action alignment, temporal eligibility, audiovisual correctness, product/brand fidelity, CTA clarity, and human acceptance as separate fields. An unavailable dimension MUST be `null` with a reason.
 
+Render completion, audio-stream presence, managed source-asset use, and subtitle
+safe-area compliance MUST remain separately named technical evidence. None of
+those facts alone MAY be substituted for audiovisual correctness, final-frame
+brand fidelity, or CTA clarity.
+
 ### EVAL-7.2 — Eligibility precedes subjective ranking
 
 A candidate with failed enforced technical, temporal, product, or brand constraints MUST be excluded before subjective diagnostic ranking. Diagnostic scores MUST NOT make an ineligible candidate selectable.
@@ -137,6 +149,42 @@ A candidate with failed enforced technical, temporal, product, or brand constrai
 
 Until the scorecard demonstrates agreement against artifact-bound human labels under a versioned evaluator, it MAY order eligible candidates for review but MUST NOT automatically keep a final advertisement. Final acceptance continues to follow EVAL-6.2 and EVAL-6.3.
 
+### EVAL-7.4 — Candidate-specific semantic contract
+
+A candidate hook MUST be judged against its own concept and compiled storyboard,
+including its hypothesis, audience problem, target emotion, timed visible
+actions, expected evidence, product bridge, and quality criteria. Evidence MUST
+be bound to the concept, storyboard, and final-video SHA-256 values. A fixed
+scenario from another candidate MUST NOT reduce hypothesis match or storyboard
+alignment. Candidate semantic evaluator `1.2` MUST reject citations outside the
+compiled evidence domain: hook semantics stay inside the hook scene,
+first-two-second clarity stays within `0-2000 ms`, and bridge evidence stays
+within the bounded one-second window on either side of the compiled hook/product
+boundary. This measurement version remains diagnostic until a fresh labelled
+baseline is established under EVAL-7.6.
+
+### EVAL-7.5 — Shared comparison is invariant-only
+
+When a baseline comparison is retained across distinct concepts, its hook
+rubric MUST exclude concept-specific setting, actor, prop, and opening-action
+requirements. It MAY assess only declared shared downstream invariants such as
+the exact product demonstration, CTA, brand composition, editing continuity,
+and audiovisual finish. Hook semantic dimensions and shared invariant
+dimensions MUST remain separately inspectable.
+
+### EVAL-7.6 — Versioned scorecard evidence and fresh baseline
+
+Campaign scorecard evidence MUST declare an independent scorecard evaluator
+version and response-schema version. Prompt, concept, storyboard, and artifact
+hashes MUST be retained in sanitized evidence. A semantic measurement change
+MUST increment that evaluator version and establish a fresh scorecard baseline
+or labelled reference before automatic acceptance policy may consume it.
+
 ## Executable coverage
 
-`test/bdd/features/video_quality_acceptance.feature` covers the high-value acceptance boundary in EVAL-1.2, EVAL-1.3, EVAL-2.4, the pre-change plan freeze in EVAL-3.2, mandatory artifact verification in EVAL-3.3, order-balanced preference in EVAL-4.2, regression blocking in EVAL-4.4, temporal confirmation in EVAL-5.3, and human acceptance in EVAL-6.2. Lower-level evaluator output, exact brand spelling, temporal extraction, metric calculations, lifecycle transitions, budget transitions, hash verification, and compact-record serialization remain covered by ordinary evaluator tests.
+`test/bdd/features/video_quality_acceptance.feature` covers the high-value acceptance boundary in EVAL-1.2, EVAL-1.3, EVAL-2.4, the pre-change plan freeze in EVAL-3.2, mandatory artifact verification in EVAL-3.3, order-balanced preference in EVAL-4.2, regression blocking in EVAL-4.4, temporal confirmation in EVAL-5.3, human acceptance in EVAL-6.2, honest rendered-candidate scorecards in EVAL-7.1, and candidate-bound semantic judgement in EVAL-7.4. Lower-level evaluator output, exact brand spelling, temporal extraction, metric calculations, lifecycle transitions, budget transitions, hash verification, schema serialization, and compact-record serialization remain covered by ordinary evaluator tests.
+
+Direct executable traceability for the new evaluator boundary is:
+
+- `EVAL-7.5` -> `[EVAL-7.5] Cross-concept comparison contains only shared downstream invariants`, which proves that the shared prompt retains the exact product-demo and CTA contract while excluding an unrelated hook contract.
+- `EVAL-7.6` -> `[EVAL-7.6] A semantic evaluator change requires fresh compatible evidence`, which proves that evidence from a superseded semantic evaluator cannot establish a new baseline.

@@ -10,7 +10,7 @@ from urllib.parse import urlparse
 import requests
 from pydantic import Field
 
-from app.services.creative.budget import IterationBudgetLedger
+from app.services.creative.budget import BudgetStateError, IterationBudgetLedger
 from app.services.creative.storyboard import CreativeModel
 
 
@@ -76,9 +76,27 @@ def estimate_runway_cost_microusd(request: RunwayVideoRequest) -> int:
     )
 
 
+def build_runway_payload(request: RunwayVideoRequest) -> dict[str, Any]:
+    """Serialize the exact sanitized payload submitted to Runway."""
+
+    if request.mode != "text_to_video":
+        raise RunwayProviderError(
+            f"unsupported Runway generation mode {request.mode!r}"
+        )
+    return {
+        "model": request.model,
+        "promptText": request.prompt_text,
+        "ratio": request.ratio,
+        "duration": request.duration_seconds,
+    }
+
+
 class RunwayAdapter:
     BASE_URL = "https://api.dev.runwayml.com"
     API_VERSION = "2024-11-06"
+    OFFICIAL_API_HOSTS = frozenset({"api.dev.runwayml.com"})
+    SUPPORTED_API_VERSIONS = frozenset({API_VERSION})
+    AMBIGUOUS_HTTP_STATUSES = frozenset({408, 409, 425, 429})
     CREDIT_PRICE_MICROUSD = 10_000
     CREDITS_PER_SECOND = {
         "gen4.5": 12,
@@ -102,8 +120,46 @@ class RunwayAdapter:
         self.session = session or requests.Session()
         self.sleep = sleep
         self.random_uniform = random_uniform
-        self.base_url = base_url.rstrip("/")
-        self.api_version = api_version
+        self.base_url = self._validate_base_url(base_url)
+        self.api_version = self._validate_api_version(api_version)
+
+    @classmethod
+    def _validate_base_url(cls, base_url: str) -> str:
+        normalized = base_url.strip().rstrip("/")
+        parsed = urlparse(normalized)
+        try:
+            port = parsed.port
+        except ValueError as exc:
+            raise ValueError("Runway base URL has an invalid port") from exc
+        if (
+            parsed.scheme.lower() != "https"
+            or parsed.hostname not in cls.OFFICIAL_API_HOSTS
+            or parsed.username is not None
+            or parsed.password is not None
+            or port not in {None, 443}
+            or parsed.path not in {"", "/"}
+            or parsed.params
+            or parsed.query
+            or parsed.fragment
+        ):
+            raise ValueError(
+                "Runway base URL must be the official HTTPS API origin"
+            )
+        return normalized
+
+    @classmethod
+    def _validate_api_version(cls, api_version: str) -> str:
+        normalized = api_version.strip()
+        if normalized not in cls.SUPPORTED_API_VERSIONS:
+            raise ValueError(f"unsupported Runway API version {normalized!r}")
+        return normalized
+
+    @classmethod
+    def _is_definite_rejection(cls, status_code: int) -> bool:
+        return (
+            400 <= status_code < 500
+            and status_code not in cls.AMBIGUOUS_HTTP_STATUSES
+        )
 
     @property
     def _headers(self) -> dict[str, str]:
@@ -122,23 +178,28 @@ class RunwayAdapter:
         *,
         operation_id: str,
     ) -> RunwayJob:
-        if request.mode != "text_to_video":
-            raise RunwayProviderError(
-                f"unsupported Runway generation mode {request.mode!r}"
-            )
-
+        if not operation_id.strip():
+            raise ValueError("operation_id is required")
         estimated_cost = self.estimate_cost_microusd(request)
-        self.budget_ledger.reserve(
-            operation_id,
-            estimated_cost,
-            f"Runway {request.model} {request.duration_seconds}s {request.mode}",
-        )
-        payload = {
-            "model": request.model,
-            "promptText": request.prompt_text,
-            "ratio": request.ratio,
-            "duration": request.duration_seconds,
-        }
+        existing = self.budget_ledger.find_operation(operation_id)
+        if existing is not None:
+            raise RunwayProviderError(
+                f"Runway operation {operation_id!r} is already {existing.status}; "
+                "automatic resubmission is blocked"
+            )
+        payload = build_runway_payload(request)
+        try:
+            self.budget_ledger.reserve(
+                operation_id,
+                estimated_cost,
+                f"Runway {request.model} {request.duration_seconds}s {request.mode}",
+                allow_existing=False,
+            )
+        except BudgetStateError as exc:
+            raise RunwayProviderError(
+                f"Runway operation {operation_id!r} already exists; "
+                "automatic resubmission is blocked"
+            ) from exc
 
         try:
             response = self.session.post(
@@ -146,6 +207,7 @@ class RunwayAdapter:
                 headers=self._headers,
                 json=payload,
                 timeout=30,
+                allow_redirects=False,
             )
         except Exception as exc:
             raise RunwayProviderError(
@@ -153,25 +215,49 @@ class RunwayAdapter:
                 f"under operation {operation_id!r} and was not retried"
             ) from exc
 
+        status_code = getattr(response, "status_code", None)
+        if not isinstance(status_code, int):
+            raise RunwayProviderError(
+                "Runway submission outcome is unknown because the provider "
+                f"returned no HTTP status; reservation {operation_id!r} was retained"
+            )
+        if self._is_definite_rejection(status_code):
+            self.budget_ledger.release(
+                operation_id,
+                reason=f"provider definitively rejected request with HTTP {status_code}",
+            )
+            raise RunwayProviderError(
+                f"Runway rejected the generation request (HTTP {status_code})"
+            )
+        if not 200 <= status_code < 300:
+            raise RunwayProviderError(
+                "Runway submission outcome is unknown after HTTP "
+                f"{status_code}; reservation {operation_id!r} was retained"
+            )
+
         try:
-            response.raise_for_status()
             response_payload = response.json()
+            if not isinstance(response_payload, dict):
+                raise ValueError("provider response was not a JSON object")
             provider_job_id = response_payload.get("id")
             if not isinstance(provider_job_id, str) or not provider_job_id.strip():
                 raise ValueError("provider response did not contain a task id")
         except Exception as exc:
-            self.budget_ledger.release(
-                operation_id,
-                reason="provider rejected request before returning a task id",
-            )
             raise RunwayProviderError(
-                f"Runway rejected the generation request (HTTP {response.status_code})"
+                "Runway returned a successful response without durable task "
+                f"evidence; reservation {operation_id!r} was retained"
             ) from exc
 
-        self.budget_ledger.mark_submitted(
-            operation_id,
-            provider_job_id=provider_job_id,
-        )
+        try:
+            self.budget_ledger.mark_submitted(
+                operation_id,
+                provider_job_id=provider_job_id,
+            )
+        except Exception as exc:
+            raise RunwayProviderError(
+                "Runway accepted a task but its durable ledger transition failed; "
+                f"reservation {operation_id!r} was retained and retry is blocked"
+            ) from exc
         return RunwayJob(
             provider_job_id=provider_job_id,
             operation_id=operation_id,
@@ -197,8 +283,12 @@ class RunwayAdapter:
                     f"{self.base_url}/v1/tasks/{job.provider_job_id}",
                     headers=self._headers,
                     timeout=30,
+                    allow_redirects=False,
                 )
-                response.raise_for_status()
+                if not 200 <= response.status_code < 300:
+                    raise RuntimeError(
+                        f"unexpected Runway polling HTTP {response.status_code}"
+                    )
                 payload = response.json()
             except Exception as exc:
                 raise RunwayProviderError(

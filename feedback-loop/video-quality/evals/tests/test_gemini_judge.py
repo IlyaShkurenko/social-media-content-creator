@@ -12,13 +12,14 @@ LOOP_ROOT = Path(__file__).resolve().parents[2]
 if str(LOOP_ROOT) not in sys.path:
     sys.path.insert(0, str(LOOP_ROOT))
 
-from evals.gemini_judge import (
+from evals.gemini_judge import (  # noqa: E402
     GeminiVideoJudge,
     JUDGE_MODEL,
     estimate_judge_pass_cost_microusd,
+    is_definite_nonbillable_gemini_error,
     sanitize_judge_evidence,
 )
-from app.services.creative.budget import IterationBudgetLedger
+from app.services.creative.budget import IterationBudgetLedger  # noqa: E402
 
 
 class GeminiJudgePricingTests(unittest.TestCase):
@@ -39,6 +40,21 @@ class GeminiJudgePricingTests(unittest.TestCase):
                 video_duration_seconds=30.0,
                 prompt_characters=8_000,
             )
+
+    def test_only_permanent_client_errors_are_definite_rejections(self) -> None:
+        self.assertTrue(
+            is_definite_nonbillable_gemini_error(
+                errors.ClientError(400, {"error": {"message": "invalid"}})
+            )
+        )
+        for status in (408, 409, 425, 429, 500, 503):
+            error_type = errors.ServerError if status >= 500 else errors.ClientError
+            with self.subTest(status=status):
+                self.assertFalse(
+                    is_definite_nonbillable_gemini_error(
+                        error_type(status, {"error": {"message": "ambiguous"}})
+                    )
+                )
 
 
 class GeminiJudgeEvidenceTests(unittest.TestCase):
@@ -84,17 +100,22 @@ class _FakeModels:
         *,
         fail_on_call: int | None = None,
         api_error_on_call: int | None = None,
+        api_error_code: int = 400,
     ) -> None:
         self.fail_on_call = fail_on_call
         self.api_error_on_call = api_error_on_call
+        self.api_error_code = api_error_code
         self.calls = 0
 
     def generate_content(self, **kwargs) -> SimpleNamespace:
         self.calls += 1
         if self.calls == self.api_error_on_call:
-            raise errors.ServerError(
-                503,
-                {"error": {"message": "high demand"}},
+            error_type = (
+                errors.ServerError if self.api_error_code >= 500 else errors.ClientError
+            )
+            raise error_type(
+                self.api_error_code,
+                {"error": {"message": "provider error"}},
             )
         if self.calls == self.fail_on_call:
             raise ConnectionError("ambiguous transport failure")
@@ -146,11 +167,13 @@ class _FakeClient:
         *,
         fail_on_call: int | None = None,
         api_error_on_call: int | None = None,
+        api_error_code: int = 400,
     ) -> None:
         self.files = _FakeFiles()
         self.models = _FakeModels(
             fail_on_call=fail_on_call,
             api_error_on_call=api_error_on_call,
+            api_error_code=api_error_code,
         )
 
 
@@ -174,6 +197,44 @@ def _scenario() -> dict:
 
 
 class GeminiVideoJudgeTests(unittest.TestCase):
+    def test_existing_paid_operation_blocks_legacy_resubmission_before_upload(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            baseline = root / "baseline.mp4"
+            candidate = root / "candidate.mp4"
+            baseline.write_bytes(b"baseline")
+            candidate.write_bytes(b"candidate")
+            ledger = IterationBudgetLedger(
+                root / "budget.sqlite3",
+                scope_id="iteration-001",
+                cap_microusd=10_000_000,
+            )
+            ledger.record_manual_charge(
+                "judge-existing-pass-1",
+                57_000,
+                "Ambiguous legacy pass",
+            )
+            client = _FakeClient()
+            judge = GeminiVideoJudge(
+                api_key="fake-key",
+                budget_ledger=ledger,
+                client=client,
+            )
+
+            with self.assertRaisesRegex(RuntimeError, "resubmission is blocked"):
+                judge.compare(
+                    baseline_video=baseline,
+                    candidate_video=candidate,
+                    baseline_duration_seconds=15,
+                    candidate_duration_seconds=15,
+                    scenario=_scenario(),
+                    scenario_sha256="a" * 64,
+                    operation_prefix="judge-existing",
+                )
+
+        self.assertEqual(client.models.calls, 0)
+        self.assertEqual(client.files.upload_count, 0)
+
     def test_explicit_provider_rejection_does_not_consume_budget(self) -> None:
         with TemporaryDirectory() as directory:
             root = Path(directory)
@@ -257,6 +318,40 @@ class GeminiVideoJudgeTests(unittest.TestCase):
         self.assertEqual(budget_snapshot.reserved_microusd, 0)
         self.assertNotIn("provider.invalid", str(evidence))
         self.assertEqual(evidence["status"], "complete")
+
+    def test_server_error_is_ambiguous_and_charged_once(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            baseline = root / "baseline.mp4"
+            candidate = root / "candidate.mp4"
+            baseline.write_bytes(b"baseline")
+            candidate.write_bytes(b"candidate")
+            ledger = IterationBudgetLedger(
+                root / "budget.sqlite3",
+                scope_id="iteration-001",
+                cap_microusd=10_000_000,
+            )
+            client = _FakeClient(api_error_on_call=1, api_error_code=503)
+            judge = GeminiVideoJudge(
+                api_key="fake-key",
+                budget_ledger=ledger,
+                client=client,
+            )
+
+            with self.assertRaisesRegex(RuntimeError, "ambiguous"):
+                judge.compare(
+                    baseline_video=baseline,
+                    candidate_video=candidate,
+                    baseline_duration_seconds=15,
+                    candidate_duration_seconds=15,
+                    scenario=_scenario(),
+                    scenario_sha256="a" * 64,
+                    operation_prefix="judge-server-error",
+                )
+            snapshot = ledger.snapshot()
+
+        self.assertEqual(client.models.calls, 1)
+        self.assertGreater(snapshot.charged_microusd, 0)
 
     def test_ambiguous_inference_failure_keeps_reservation_without_retry(self) -> None:
         with TemporaryDirectory() as directory:

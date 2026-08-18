@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import importlib.util
+import sys
 from pathlib import Path
 from types import ModuleType
 from typing import Any
@@ -23,6 +24,34 @@ EVALUATOR_SCRIPT = (
     / "video-quality"
     / "evals"
     / "evaluate.py"
+)
+FINALIZE_CAMPAIGN_SCRIPT = (
+    REPOSITORY_ROOT
+    / "feedback-loop"
+    / "video-quality"
+    / "scripts"
+    / "finalize_campaign.py"
+)
+CANDIDATE_JUDGE_SCRIPT = (
+    REPOSITORY_ROOT
+    / "feedback-loop"
+    / "video-quality"
+    / "evals"
+    / "candidate_judge.py"
+)
+INVARIANT_JUDGE_SCRIPT = (
+    REPOSITORY_ROOT
+    / "feedback-loop"
+    / "video-quality"
+    / "evals"
+    / "invariant_judge.py"
+)
+EVALUATOR_BASELINE_RECORDER_SCRIPT = (
+    REPOSITORY_ROOT
+    / "feedback-loop"
+    / "video-quality"
+    / "scripts"
+    / "record_candidate_evaluator_baseline.py"
 )
 
 
@@ -458,3 +487,275 @@ def reviewed_keep_rejects_regression(
     reviewed_decision_result: dict[str, str],
 ) -> None:
     assert "constraint regression" in reviewed_decision_result["error"]
+
+
+@given(
+    "an eligible rendered candidate without semantic judge evidence",
+    target_fixture="rendered_candidate_records",
+)
+def rendered_candidate_without_semantic_evidence() -> list[dict[str, Any]]:
+    return [
+        {
+            "candidate_id": "map-fragmentation",
+            "eligible": True,
+            "final_video_sha256": "c" * 64,
+            "subtitle_safe_area_pass": True,
+        }
+    ]
+
+
+@when("its campaign scorecard is finalized", target_fixture="campaign_scorecard")
+def finalize_rendered_candidate_scorecard(
+    rendered_candidate_records: list[dict[str, Any]],
+) -> dict[str, Any]:
+    scripts_dir = str(FINALIZE_CAMPAIGN_SCRIPT.parent)
+    if scripts_dir not in sys.path:
+        sys.path.insert(0, scripts_dir)
+    module_spec = importlib.util.spec_from_file_location(
+        "video_quality_finalize_campaign",
+        FINALIZE_CAMPAIGN_SCRIPT,
+    )
+    if module_spec is None or module_spec.loader is None:
+        raise RuntimeError(f"cannot load campaign finalizer: {FINALIZE_CAMPAIGN_SCRIPT}")
+    module = importlib.util.module_from_spec(module_spec)
+    module_spec.loader.exec_module(module)
+    return module._build_scorecards(rendered_candidate_records)[0]
+
+
+@then("only temporal eligibility has a measured score")
+def only_temporal_eligibility_is_measured(campaign_scorecard: dict[str, Any]) -> None:
+    assert campaign_scorecard["dimensions"]["temporal_eligibility"] == {
+        "value": 1.0,
+        "unavailable_reason": None,
+    }
+
+
+@then("audiovisual brand and CTA semantic scores remain unavailable")
+def rendered_semantics_are_unavailable(campaign_scorecard: dict[str, Any]) -> None:
+    for name in ("audiovisual_correctness", "product_brand_fidelity", "cta_clarity"):
+        dimension = campaign_scorecard["dimensions"][name]
+        assert dimension["value"] is None
+        assert dimension["unavailable_reason"]
+
+
+@given(
+    "a map-fragmentation candidate with its own hypothesis and storyboard",
+    target_fixture="candidate_semantic_contract",
+)
+def map_fragmentation_contract() -> dict[str, Any]:
+    return {
+        "concept": {
+            "concept_id": "map-fragmentation",
+            "hypothesis": "Scattered map pins make fragmented planning instantly visible.",
+            "audience_problem": "Travel ideas are scattered across disconnected places.",
+            "target_emotion": "frustration turning into relief",
+            "emotional_arc": "Visible clutter resolves into one clear plan.",
+            "hook_setting": "A table covered in maps, notes, and saved-place pins.",
+            "hook_camera": "A controlled overhead push toward the scattered map.",
+            "hook_voiceover": "Saved everything, but planned nothing?",
+            "hook_beats": [
+                {
+                    "start_seconds": 0.0,
+                    "end_seconds": 2.0,
+                    "visible_action": "Hands shuffle notes and pins across a city map.",
+                    "expected_evidence": ["map_visible", "scattered_pins_visible"],
+                },
+                {
+                    "start_seconds": 2.0,
+                    "end_seconds": 5.0,
+                    "visible_action": "The clutter clears toward one centered plan.",
+                    "expected_evidence": ["clutter_clears", "single_plan_focus"],
+                },
+            ],
+            "product_bridge": "The scattered pins resolve into one exact tict trip plan.",
+            "quality_criteria": ["Map fragmentation is clear without audio."],
+        },
+        "storyboard": {
+            "storyboard_id": "map-fragmentation",
+            "scenes": [
+                {
+                    "scene_id": "hook",
+                    "start_seconds": 0.0,
+                    "end_seconds": 5.0,
+                    "purpose": "hook",
+                    "visual_intent": {
+                        "subject_action": "A traveller corrals scattered map pins and notes."
+                    },
+                    "expected_evidence": ["map_visible", "scattered_pins_visible"],
+                },
+                {
+                    "scene_id": "product_demo",
+                    "start_seconds": 5.0,
+                    "end_seconds": 11.0,
+                    "purpose": "product_demo",
+                    "visual_intent": {
+                        "subject_action": "The exact tict trip plan appears."
+                    },
+                    "expected_evidence": ["approved_tict_ui_visible"],
+                },
+            ],
+        },
+    }
+
+
+@when(
+    "its candidate-specific judge prompt is built",
+    target_fixture="candidate_judge_prompt",
+)
+def build_candidate_specific_prompt(candidate_semantic_contract: dict[str, Any]) -> str:
+    module_spec = importlib.util.spec_from_file_location(
+        "video_quality_candidate_judge",
+        CANDIDATE_JUDGE_SCRIPT,
+    )
+    if module_spec is None or module_spec.loader is None:
+        raise RuntimeError(f"cannot load candidate judge: {CANDIDATE_JUDGE_SCRIPT}")
+    module = importlib.util.module_from_spec(module_spec)
+    module_spec.loader.exec_module(module)
+    return module.build_candidate_judge_prompt(**candidate_semantic_contract)
+
+
+@then("the prompt requires the map-fragmentation contract")
+def prompt_uses_candidate_contract(candidate_judge_prompt: str) -> None:
+    prompt = candidate_judge_prompt.lower()
+    assert "scattered map pins" in prompt
+    assert "map_visible" in prompt
+
+
+@then("the prompt does not require the unrelated airport hook")
+def prompt_excludes_unrelated_airport(candidate_judge_prompt: str) -> None:
+    assert "airport" not in candidate_judge_prompt.lower()
+
+
+@given(
+    "a shared downstream contract and an unrelated airport hook",
+    target_fixture="shared_invariant_scenario",
+)
+def shared_downstream_contract() -> dict[str, Any]:
+    return {
+        "id": "shared-downstream-invariants",
+        "purpose": "AIRPORT-HOOK-SENTINEL",
+        "hypothesis": "AIRPORT-HOOK-SENTINEL",
+        "expected": {
+            "aspect_ratio": "9:16",
+            "duration_seconds": {"min": 14.9, "max": 15.1},
+            "audio_required": True,
+            "brand_assets_required": True,
+            "storyboard": [
+                {
+                    "id": "hook",
+                    "start_seconds": 0.0,
+                    "end_seconds": 5.0,
+                    "description": (
+                        "AIRPORT-HOOK-SENTINEL: a traveller runs through an airport."
+                    ),
+                    "expected_tags": ["airport_hook_only"],
+                },
+                {
+                    "id": "product_demo",
+                    "start_seconds": 5.0,
+                    "end_seconds": 11.0,
+                    "description": (
+                        "The exact approved tict product demonstration remains legible."
+                    ),
+                    "expected_tags": ["approved_tict_ui_visible"],
+                },
+                {
+                    "id": "cta",
+                    "start_seconds": 11.0,
+                    "end_seconds": 15.0,
+                    "description": (
+                        "One exact Create your trip CTA remains readable."
+                    ),
+                    "expected_tags": ["single_cta_visible"],
+                },
+            ],
+        },
+    }
+
+
+@when(
+    "its shared-invariant judge prompt is built",
+    target_fixture="shared_invariant_prompt",
+)
+def build_shared_invariant_prompt(shared_invariant_scenario: dict[str, Any]) -> str:
+    module_spec = importlib.util.spec_from_file_location(
+        "video_quality_invariant_judge",
+        INVARIANT_JUDGE_SCRIPT,
+    )
+    if module_spec is None or module_spec.loader is None:
+        raise RuntimeError(f"cannot load invariant judge: {INVARIANT_JUDGE_SCRIPT}")
+    module = importlib.util.module_from_spec(module_spec)
+    module_spec.loader.exec_module(module)
+    return module.build_invariant_judge_prompt(shared_invariant_scenario)
+
+
+@then("the prompt requires the exact product demonstration and CTA")
+def prompt_requires_shared_downstream_contract(shared_invariant_prompt: str) -> None:
+    prompt = shared_invariant_prompt.lower()
+    assert "exact approved tict product demonstration" in prompt
+    assert "create your trip" in prompt
+    assert "approved_tict_ui_visible" in prompt
+    assert "single_cta_visible" in prompt
+
+
+@then("the prompt excludes airport hook requirements")
+def prompt_excludes_hook_contract(shared_invariant_prompt: str) -> None:
+    prompt = shared_invariant_prompt.lower()
+    assert "airport-hook-sentinel" not in prompt
+    assert "airport_hook_only" not in prompt
+
+
+@given(
+    "candidate evidence from a superseded semantic evaluator version",
+    target_fixture="superseded_candidate_evidence",
+)
+def superseded_semantic_evidence() -> dict[str, Any]:
+    return {
+        "schema_version": 1,
+        "evaluator_version": "1.0.0",
+        "observation_mode": "gemini_candidate_contract_v1",
+        "status": "complete",
+    }
+
+
+@when(
+    "a new evaluator baseline validates that evidence",
+    target_fixture="baseline_validation_result",
+)
+def validate_superseded_baseline_evidence(
+    superseded_candidate_evidence: dict[str, Any],
+) -> dict[str, str]:
+    scripts_dir = str(EVALUATOR_BASELINE_RECORDER_SCRIPT.parent)
+    if scripts_dir not in sys.path:
+        sys.path.insert(0, scripts_dir)
+    module_spec = importlib.util.spec_from_file_location(
+        "video_quality_evaluator_baseline_recorder",
+        EVALUATOR_BASELINE_RECORDER_SCRIPT,
+    )
+    if module_spec is None or module_spec.loader is None:
+        raise RuntimeError(
+            "cannot load evaluator baseline recorder: "
+            f"{EVALUATOR_BASELINE_RECORDER_SCRIPT}"
+        )
+    module = importlib.util.module_from_spec(module_spec)
+    module_spec.loader.exec_module(module)
+    assert (
+        superseded_candidate_evidence["evaluator_version"]
+        != module.CANDIDATE_EVALUATOR_VERSION
+    )
+    try:
+        module._validate_candidate_evidence(
+            superseded_candidate_evidence,
+            plan={"candidates": []},
+            candidate_sha256="b" * 64,
+        )
+    except ValueError as exc:
+        return {"error": str(exc)}
+    return {"result": "accepted"}
+
+
+@then("baseline establishment is rejected as version-incompatible")
+def baseline_rejects_superseded_evidence(
+    baseline_validation_result: dict[str, str],
+) -> None:
+    assert "unsupported evaluator_version" in baseline_validation_result["error"]
