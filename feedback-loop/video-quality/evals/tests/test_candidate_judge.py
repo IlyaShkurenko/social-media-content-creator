@@ -48,6 +48,7 @@ def _concept() -> dict:
         "hook_voiceover": (
             "You saved fifty spots, but how are you spending day one?"
         ),
+        "hook_voice_delivery": "A genuinely confused, quietly anxious person thinking out loud.",
         "hook_beats": [
             {
                 "start_seconds": 0.0,

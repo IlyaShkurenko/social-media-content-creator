@@ -1,0 +1,124 @@
+{
+  "schema_version": "1.0",
+  "kind": "candidate_evaluator_baseline",
+  "decision": "evaluator_baseline_established",
+  "acceptance_authority": false,
+  "candidate_id": "browser-tab-chaos",
+  "reference_sha256": "bd3a17ef31339160eb19062568e6f4c0aac3e17ec8afbfa2007f841aeae13c52",
+  "candidate_sha256": "fb48ec133c903e1bb6e74c77e06b6dab1a511fc787f57ebca7802d4e9022ef5f",
+  "evaluator_versions": {
+    "candidate": "1.2.0",
+    "invariant": "1.0.0"
+  },
+  "source_bindings": {
+    "scenario": {
+      "source_path": "feedback-loop/video-quality/evals/dataset/mixed-media-stock-baseline-001.json",
+      "source_sha256": "2c66b606c90eaaa3db9d550aeed3672b595da86d9812b547b969ac151e5b21da",
+      "content_sha256": "4689fac4ce8a6dc8d7d2f646b096a88711723d79fb7021cc422779c412bc1af5"
+    },
+    "campaign_plan": {
+      "source_path": "feedback-loop/video-quality/experiments/013-hypothesis-aware-candidate-orchestration/artifacts/campaign/campaign-plan.json",
+      "source_sha256": "26b3f7198457c2f35ee37e34be0e0abcd8f13cb98ca027bae48ba7961f760243",
+      "content_sha256": "67654a91ec260382f1f8884400066fdf7b31093d97423ff21b8adb3a76cc9bbb"
+    },
+    "candidate_evidence": {
+      "source_path": "feedback-loop/video-quality/experiments/013-hypothesis-aware-candidate-orchestration/artifacts/campaign/judges/browser-tab-chaos-semantic-v1.2.json",
+      "source_sha256": "8cef89cb0cb629151f8c0f9f510eed5ce5167e15590d4b009e31c46cf74cd8ee",
+      "content_sha256": "deb5789043032e010f0e41af9d5d6480b1980ac9d5a705af636ec444fe2a06d7"
+    },
+    "invariant_evidence": {
+      "source_path": "feedback-loop/video-quality/experiments/013-hypothesis-aware-candidate-orchestration/artifacts/campaign/judges/browser-tab-chaos-invariant-v2.json",
+      "source_sha256": "20149512313569fad04508c9fe26afa98706845be851d5df9a28b8c1044ae1a9",
+      "content_sha256": "3b14fbe62eb60f5508e882e0c4bfecf59acf733fcda6543dd059aa20c031e7ff"
+    },
+    "reference_artifact": "feedback-loop/video-quality/experiments/012-screen-stable-runway-batch/artifacts/video.mp4",
+    "candidate_artifact": "feedback-loop/video-quality/experiments/013-hypothesis-aware-candidate-orchestration/artifacts/campaign/renders/browser-tab-chaos/final.mp4"
+  },
+  "scorecard": {
+    "candidate_id": "browser-tab-chaos",
+    "eligible": true,
+    "dimensions": {
+      "hypothesis_match": {
+        "value": 1.0,
+        "unavailable_reason": null
+      },
+      "target_emotion_strength": {
+        "value": 1.0,
+        "unavailable_reason": null
+      },
+      "first_two_seconds_hook_clarity": {
+        "value": 0.5,
+        "unavailable_reason": null
+      },
+      "hook_to_product_bridge_coherence": {
+        "value": 1.0,
+        "unavailable_reason": null
+      },
+      "storyboard_action_alignment": {
+        "value": 0.5,
+        "unavailable_reason": null
+      },
+      "temporal_eligibility": {
+        "value": null,
+        "unavailable_reason": "not measured in this run"
+      },
+      "audiovisual_correctness": {
+        "value": 1.0,
+        "unavailable_reason": null
+      },
+      "product_brand_fidelity": {
+        "value": 1.0,
+        "unavailable_reason": null
+      },
+      "cta_clarity": {
+        "value": 1.0,
+        "unavailable_reason": null
+      },
+      "human_acceptance": {
+        "value": null,
+        "unavailable_reason": "exact MP4 product-owner review is pending"
+      }
+    }
+  },
+  "invariant_diagnostics": {
+    "transition_mechanics": 1.0,
+    "professional_finish": 1.0,
+    "winner_diagnostic": {
+      "diagnostic_only": true,
+      "position_balanced": true,
+      "candidate_credit": 0.5,
+      "pass_candidate_credits": [
+        0.5,
+        0.5
+      ],
+      "outcome": "tie"
+    }
+  },
+  "evaluator_costs": {
+    "accounting": "conservative_recorded_charge",
+    "operations": [
+      {
+        "operation_id": "evaluator-120-candidate-013-browser-tab-chaos-v1-retry",
+        "charged_microusd": 15464,
+        "preflight_maximum_microusd": 51000
+      },
+      {
+        "operation_id": "evaluator-120-invariant-013-browser-tab-chaos-v2-pass-1",
+        "charged_microusd": 20508,
+        "preflight_maximum_microusd": 57000
+      },
+      {
+        "operation_id": "evaluator-120-invariant-013-browser-tab-chaos-v2-pass-2",
+        "charged_microusd": 21656,
+        "preflight_maximum_microusd": 57000
+      }
+    ],
+    "total_charged_microusd": 57628,
+    "total_preflight_maximum_microusd": 165000
+  },
+  "claims": {
+    "product_improvement": false,
+    "keep_decision": false,
+    "purpose": "calibrate and replay the evaluator against owner-labelled artifacts"
+  }
+}

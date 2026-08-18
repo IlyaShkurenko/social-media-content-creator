@@ -136,6 +136,35 @@ def test_story_1_3_explicit_incompatible_voice_is_rejected() -> None:
         )
 
 
+def test_voice_1_2_provider_prefixed_voice_is_accepted_without_locale_prefix() -> None:
+    settings = resolve_narration_voice(
+        content_language="en-US",
+        requested_voice="openai:cedar",
+    )
+    assert settings.voice_name == "openai:cedar"
+
+
+def test_voice_1_2_unknown_provider_prefix_is_still_rejected() -> None:
+    with pytest.raises(StoryboardValidationError, match="incompatible"):
+        resolve_narration_voice(
+            content_language="en-US",
+            requested_voice="not-a-real-provider:cedar",
+        )
+
+
+def test_voice_1_1_scene_voice_instructions_defaults_to_none_and_accepts_text() -> None:
+    payload = valid_payload()
+    storyboard = validate_storyboard(payload)
+    assert storyboard.scenes[0].voice_instructions is None
+
+    payload["scenes"][0]["voice_instructions"] = "A calm, confident narrator."
+    with_instructions = validate_storyboard(payload)
+    assert (
+        with_instructions.scenes[0].voice_instructions
+        == "A calm, confident narrator."
+    )
+
+
 def test_story_1_2_parser_accepts_one_surrounding_code_fence() -> None:
     raw = f"```json\n{json.dumps(valid_payload())}\n```"
     assert parse_storyboard_json(raw).storyboard_id == "fixture"

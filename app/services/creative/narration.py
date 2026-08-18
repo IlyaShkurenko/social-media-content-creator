@@ -3,7 +3,7 @@ from __future__ import annotations
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable
+from typing import Any, Callable
 
 from app.services.creative.renderer import write_scene_subtitles
 from app.services.creative.storyboard import (
@@ -16,7 +16,14 @@ from app.services.creative.storyboard import (
 )
 
 
-Synthesizer = Callable[[str, str, Path], bool]
+Synthesizer = Callable[[str, str, Path, "str | None"], bool]
+
+# Fixed worst-case reservation per OpenAI-voiced scene: the streaming-to-file
+# response form used here does not expose per-call token usage, so unlike the
+# Gemini judges this is charged flat rather than reconciled to a metered
+# actual. A short ad-hook line synthesizes to well under this on gpt-4o-mini-tts
+# token pricing; see RFC-0007.
+OPENAI_TTS_SCENE_WORST_CASE_MICROUSD = 20_000
 
 
 @dataclass(frozen=True)
@@ -27,6 +34,7 @@ class SceneNarration:
     duration_seconds: float
     display_text: str
     spoken_text: str
+    voice_instructions: str | None = None
 
     @property
     def text(self) -> str:
@@ -75,6 +83,7 @@ def build_narration_plan(
                     storyboard,
                     scene.voiceover.strip(),
                 ),
+                voice_instructions=scene.voice_instructions,
             )
             for scene in storyboard.scenes
         ),
@@ -122,7 +131,12 @@ def _audio_duration(path: Path) -> float:
     return duration
 
 
-def _default_synthesizer(text: str, voice_name: str, output_path: Path) -> bool:
+def _default_synthesizer(
+    text: str,
+    voice_name: str,
+    output_path: Path,
+    instructions: str | None,
+) -> bool:
     from app.services import voice
 
     return (
@@ -132,6 +146,7 @@ def _default_synthesizer(text: str, voice_name: str, output_path: Path) -> bool:
             voice_rate=1.0,
             voice_file=str(output_path),
             voice_volume=1.0,
+            instructions=instructions,
         )
         is not None
     )
@@ -200,8 +215,21 @@ def generate_scene_narration(
     requested_voice: str | None = None,
     interface_locale: str | None = None,
     synthesizer: Synthesizer | None = None,
+    budget_ledger: Any | None = None,
+    operation_prefix: str | None = None,
 ) -> NarrationArtifacts:
-    """Synthesize one English line per scene and fit it to the declared timeline."""
+    """Synthesize one English line per scene and fit it to the declared timeline.
+
+    A paid narration voice (currently only OpenAI's) requires ``budget_ledger``
+    and ``operation_prefix``: per goal.md, "any paid ... TTS ... call
+    introduced later must use this same [iteration budget] scope." Each scene
+    charges a fixed worst-case amount under ``{operation_prefix}-{scene_id}``,
+    fail-closed and exactly-once per that id, whether or not synthesis itself
+    succeeds — see RFC-0007. A free voice (the Azure default) never touches
+    the ledger.
+    """
+
+    from app.services.voice import is_openai_voice
 
     storyboard = validate_storyboard(storyboard)
     plan = build_narration_plan(
@@ -213,6 +241,13 @@ def generate_scene_narration(
     narration_dir = output_dir.resolve()
     narration_dir.mkdir(parents=True, exist_ok=True)
 
+    paid_voice = is_openai_voice(plan.settings.voice_name)
+    if paid_voice and (budget_ledger is None or not (operation_prefix or "").strip()):
+        raise StoryboardValidationError(
+            f"voice {plan.settings.voice_name!r} is a paid narration provider "
+            "and requires budget_ledger and operation_prefix"
+        )
+
     raw_paths: list[Path] = []
     fitted_paths: list[Path] = []
     for index, scene in enumerate(plan.scenes, start=1):
@@ -222,7 +257,27 @@ def generate_scene_narration(
             raise StoryboardValidationError(
                 f"scene {scene.scene_id!r} has no narration text"
             )
-        if not synthesize(scene.spoken_text, plan.settings.voice_name, raw_path):
+        if paid_voice:
+            budget_ledger.ensure_available(OPENAI_TTS_SCENE_WORST_CASE_MICROUSD)
+        try:
+            synthesized = synthesize(
+                scene.spoken_text,
+                plan.settings.voice_name,
+                raw_path,
+                scene.voice_instructions,
+            )
+        finally:
+            if paid_voice:
+                budget_ledger.record_manual_charge(
+                    f"{operation_prefix}-{scene.scene_id}",
+                    OPENAI_TTS_SCENE_WORST_CASE_MICROUSD,
+                    (
+                        "OpenAI gpt-4o-mini-tts narration scene "
+                        f"{scene.scene_id!r}; worst-case charge (usage is not "
+                        "exposed by the streaming response)"
+                    ),
+                )
+        if not synthesized:
             raise StoryboardValidationError(
                 f"narration synthesis failed for scene {scene.scene_id!r}"
             )

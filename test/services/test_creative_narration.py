@@ -4,11 +4,15 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
+from app.services.creative.budget import IterationBudgetLedger
 from app.services.creative.narration import (
+    OPENAI_TTS_SCENE_WORST_CASE_MICROUSD,
     build_narration_plan,
     generate_scene_narration,
 )
-from app.services.creative.storyboard import validate_storyboard
+from app.services.creative.storyboard import StoryboardValidationError, validate_storyboard
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -39,7 +43,10 @@ def test_story_1_1_scene_audio_is_padded_to_exact_storyboard_timing(
     requested_voices: list[str] = []
     synthesized_texts: list[str] = []
 
-    def fake_synthesizer(text: str, voice_name: str, output_path: Path) -> bool:
+    def fake_synthesizer(
+        text: str, voice_name: str, output_path: Path, instructions: str | None
+    ) -> bool:
+        del instructions
         synthesized_texts.append(text)
         requested_voices.append(voice_name)
         subprocess.run(
@@ -92,3 +99,148 @@ def test_story_1_1_scene_audio_is_padded_to_exact_storyboard_timing(
     subtitle_text = artifacts.subtitle_path.read_text(encoding="utf-8")
     assert "tict" in subtitle_text
     assert "tickt" not in subtitle_text
+
+
+def storyboard_with_hook_instructions(text: str):
+    payload = json.loads(STORYBOARD_PATH.read_text(encoding="utf-8"))
+    payload["scenes"][0]["voice_instructions"] = text
+    return validate_storyboard(payload)
+
+
+def _write_silent_clip(output_path: Path) -> None:
+    subprocess.run(
+        [
+            "ffmpeg",
+            "-loglevel",
+            "error",
+            "-y",
+            "-f",
+            "lavfi",
+            "-i",
+            "anullsrc=r=44100:cl=mono",
+            "-t",
+            "1",
+            "-c:a",
+            "libmp3lame",
+            str(output_path),
+        ],
+        check=True,
+    )
+
+
+def test_voice_1_1_scene_instructions_are_threaded_to_the_synthesizer(
+    tmp_path: Path,
+) -> None:
+    captured_instructions: list[str | None] = []
+
+    def fake_synthesizer(
+        text: str, voice_name: str, output_path: Path, instructions: str | None
+    ) -> bool:
+        captured_instructions.append(instructions)
+        _write_silent_clip(output_path)
+        return True
+
+    generate_scene_narration(
+        storyboard_with_hook_instructions("A genuinely confused person."),
+        output_dir=tmp_path / "narration",
+        synthesizer=fake_synthesizer,
+    )
+
+    assert captured_instructions[0] == "A genuinely confused person."
+    assert captured_instructions[1] is None
+    assert captured_instructions[2] is None
+
+
+def test_voice_1_2_paid_voice_without_ledger_is_rejected(tmp_path: Path) -> None:
+    with pytest.raises(StoryboardValidationError, match="budget_ledger"):
+        generate_scene_narration(
+            storyboard(),
+            output_dir=tmp_path / "narration",
+            requested_voice="openai:cedar",
+        )
+
+
+def test_voice_1_2_paid_voice_charges_ledger_exactly_once_per_scene(
+    tmp_path: Path,
+) -> None:
+    def fake_synthesizer(
+        text: str, voice_name: str, output_path: Path, instructions: str | None
+    ) -> bool:
+        _write_silent_clip(output_path)
+        return True
+
+    ledger = IterationBudgetLedger(
+        tmp_path / "budget.sqlite3",
+        scope_id="narration-tests",
+        cap_microusd=10_000_000,
+    )
+
+    generate_scene_narration(
+        storyboard(),
+        output_dir=tmp_path / "narration",
+        requested_voice="openai:cedar",
+        synthesizer=fake_synthesizer,
+        budget_ledger=ledger,
+        operation_prefix="narration-test-001",
+    )
+
+    snapshot = ledger.snapshot()
+    assert snapshot.charged_microusd == OPENAI_TTS_SCENE_WORST_CASE_MICROUSD * 3
+    assert snapshot.reserved_microusd == 0
+    # Retrying under the same prefix must not resubmit an already-charged scene.
+    with pytest.raises(Exception):
+        ledger.record_manual_charge(
+            "narration-test-001-hook", 1, "duplicate charge attempt"
+        )
+
+
+def test_voice_1_2_paid_voice_charges_even_when_synthesis_fails(
+    tmp_path: Path,
+) -> None:
+    def failing_synthesizer(
+        text: str, voice_name: str, output_path: Path, instructions: str | None
+    ) -> bool:
+        return False
+
+    ledger = IterationBudgetLedger(
+        tmp_path / "budget.sqlite3",
+        scope_id="narration-tests",
+        cap_microusd=10_000_000,
+    )
+
+    with pytest.raises(StoryboardValidationError, match="synthesis failed"):
+        generate_scene_narration(
+            storyboard(),
+            output_dir=tmp_path / "narration",
+            requested_voice="openai:cedar",
+            synthesizer=failing_synthesizer,
+            budget_ledger=ledger,
+            operation_prefix="narration-test-002",
+        )
+
+    # Fail-closed: the ambiguous provider outcome is still charged.
+    assert ledger.snapshot().charged_microusd == OPENAI_TTS_SCENE_WORST_CASE_MICROUSD
+
+
+def test_voice_1_2_free_voice_never_touches_the_ledger(tmp_path: Path) -> None:
+    def fake_synthesizer(
+        text: str, voice_name: str, output_path: Path, instructions: str | None
+    ) -> bool:
+        _write_silent_clip(output_path)
+        return True
+
+    ledger = IterationBudgetLedger(
+        tmp_path / "budget.sqlite3",
+        scope_id="narration-tests",
+        cap_microusd=10_000_000,
+    )
+
+    generate_scene_narration(
+        storyboard(),
+        output_dir=tmp_path / "narration",
+        synthesizer=fake_synthesizer,
+        budget_ledger=ledger,
+        operation_prefix="unused-prefix",
+    )
+
+    assert ledger.snapshot().charged_microusd == 0

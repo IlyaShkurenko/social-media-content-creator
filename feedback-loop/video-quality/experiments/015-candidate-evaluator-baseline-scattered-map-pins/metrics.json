@@ -1,0 +1,124 @@
+{
+  "schema_version": "1.0",
+  "kind": "candidate_evaluator_baseline",
+  "decision": "evaluator_baseline_established",
+  "acceptance_authority": false,
+  "candidate_id": "scattered-map-pins",
+  "reference_sha256": "bd3a17ef31339160eb19062568e6f4c0aac3e17ec8afbfa2007f841aeae13c52",
+  "candidate_sha256": "7412f0e49389cfdac8b984eae0d406dc5af691bf77cc9cb34790d756022d93ae",
+  "evaluator_versions": {
+    "candidate": "1.2.0",
+    "invariant": "1.0.0"
+  },
+  "source_bindings": {
+    "scenario": {
+      "source_path": "feedback-loop/video-quality/evals/dataset/mixed-media-stock-baseline-001.json",
+      "source_sha256": "2c66b606c90eaaa3db9d550aeed3672b595da86d9812b547b969ac151e5b21da",
+      "content_sha256": "4689fac4ce8a6dc8d7d2f646b096a88711723d79fb7021cc422779c412bc1af5"
+    },
+    "campaign_plan": {
+      "source_path": "feedback-loop/video-quality/experiments/013-hypothesis-aware-candidate-orchestration/artifacts/campaign/campaign-plan.json",
+      "source_sha256": "26b3f7198457c2f35ee37e34be0e0abcd8f13cb98ca027bae48ba7961f760243",
+      "content_sha256": "67654a91ec260382f1f8884400066fdf7b31093d97423ff21b8adb3a76cc9bbb"
+    },
+    "candidate_evidence": {
+      "source_path": "feedback-loop/video-quality/experiments/013-hypothesis-aware-candidate-orchestration/artifacts/campaign/judges/scattered-map-pins-semantic-v1.2.json",
+      "source_sha256": "29d7cf389c6d64197176a2baf2dc4c500ec23cf6f22111f05b378e3f3cfba821",
+      "content_sha256": "09647c9f350f115d299529efbd0d584c582f79ce1bb6ab4d20347a927698aa9f"
+    },
+    "invariant_evidence": {
+      "source_path": "feedback-loop/video-quality/experiments/013-hypothesis-aware-candidate-orchestration/artifacts/campaign/judges/scattered-map-pins-invariant-v1.json",
+      "source_sha256": "84cb6ce6f0fccc42bb545754d5e173d3106a27909daac48656785dd516ee9a8c",
+      "content_sha256": "c83d4449d80742097f8fa84e403f3650fbf17d43ef0cd6e2d7a6419fd22fec8d"
+    },
+    "reference_artifact": "feedback-loop/video-quality/experiments/012-screen-stable-runway-batch/artifacts/video.mp4",
+    "candidate_artifact": "feedback-loop/video-quality/experiments/013-hypothesis-aware-candidate-orchestration/artifacts/campaign/renders/scattered-map-pins/final.mp4"
+  },
+  "scorecard": {
+    "candidate_id": "scattered-map-pins",
+    "eligible": true,
+    "dimensions": {
+      "hypothesis_match": {
+        "value": 1.0,
+        "unavailable_reason": null
+      },
+      "target_emotion_strength": {
+        "value": 1.0,
+        "unavailable_reason": null
+      },
+      "first_two_seconds_hook_clarity": {
+        "value": 1.0,
+        "unavailable_reason": null
+      },
+      "hook_to_product_bridge_coherence": {
+        "value": 1.0,
+        "unavailable_reason": null
+      },
+      "storyboard_action_alignment": {
+        "value": 0.5,
+        "unavailable_reason": null
+      },
+      "temporal_eligibility": {
+        "value": null,
+        "unavailable_reason": "not measured in this run"
+      },
+      "audiovisual_correctness": {
+        "value": 1.0,
+        "unavailable_reason": null
+      },
+      "product_brand_fidelity": {
+        "value": 1.0,
+        "unavailable_reason": null
+      },
+      "cta_clarity": {
+        "value": 1.0,
+        "unavailable_reason": null
+      },
+      "human_acceptance": {
+        "value": null,
+        "unavailable_reason": "exact MP4 product-owner review is pending"
+      }
+    }
+  },
+  "invariant_diagnostics": {
+    "transition_mechanics": 1.0,
+    "professional_finish": 1.0,
+    "winner_diagnostic": {
+      "diagnostic_only": true,
+      "position_balanced": true,
+      "candidate_credit": 0.5,
+      "pass_candidate_credits": [
+        0.5,
+        0.5
+      ],
+      "outcome": "tie"
+    }
+  },
+  "evaluator_costs": {
+    "accounting": "conservative_recorded_charge",
+    "operations": [
+      {
+        "operation_id": "evaluator-120-candidate-013-scattered-map-pins-v1",
+        "charged_microusd": 11625,
+        "preflight_maximum_microusd": 51000
+      },
+      {
+        "operation_id": "evaluator-100-invariant-013-scattered-map-pins-v1-pass-1",
+        "charged_microusd": 21828,
+        "preflight_maximum_microusd": 57000
+      },
+      {
+        "operation_id": "evaluator-100-invariant-013-scattered-map-pins-v1-pass-2",
+        "charged_microusd": 21963,
+        "preflight_maximum_microusd": 57000
+      }
+    ],
+    "total_charged_microusd": 55416,
+    "total_preflight_maximum_microusd": 165000
+  },
+  "claims": {
+    "product_improvement": false,
+    "keep_decision": false,
+    "purpose": "calibrate and replay the evaluator against owner-labelled artifacts"
+  }
+}

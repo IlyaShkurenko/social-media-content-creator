@@ -442,6 +442,7 @@ class CandidateEvaluatorBaselineRecordTests(unittest.TestCase):
                 "hook_setting": "a table covered in maps",
                 "hook_camera": "top-down push-in",
                 "hook_voiceover": "Saved everything, planned nothing?",
+                "hook_voice_delivery": "A tired, matter-of-fact person stating the obvious.",
                 "hook_beats": [
                     {
                         "start_seconds": 0.0,

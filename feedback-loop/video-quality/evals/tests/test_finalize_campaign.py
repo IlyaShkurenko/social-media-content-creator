@@ -56,6 +56,7 @@ def _plan(candidate_id: str = "map-fragmentation") -> SimpleNamespace:
         "hook_setting": "A table covered in maps and notes.",
         "hook_camera": "A quick overhead push-in.",
         "hook_voiceover": "Trip planning should not feel this scattered.",
+        "hook_voice_delivery": "A tired, matter-of-fact person stating the obvious.",
         "hook_beats": [
             {
                 "start_seconds": 0.0,

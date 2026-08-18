@@ -293,6 +293,10 @@ def is_chatterbox_voice(voice_name: str) -> bool:
     return (voice_name or "").startswith("chatterbox:")
 
 
+def is_openai_voice(voice_name: str) -> bool:
+    return (voice_name or "").startswith("openai:")
+
+
 def is_no_voice(voice_name: str | None) -> bool:
     """
     判断用户是否明确选择了“无配音”模式。
@@ -397,6 +401,7 @@ def tts(
     voice_rate: float,
     voice_file: str,
     voice_volume: float = 1.0,
+    instructions: str | None = None,
 ) -> Union[SubMaker, None]:
     if is_no_voice(voice_name):
         duration_seconds = estimate_no_voice_duration(text)
@@ -485,6 +490,24 @@ def tts(
             )
         else:
             logger.error(f"Invalid chatterbox voice name format: {voice_name}")
+            return None
+    elif is_openai_voice(voice_name):
+        # 格式: openai:<voice>，voice 可带显示用的 -Female/-Male 后缀
+        parts = voice_name.split(":", 1)
+        if len(parts) >= 2 and parts[1].strip():
+            openai_voice = parts[1].strip()
+            if openai_voice.endswith(("-Female", "-Male")):
+                openai_voice = openai_voice.rsplit("-", 1)[0]
+            return openai_tts(
+                text,
+                openai_voice,
+                voice_file,
+                voice_rate,
+                voice_volume,
+                instructions=instructions,
+            )
+        else:
+            logger.error(f"Invalid openai voice name format: {voice_name}")
             return None
     return azure_tts_v1(text, voice_name, voice_rate, voice_file)
 
@@ -1721,6 +1744,94 @@ def chatterbox_tts(
             )
         except Exception as e:
             logger.error(f"chatterbox tts failed: {str(e)}")
+
+    return None
+
+
+def get_openai_tts_api_key() -> str:
+    configured_key = str(config.app.get("openai_api_key", "") or "").strip()
+    return configured_key or os.getenv("OPENAI_API_KEY", "").strip()
+
+
+def openai_tts(
+    text: str,
+    voice: str,
+    voice_file: str,
+    voice_rate: float = 1.0,
+    voice_volume: float = 1.0,
+    instructions: str | None = None,
+    model: str = "gpt-4o-mini-tts",
+) -> Union[SubMaker, None]:
+    """Generate speech with OpenAI's instructable ``gpt-4o-mini-tts`` model.
+
+    Unlike the other providers here, delivery (tone, pacing, emotional
+    colour) can be steered per call through ``instructions`` — free-text
+    character direction, not literal audio mechanics; the model performs
+    worse when told how to manipulate volume or syllable stress directly.
+    Talks to the same OpenAI-compatible ``/audio/speech`` contract as
+    ``chatterbox_tts``, against the real OpenAI API by default.
+    """
+    text = (text or "").strip()
+    if not text:
+        logger.error("OpenAI TTS text is empty")
+        return None
+
+    api_key = get_openai_tts_api_key()
+    if not api_key:
+        logger.error("OpenAI API key is not set")
+        return None
+
+    base_url = (config.app.get("openai_base_url", "") or "").strip().rstrip("/")
+    base_url = base_url or "https://api.openai.com/v1"
+
+    url = f"{base_url}/audio/speech"
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}",
+    }
+    payload: dict = {
+        "model": model,
+        "input": text,
+        "voice": voice,
+        "response_format": "mp3",
+        "speed": max(0.25, min(4.0, float(voice_rate or 1.0))),
+    }
+    if instructions and instructions.strip():
+        payload["instructions"] = instructions.strip()
+    # voice_volume has no field in the OpenAI /audio/speech contract, kept
+    # only for signature parity with the other providers; see chatterbox_tts.
+    del voice_volume
+
+    for i in range(3):
+        try:
+            logger.info(f"start openai tts, voice: {voice}, try: {i + 1}")
+            ensure_file_path_exists(voice_file)
+
+            response = requests.post(url, json=payload, headers=headers, timeout=60)
+            if response.status_code != 200:
+                logger.error(
+                    f"openai tts failed with status {response.status_code}: {response.text[:200]}"
+                )
+                if response.status_code in {401, 403, 422}:
+                    return None
+                continue
+
+            with open(voice_file, "wb") as f:
+                f.write(response.content)
+
+            audio_clip = AudioFileClip(voice_file)
+            audio_duration = audio_clip.duration
+            audio_clip.close()
+
+            sub_maker = ensure_legacy_submaker_fields(SubMaker())
+            logger.success(f"openai tts succeeded: {voice_file}")
+            return populate_legacy_submaker_with_full_text(
+                sub_maker=sub_maker,
+                text=text,
+                audio_duration_seconds=audio_duration,
+            )
+        except Exception as e:
+            logger.error(f"openai tts failed: {str(e)}")
 
     return None
 

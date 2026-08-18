@@ -904,6 +904,121 @@ class TestVoiceService(unittest.TestCase):
         self.assertIsNone(result)
         self.assertEqual(post.call_count, 3)
 
+    def test_openai_voice_helper(self):
+        self.assertTrue(vs.is_openai_voice("openai:cedar"))
+        self.assertFalse(vs.is_openai_voice("elevenlabs:abc:Rachel"))
+        self.assertFalse(vs.is_openai_voice(""))
+        self.assertFalse(vs.is_openai_voice(None))
+
+    def test_openai_tts_posts_instructions_to_real_endpoint(self):
+        """Success path: bearer auth, real api.openai.com default, instructions."""
+
+        class _FakeResponse:
+            status_code = 200
+            content = b"fake-mp3-bytes"
+            text = ""
+
+        class _FakeClip:
+            duration = 2.4
+
+            def close(self):
+                pass
+
+        captured = {}
+
+        def _fake_post(url, json=None, headers=None, timeout=None):
+            captured["url"] = url
+            captured["json"] = json
+            captured["headers"] = headers
+            return _FakeResponse()
+
+        with tempfile.TemporaryDirectory() as tmp_dir, patch.object(
+            vs.config,
+            "app",
+            {"openai_api_key": "sk-test", "openai_base_url": ""},
+        ), patch.object(
+            vs.requests, "post", side_effect=_fake_post
+        ) as post, patch.object(
+            vs, "AudioFileClip", return_value=_FakeClip()
+        ):
+            voice_file = str(Path(tmp_dir) / "openai.mp3")
+            sub_maker = vs.openai_tts(
+                text="You saved fifty spots on the map.",
+                voice="cedar",
+                voice_file=voice_file,
+                instructions="A genuinely confused person thinking out loud.",
+            )
+            generated_audio = Path(voice_file).read_bytes()
+
+        post.assert_called_once()
+        self.assertEqual(captured["url"], "https://api.openai.com/v1/audio/speech")
+        self.assertEqual(captured["json"]["model"], "gpt-4o-mini-tts")
+        self.assertEqual(captured["json"]["voice"], "cedar")
+        self.assertEqual(
+            captured["json"]["instructions"],
+            "A genuinely confused person thinking out loud.",
+        )
+        self.assertEqual(captured["headers"].get("Authorization"), "Bearer sk-test")
+        self.assertNotIn("volume", captured["json"])
+        self.assertEqual(generated_audio, b"fake-mp3-bytes")
+        self.assertIsNotNone(sub_maker)
+
+    def test_openai_tts_omits_instructions_when_not_given(self):
+        class _FakeResponse:
+            status_code = 200
+            content = b"fake-mp3-bytes"
+            text = ""
+
+        class _FakeClip:
+            duration = 1.0
+
+            def close(self):
+                pass
+
+        captured = {}
+
+        def _fake_post(url, json=None, headers=None, timeout=None):
+            captured["json"] = json
+            return _FakeResponse()
+
+        with tempfile.TemporaryDirectory() as tmp_dir, patch.object(
+            vs.config, "app", {"openai_api_key": "sk-test", "openai_base_url": ""}
+        ), patch.object(
+            vs.requests, "post", side_effect=_fake_post
+        ), patch.object(vs, "AudioFileClip", return_value=_FakeClip()):
+            voice_file = str(Path(tmp_dir) / "openai.mp3")
+            vs.openai_tts(text="hi", voice="cedar", voice_file=voice_file)
+
+        self.assertNotIn("instructions", captured["json"])
+
+    def test_openai_tts_no_api_key(self):
+        with patch.object(
+            vs.config, "app", {"openai_api_key": "", "openai_base_url": ""}
+        ), patch.dict(os.environ, {}, clear=True):
+            result = vs.openai_tts(text="hi", voice="cedar", voice_file="/tmp/test.mp3")
+        self.assertIsNone(result)
+
+    def test_tts_dispatch_routes_openai_prefix_with_instructions(self):
+        """tts()'s provider dispatch reaches openai_tts and threads instructions."""
+
+        with patch.object(vs, "openai_tts", return_value=object()) as mock_tts:
+            vs.tts(
+                text="hello",
+                voice_name="openai:cedar-Female",
+                voice_rate=1.0,
+                voice_file="/tmp/test.mp3",
+                voice_volume=1.0,
+                instructions="calm and confident",
+            )
+        mock_tts.assert_called_once_with(
+            "hello",
+            "cedar",
+            "/tmp/test.mp3",
+            1.0,
+            1.0,
+            instructions="calm and confident",
+        )
+
     def test_generate_subtitle_keeps_edge_provider_for_gemini_legacy_submaker(self):
         """
         验证 Gemini TTS 返回的 legacy 字幕结构在 edge provider 下可以直接产出

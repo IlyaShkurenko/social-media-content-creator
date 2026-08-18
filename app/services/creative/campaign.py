@@ -57,6 +57,7 @@ class AdvertisingConcept(CreativeModel):
     hook_setting: str = Field(min_length=1)
     hook_camera: str = Field(min_length=1)
     hook_voiceover: str = Field(min_length=1)
+    hook_voice_delivery: str = Field(min_length=1)
     hook_beats: list[HookBeat] = Field(min_length=1)
     product_bridge: str = Field(min_length=1)
     quality_criteria: list[str] = Field(min_length=1)
@@ -92,6 +93,15 @@ class AdvertisingConceptResponse(BaseModel):
     hook_setting: str
     hook_camera: str
     hook_voiceover: str
+    hook_voice_delivery: str = Field(
+        description=(
+            "The speaker's emotional state and situation while saying the "
+            "hook line, e.g. 'a genuinely confused, quietly anxious person "
+            "thinking out loud'. Describe character and feeling only — never "
+            "literal audio mechanics like volume, syllable stress, pacing "
+            "percentages, or fade behaviour."
+        )
+    )
     hook_beats: list[HookBeatResponse]
     product_bridge: str
     quality_criteria: list[str]
@@ -195,6 +205,13 @@ non-overlapping timed beats. Make the target emotion visually legible without au
 the first two seconds, then define a coherent bridge into the exact product demonstration.
 Do not invent product claims. Do not name a video provider or ask a model to redraw UI.
 Use canonical lowercase "tict" in visible or narrated copy.
+
+For each concept also describe how the hook line should be delivered
+(hook_voice_delivery): the speaker's emotional state and situation, in plain
+character terms. Never describe literal audio mechanics (volume, syllable
+stress, pacing percentages, fade behaviour) — an instructable narration model
+performs worse, not better, when told how to manipulate its own delivery
+mechanically instead of who to sound like.
 
 Set schema_version to exactly "1.0". Every concept_id must be a unique lowercase
 kebab-case identifier containing only a-z, 0-9, and hyphens; never use underscores.
@@ -345,6 +362,7 @@ def _compile_hook_scene(
         update={
             "visual_intent": visual_intent,
             "voiceover": concept.hook_voiceover,
+            "voice_instructions": concept.hook_voice_delivery,
             "expected_evidence": evidence,
         }
     )

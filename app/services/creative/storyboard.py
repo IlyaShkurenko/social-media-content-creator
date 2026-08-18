@@ -84,6 +84,7 @@ class StoryboardScene(CreativeModel):
     call_to_action: str = ""
     layout_intent: SceneLayoutIntent | None = None
     expected_evidence: list[str] = Field(default_factory=list)
+    voice_instructions: str | None = Field(default=None, min_length=1)
 
 
 class Storyboard(CreativeModel):
@@ -290,6 +291,19 @@ def parse_storyboard_json(raw: str) -> Storyboard:
     return validate_storyboard(payload)
 
 
+# Non-Azure providers key their own catalogues with a "provider:..." prefix
+# rather than a "{content_language}-..." one; this project only supports
+# en-US content today, so any of these is already implicitly en-US-only.
+_NON_LOCALE_PREFIXED_PROVIDERS = (
+    "openai:",
+    "elevenlabs:",
+    "minimax:",
+    "siliconflow:",
+    "gemini:",
+    "mimo:",
+)
+
+
 def resolve_narration_voice(
     *,
     content_language: str,
@@ -306,7 +320,9 @@ def resolve_narration_voice(
         )
 
     voice_name = (requested_voice or "").strip() or default_voice
-    if not voice_name.startswith(f"{content_language}-"):
+    is_locale_prefixed = voice_name.startswith(f"{content_language}-")
+    is_provider_prefixed = voice_name.startswith(_NON_LOCALE_PREFIXED_PROVIDERS)
+    if not is_locale_prefixed and not is_provider_prefixed:
         raise StoryboardValidationError(
             f"voice {voice_name!r} is incompatible with {content_language} content"
         )

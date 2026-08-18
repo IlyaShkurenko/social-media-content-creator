@@ -1,0 +1,1519 @@
+{
+  "schema_version": 1,
+  "kind": "candidate_evaluator_baseline",
+  "lifecycle": {
+    "status": "baseline_established",
+    "established_at": "2026-08-18T15:06:41.690744+00:00",
+    "decision": "evaluator_baseline_established",
+    "acceptance_authority": false
+  },
+  "scenario": {
+    "source_path": "feedback-loop/video-quality/evals/dataset/mixed-media-stock-baseline-001.json",
+    "source_sha256": "2c66b606c90eaaa3db9d550aeed3672b595da86d9812b547b969ac151e5b21da",
+    "content_sha256": "4689fac4ce8a6dc8d7d2f646b096a88711723d79fb7021cc422779c412bc1af5",
+    "content": {
+      "schema_version": 1,
+      "id": "mixed-media-stock-baseline-001",
+      "title": "TICT mixed-media stock hook baseline",
+      "purpose": "Establish the first controlled 15-second mixed-media baseline before replacing only the hook with Runway generation.",
+      "artifact": {
+        "video": "feedback-loop/video-quality/experiments/002-baseline/artifacts/snapshot/final.mp4",
+        "pipeline_record": "feedback-loop/video-quality/experiments/002-baseline/artifacts/snapshot/run-summary.json",
+        "subtitle": "feedback-loop/video-quality/experiments/002-baseline/artifacts/snapshot/storyboard.srt"
+      },
+      "expected": {
+        "aspect_ratio": "9:16",
+        "duration_seconds": {
+          "min": 14.9,
+          "max": 15.1
+        },
+        "audio_required": true,
+        "brand_assets_required": true,
+        "storyboard": [
+          {
+            "id": "hook",
+            "start_seconds": 0.0,
+            "end_seconds": 5.0,
+            "screen_content_policy": "non_product_context",
+            "description": "A traveller in an airport visibly struggles with fragmented planning on a phone.",
+            "expected_tags": [
+              "traveller_visible",
+              "phone_visible",
+              "airport_visible",
+              "planning_stress_visible"
+            ]
+          },
+          {
+            "id": "product_demo",
+            "start_seconds": 5.0,
+            "end_seconds": 11.0,
+            "screen_content_policy": "approved_product_ui",
+            "description": "The exact approved TICT trip overview is shown legibly.",
+            "expected_tags": [
+              "approved_tict_ui_visible",
+              "trip_plan_visible",
+              "product_text_legible"
+            ]
+          },
+          {
+            "id": "cta",
+            "start_seconds": 11.0,
+            "end_seconds": 15.0,
+            "screen_content_policy": "unconstrained",
+            "description": "The approved logo and mascot support one clear call to action.",
+            "expected_tags": [
+              "approved_logo_visible",
+              "approved_mascot_visible",
+              "single_cta_visible"
+            ]
+          }
+        ]
+      },
+      "observations": {
+        "mode": "human_fixture",
+        "artifact_sha256": "862fc7d827e0807459bda082159a8c3dc9ad2e05ac2067addc80c1cfedd35699",
+        "reviewed_at": "2026-08-17",
+        "review_protocol": "One midpoint frame per scene, inspected from the rendered MP4; only literal visible evidence is tagged.",
+        "scenes": [
+          {
+            "scene_id": "hook",
+            "observed_tags": [
+              "traveller_visible",
+              "phone_visible",
+              "luggage_visible"
+            ],
+            "notes": "A seated traveller looks at a phone beside luggage. The location resembles a waiting area but airport identity and planning stress are not literal enough to award those tags."
+          },
+          {
+            "scene_id": "product_demo",
+            "observed_tags": [
+              "approved_tict_ui_visible",
+              "trip_plan_visible",
+              "product_text_legible",
+              "subtitle_obscures_ui"
+            ],
+            "notes": "The exact exported trip overview is recognizable and mostly legible, but the large narration subtitle covers a material part of the screen."
+          },
+          {
+            "scene_id": "cta",
+            "observed_tags": [
+              "approved_logo_visible",
+              "approved_mascot_visible",
+              "single_cta_visible",
+              "duplicate_text_visible"
+            ],
+            "notes": "Logo, mascot, and one button are visible. Narration subtitles duplicate the deterministic CTA text and partially cover the mascot area."
+          }
+        ]
+      }
+    }
+  },
+  "campaign_plan": {
+    "source_path": "feedback-loop/video-quality/experiments/013-hypothesis-aware-candidate-orchestration/artifacts/campaign/campaign-plan.json",
+    "source_sha256": "26b3f7198457c2f35ee37e34be0e0abcd8f13cb98ca027bae48ba7961f760243",
+    "content_sha256": "67654a91ec260382f1f8884400066fdf7b31093d97423ff21b8adb3a76cc9bbb",
+    "content": {
+      "schema_version": "1.0",
+      "operation_prefix": "experiment-013",
+      "candidates": [
+        {
+          "candidate_id": "browser-tab-chaos",
+          "concept_id": "browser-tab-chaos",
+          "operation_id": "experiment-013-browser-tab-chaos",
+          "concept": {
+            "concept_id": "browser-tab-chaos",
+            "hypothesis": "Demonstrating the visual frustration of switching between 40 open browser tabs and notes apps will resonate with chaotic planners seeking a single unified tool.",
+            "audience_problem": "Having travel details split across dozens of browser tabs, confirmation emails, and separate map pins.",
+            "target_emotion": "Overwhelmed",
+            "emotional_arc": "Frustrated panic to instant relief",
+            "hook_setting": "A dimly lit desk at night with a laptop screen glowing.",
+            "hook_camera": "Extreme close-up on stressed eyes reflecting dozens of tiny open browser tabs, panning down to rapid frantically clicking fingers.",
+            "hook_voiceover": "If your next vacation plan looks like forty open browser tabs and pure panic...",
+            "hook_beats": [
+              {
+                "start_seconds": 0.0,
+                "end_seconds": 2.0,
+                "visible_action": "Rapid cutting between a glowing laptop screen filled with forty tiny browser tabs and a traveller rubbing their temples in distress.",
+                "expected_evidence": [
+                  "laptop screen with excessive open tabs",
+                  "traveller rubbing temples in visible frustration"
+                ]
+              },
+              {
+                "start_seconds": 2.0,
+                "end_seconds": 3.5,
+                "visible_action": "Traveller slams the laptop lid halfway shut in frustration, staring down at scattered printed hotel confirmations.",
+                "expected_evidence": [
+                  "half-closed laptop",
+                  "scattered paper hotel confirmation sheets"
+                ]
+              },
+              {
+                "start_seconds": 3.5,
+                "end_seconds": 5.0,
+                "visible_action": "Screen transitions smoothly into the clear layout of tict as the traveller takes a deep breath.",
+                "expected_evidence": [
+                  "transition to tict screen overview",
+                  "relaxed facial expression"
+                ]
+              }
+            ],
+            "product_bridge": "Transition directly into screens/Plan_Overview_Screen.png, demonstrating how tict turns bookings, saved places, and next steps into one clear trip plan.",
+            "quality_criteria": [
+              "Visually demonstrates browser tab overload within the first 2 seconds without requiring audio",
+              "Uses exact captured screen screens/Plan_Overview_Screen.png without generating fake mobile UI",
+              "Uses canonical lowercase tict throughout visible and spoken copy"
+            ]
+          },
+          "storyboard": {
+            "schema_version": "1.2",
+            "storyboard_id": "mixed-media-first-slice-001-browser-tab-chaos",
+            "content_language": "en-US",
+            "aspect_ratio": "9:16",
+            "target_duration_seconds": 15.0,
+            "hypothesis": "Demonstrating the visual frustration of switching between 40 open browser tabs and notes apps will resonate with chaotic planners seeking a single unified tool.",
+            "brand_pronunciations": [
+              {
+                "canonical": "tict",
+                "spoken_alias": "tickt",
+                "ipa": "tɪkt"
+              }
+            ],
+            "scenes": [
+              {
+                "scene_id": "hook",
+                "start_seconds": 0.0,
+                "end_seconds": 5.0,
+                "purpose": "hook",
+                "visual_intent": {
+                  "setting": "A dimly lit desk at night with a laptop screen glowing.",
+                  "subject_action": "0-2s: Rapid cutting between a glowing laptop screen filled with forty tiny browser tabs and a traveller rubbing their temples in distress. 2-3.5s: Traveller slams the laptop lid halfway shut in frustration, staring down at scattered printed hotel confirmations. 3.5-5s: The subject completes the preceding physical action with a clear overwhelmed reaction; every device screen stays hidden",
+                  "camera": "Extreme close-up on stressed eyes reflecting dozens of tiny open browser tabs, panning down to rapid frantically clicking fingers.",
+                  "screen_content_policy": "non_product_context"
+                },
+                "media_plan": {
+                  "base": {
+                    "kind": "stock",
+                    "intent": "overwhelmed solo traveller planning on phone in airport",
+                    "asset_id": null,
+                    "placement": null,
+                    "role": null,
+                    "provider": null,
+                    "model": null,
+                    "mode": null,
+                    "duration_seconds": null
+                  },
+                  "overlays": []
+                },
+                "voiceover": "If your next vacation plan looks like forty open browser tabs and pure panic...",
+                "onscreen_text": "Too much planning?",
+                "call_to_action": "",
+                "layout_intent": null,
+                "expected_evidence": [
+                  "laptop screen with excessive open tabs",
+                  "traveller rubbing temples in visible frustration",
+                  "half-closed laptop",
+                  "scattered paper hotel confirmation sheets",
+                  "continuous physical motion",
+                  "visible overwhelmed reaction",
+                  "device screens hidden"
+                ]
+              },
+              {
+                "scene_id": "product_demo",
+                "start_seconds": 5.0,
+                "end_seconds": 11.0,
+                "purpose": "product_demo",
+                "visual_intent": {
+                  "setting": "a deterministic tict product demonstration",
+                  "subject_action": "the approved trip overview screen moves into view and remains legible",
+                  "camera": "slow controlled push toward the exact application capture",
+                  "screen_content_policy": "approved_product_ui"
+                },
+                "media_plan": {
+                  "base": {
+                    "kind": "solid_or_graphic",
+                    "intent": "tict warm brand background",
+                    "asset_id": null,
+                    "placement": null,
+                    "role": null,
+                    "provider": null,
+                    "model": null,
+                    "mode": null,
+                    "duration_seconds": null
+                  },
+                  "overlays": [
+                    {
+                      "kind": "product_capture",
+                      "intent": null,
+                      "asset_id": "screens/Plan_Overview_Screen.png",
+                      "placement": "centered_phone",
+                      "role": null,
+                      "provider": null,
+                      "model": null,
+                      "mode": null,
+                      "duration_seconds": null
+                    }
+                  ]
+                },
+                "voiceover": "tict turns every booking, place, and next step into one clear trip plan.",
+                "onscreen_text": "Your whole trip. One plan.",
+                "call_to_action": "",
+                "layout_intent": null,
+                "expected_evidence": [
+                  "approved_tict_ui_visible",
+                  "trip_plan_visible",
+                  "product_text_legible"
+                ]
+              },
+              {
+                "scene_id": "cta",
+                "start_seconds": 11.0,
+                "end_seconds": 15.0,
+                "purpose": "cta",
+                "visual_intent": {
+                  "setting": "a deterministic tict brand end card",
+                  "subject_action": "the approved mascot and logo appear beside one call to action",
+                  "camera": "static end card with a subtle local push-in",
+                  "screen_content_policy": "unconstrained"
+                },
+                "media_plan": {
+                  "base": {
+                    "kind": "solid_or_graphic",
+                    "intent": "tict warm brand background",
+                    "asset_id": null,
+                    "placement": null,
+                    "role": null,
+                    "provider": null,
+                    "model": null,
+                    "mode": null,
+                    "duration_seconds": null
+                  },
+                  "overlays": [
+                    {
+                      "kind": "brand_asset",
+                      "intent": null,
+                      "asset_id": "tict-logo.png",
+                      "placement": "upper_center",
+                      "role": "logo",
+                      "provider": null,
+                      "model": null,
+                      "mode": null,
+                      "duration_seconds": null
+                    },
+                    {
+                      "kind": "brand_asset",
+                      "intent": null,
+                      "asset_id": "tict-mascot-1.png",
+                      "placement": "center",
+                      "role": "hero",
+                      "provider": null,
+                      "model": null,
+                      "mode": null,
+                      "duration_seconds": null
+                    }
+                  ]
+                },
+                "voiceover": "Plan less. Travel more with tict.",
+                "onscreen_text": "Plan less. Travel more.",
+                "call_to_action": "Create your trip",
+                "layout_intent": {
+                  "mode": "portrait_regions",
+                  "elements": [
+                    {
+                      "element_id": "logo",
+                      "vertical_region": "top",
+                      "horizontal_alignment": "center",
+                      "scale": "medium"
+                    },
+                    {
+                      "element_id": "hero",
+                      "vertical_region": "center",
+                      "horizontal_alignment": "center",
+                      "scale": "large"
+                    },
+                    {
+                      "element_id": "headline",
+                      "vertical_region": "lower",
+                      "horizontal_alignment": "center",
+                      "scale": "medium"
+                    },
+                    {
+                      "element_id": "action",
+                      "vertical_region": "bottom",
+                      "horizontal_alignment": "center",
+                      "scale": "medium"
+                    }
+                  ]
+                },
+                "expected_evidence": [
+                  "approved_logo_visible",
+                  "approved_mascot_visible",
+                  "single_cta_visible"
+                ]
+              }
+            ]
+          },
+          "request": {
+            "prompt_text": "A dimly lit desk at night with a laptop screen glowing.. Action timeline: 0-2s: Rapid cutting between a glowing laptop screen filled with forty tiny browser tabs and a traveller rubbing their temples in distress. 2-3.5s: Traveller slams the laptop lid halfway shut in frustration, staring down at scattered printed hotel confirmations. 3.5-5s: The subject completes the preceding physical action with a clear overwhelmed reaction; every device screen stays hidden. Camera: Extreme close-up on stressed eyes reflecting dozens of tiny open browser tabs, panning down to rapid frantically clicking fingers.. Photoreal premium travel ad; natural human motion. A generic non-product phone interface may be visible only when the action requires it; it must not resemble tict or contain readable text. Exactly one stable device; its display never faces camera. No flips, duplicates, back-screen, or broken hand contact. No logos, watermarks, or subtitles.",
+            "model": "gen4.5",
+            "mode": "text_to_video",
+            "ratio": "720:1280",
+            "duration_seconds": 5
+          },
+          "estimated_cost_microusd": 600000,
+          "state": "planned"
+        },
+        {
+          "candidate_id": "lost-reservation-panic",
+          "concept_id": "lost-reservation-panic",
+          "operation_id": "experiment-013-lost-reservation-panic",
+          "concept": {
+            "concept_id": "lost-reservation-panic",
+            "hypothesis": "Showing the specific anxiety of standing at a check-in desk frantically searching through email folders will activate travellers looking for instant access to next steps.",
+            "audience_problem": "Panicking while trying to locate a specific confirmation email or booking reference while on the go.",
+            "target_emotion": "Anxious",
+            "emotional_arc": "Panic at check-in to calm control",
+            "hook_setting": "A busy airport arrival terminal with bright overhead lights.",
+            "hook_camera": "Over-the-shoulder handheld shot tracking rapid scrolling on a phone, zooming in on anxious facial expressions.",
+            "hook_voiceover": "Searching through six email folders for one confirmation code while standing in line?",
+            "hook_beats": [
+              {
+                "start_seconds": 0.0,
+                "end_seconds": 2.0,
+                "visible_action": "Fast-paced over-the-shoulder view of a traveller furiously scrolling through an endless email inbox with a worried face.",
+                "expected_evidence": [
+                  "fast phone scrolling through long email list",
+                  "anxious traveller expression in airport terminal"
+                ]
+              },
+              {
+                "start_seconds": 2.0,
+                "end_seconds": 3.5,
+                "visible_action": "Traveller sighs and taps their foot impatiently while looking up at a busy flight arrival board.",
+                "expected_evidence": [
+                  "impatient foot tapping",
+                  "crowded flight information display board"
+                ]
+              },
+              {
+                "start_seconds": 3.5,
+                "end_seconds": 5.0,
+                "visible_action": "Traveller opens tict on screen, instantly revealing organized booking details and next steps.",
+                "expected_evidence": [
+                  "phone screen displaying organized tict interface",
+                  "calm facial expression"
+                ]
+              }
+            ],
+            "product_bridge": "Zoom directly into screens/Plan_Overview_Screen.png alongside tict-logo.png to show how tict consolidates bookings and next steps in one place.",
+            "quality_criteria": [
+              "Clear portrayal of location-based booking retrieval panic within the first 2 seconds",
+              "Includes managed asset screens/Plan_Overview_Screen.png composited locally",
+              "Adheres strictly to verified product facts with canonical lowercase tict"
+            ]
+          },
+          "storyboard": {
+            "schema_version": "1.2",
+            "storyboard_id": "mixed-media-first-slice-001-lost-reservation-panic",
+            "content_language": "en-US",
+            "aspect_ratio": "9:16",
+            "target_duration_seconds": 15.0,
+            "hypothesis": "Showing the specific anxiety of standing at a check-in desk frantically searching through email folders will activate travellers looking for instant access to next steps.",
+            "brand_pronunciations": [
+              {
+                "canonical": "tict",
+                "spoken_alias": "tickt",
+                "ipa": "tɪkt"
+              }
+            ],
+            "scenes": [
+              {
+                "scene_id": "hook",
+                "start_seconds": 0.0,
+                "end_seconds": 5.0,
+                "purpose": "hook",
+                "visual_intent": {
+                  "setting": "A busy airport arrival terminal with bright overhead lights.",
+                  "subject_action": "0-2s: Fast-paced over-the-shoulder view of a traveller furiously scrolling through an endless email inbox with a worried face. 2-3.5s: Traveller sighs and taps their foot impatiently while looking up at a busy flight arrival board. 3.5-5s: The subject completes the preceding physical action with a clear anxious reaction; every device screen stays hidden",
+                  "camera": "Over-the-shoulder handheld shot tracking rapid scrolling on a phone, zooming in on anxious facial expressions.",
+                  "screen_content_policy": "non_product_context"
+                },
+                "media_plan": {
+                  "base": {
+                    "kind": "stock",
+                    "intent": "overwhelmed solo traveller planning on phone in airport",
+                    "asset_id": null,
+                    "placement": null,
+                    "role": null,
+                    "provider": null,
+                    "model": null,
+                    "mode": null,
+                    "duration_seconds": null
+                  },
+                  "overlays": []
+                },
+                "voiceover": "Searching through six email folders for one confirmation code while standing in line?",
+                "onscreen_text": "Too much planning?",
+                "call_to_action": "",
+                "layout_intent": null,
+                "expected_evidence": [
+                  "fast phone scrolling through long email list",
+                  "anxious traveller expression in airport terminal",
+                  "impatient foot tapping",
+                  "crowded flight information display board",
+                  "continuous physical motion",
+                  "visible anxious reaction",
+                  "device screens hidden"
+                ]
+              },
+              {
+                "scene_id": "product_demo",
+                "start_seconds": 5.0,
+                "end_seconds": 11.0,
+                "purpose": "product_demo",
+                "visual_intent": {
+                  "setting": "a deterministic tict product demonstration",
+                  "subject_action": "the approved trip overview screen moves into view and remains legible",
+                  "camera": "slow controlled push toward the exact application capture",
+                  "screen_content_policy": "approved_product_ui"
+                },
+                "media_plan": {
+                  "base": {
+                    "kind": "solid_or_graphic",
+                    "intent": "tict warm brand background",
+                    "asset_id": null,
+                    "placement": null,
+                    "role": null,
+                    "provider": null,
+                    "model": null,
+                    "mode": null,
+                    "duration_seconds": null
+                  },
+                  "overlays": [
+                    {
+                      "kind": "product_capture",
+                      "intent": null,
+                      "asset_id": "screens/Plan_Overview_Screen.png",
+                      "placement": "centered_phone",
+                      "role": null,
+                      "provider": null,
+                      "model": null,
+                      "mode": null,
+                      "duration_seconds": null
+                    }
+                  ]
+                },
+                "voiceover": "tict turns every booking, place, and next step into one clear trip plan.",
+                "onscreen_text": "Your whole trip. One plan.",
+                "call_to_action": "",
+                "layout_intent": null,
+                "expected_evidence": [
+                  "approved_tict_ui_visible",
+                  "trip_plan_visible",
+                  "product_text_legible"
+                ]
+              },
+              {
+                "scene_id": "cta",
+                "start_seconds": 11.0,
+                "end_seconds": 15.0,
+                "purpose": "cta",
+                "visual_intent": {
+                  "setting": "a deterministic tict brand end card",
+                  "subject_action": "the approved mascot and logo appear beside one call to action",
+                  "camera": "static end card with a subtle local push-in",
+                  "screen_content_policy": "unconstrained"
+                },
+                "media_plan": {
+                  "base": {
+                    "kind": "solid_or_graphic",
+                    "intent": "tict warm brand background",
+                    "asset_id": null,
+                    "placement": null,
+                    "role": null,
+                    "provider": null,
+                    "model": null,
+                    "mode": null,
+                    "duration_seconds": null
+                  },
+                  "overlays": [
+                    {
+                      "kind": "brand_asset",
+                      "intent": null,
+                      "asset_id": "tict-logo.png",
+                      "placement": "upper_center",
+                      "role": "logo",
+                      "provider": null,
+                      "model": null,
+                      "mode": null,
+                      "duration_seconds": null
+                    },
+                    {
+                      "kind": "brand_asset",
+                      "intent": null,
+                      "asset_id": "tict-mascot-1.png",
+                      "placement": "center",
+                      "role": "hero",
+                      "provider": null,
+                      "model": null,
+                      "mode": null,
+                      "duration_seconds": null
+                    }
+                  ]
+                },
+                "voiceover": "Plan less. Travel more with tict.",
+                "onscreen_text": "Plan less. Travel more.",
+                "call_to_action": "Create your trip",
+                "layout_intent": {
+                  "mode": "portrait_regions",
+                  "elements": [
+                    {
+                      "element_id": "logo",
+                      "vertical_region": "top",
+                      "horizontal_alignment": "center",
+                      "scale": "medium"
+                    },
+                    {
+                      "element_id": "hero",
+                      "vertical_region": "center",
+                      "horizontal_alignment": "center",
+                      "scale": "large"
+                    },
+                    {
+                      "element_id": "headline",
+                      "vertical_region": "lower",
+                      "horizontal_alignment": "center",
+                      "scale": "medium"
+                    },
+                    {
+                      "element_id": "action",
+                      "vertical_region": "bottom",
+                      "horizontal_alignment": "center",
+                      "scale": "medium"
+                    }
+                  ]
+                },
+                "expected_evidence": [
+                  "approved_logo_visible",
+                  "approved_mascot_visible",
+                  "single_cta_visible"
+                ]
+              }
+            ]
+          },
+          "request": {
+            "prompt_text": "A busy airport arrival terminal with bright overhead lights.. Action timeline: 0-2s: Fast-paced over-the-shoulder view of a traveller furiously scrolling through an endless email inbox with a worried face. 2-3.5s: Traveller sighs and taps their foot impatiently while looking up at a busy flight arrival board. 3.5-5s: The subject completes the preceding physical action with a clear anxious reaction; every device screen stays hidden. Camera: Over-the-shoulder handheld shot tracking rapid scrolling on a phone, zooming in on anxious facial expressions.. Photoreal premium travel ad; natural human motion. A generic non-product phone interface may be visible only when the action requires it; it must not resemble tict or contain readable text. Exactly one stable device; its display never faces camera. No flips, duplicates, back-screen, or broken hand contact. No logos, watermarks, or subtitles.",
+            "model": "gen4.5",
+            "mode": "text_to_video",
+            "ratio": "720:1280",
+            "duration_seconds": 5
+          },
+          "estimated_cost_microusd": 600000,
+          "state": "planned"
+        },
+        {
+          "candidate_id": "scattered-map-pins",
+          "concept_id": "scattered-map-pins",
+          "operation_id": "experiment-013-scattered-map-pins",
+          "concept": {
+            "concept_id": "scattered-map-pins",
+            "hypothesis": "Highlighting the disconnect between saved map pins and actual day-by-day itinerary flow will attract structured travellers who want clear execution.",
+            "audience_problem": "Having dozens of saved places on a map but no clear sequence or actionable plan for how to visit them.",
+            "target_emotion": "Confused",
+            "emotional_arc": "Disorganized confusion to streamlined clarity",
+            "hook_setting": "A sunny coffee shop table covered with a physical paper map, sticky notes, and a phone.",
+            "hook_camera": "Top-down bird's-eye view zooming down onto a cluttered table with hands frantically arranging color-coded sticky notes.",
+            "hook_voiceover": "You saved fifty spots on the map, but how are you actually spending day one?",
+            "hook_beats": [
+              {
+                "start_seconds": 0.0,
+                "end_seconds": 2.0,
+                "visible_action": "Top-down shot of hands frantically shuffling messy color-coded sticky notes back and forth across a city map.",
+                "expected_evidence": [
+                  "top-down view of cluttered map with sticky notes",
+                  "hands swapping sticky notes frantically"
+                ]
+              },
+              {
+                "start_seconds": 2.0,
+                "end_seconds": 3.5,
+                "visible_action": "Hands sweep away the physical paper clutter, leaving a single clean smartphone centered on the table alongside tict-mascot-1.png.",
+                "expected_evidence": [
+                  "hand sweeping paper notes off table",
+                  "clean focal point on central smartphone"
+                ]
+              },
+              {
+                "start_seconds": 3.5,
+                "end_seconds": 5.0,
+                "visible_action": "The smartphone screen illuminates with the clear trip timeline in tict.",
+                "expected_evidence": [
+                  "smartphone screen showing tict plan overview",
+                  "organized digital trip layout"
+                ]
+              }
+            ],
+            "product_bridge": "Match-cut to screens/Plan_Overview_Screen.png showing how tict turns bookings, saved places, and next steps into one clear trip plan.",
+            "quality_criteria": [
+              "Top-down visual contrast between physical paper clutter and organized digital plan in first 2 seconds",
+              "No generic or generated UI presented as tict",
+              "Maintains valid json structure and correct kebab-case concept_id"
+            ]
+          },
+          "storyboard": {
+            "schema_version": "1.2",
+            "storyboard_id": "mixed-media-first-slice-001-scattered-map-pins",
+            "content_language": "en-US",
+            "aspect_ratio": "9:16",
+            "target_duration_seconds": 15.0,
+            "hypothesis": "Highlighting the disconnect between saved map pins and actual day-by-day itinerary flow will attract structured travellers who want clear execution.",
+            "brand_pronunciations": [
+              {
+                "canonical": "tict",
+                "spoken_alias": "tickt",
+                "ipa": "tɪkt"
+              }
+            ],
+            "scenes": [
+              {
+                "scene_id": "hook",
+                "start_seconds": 0.0,
+                "end_seconds": 5.0,
+                "purpose": "hook",
+                "visual_intent": {
+                  "setting": "A sunny coffee shop table covered with a physical paper map, sticky notes, and a phone.",
+                  "subject_action": "0-2s: Top-down shot of hands frantically shuffling messy color-coded sticky notes back and forth across a city map. 2-3.5s: The subject completes the preceding physical action with a clear confused reaction; every device screen stays hidden 3.5-5s: The subject completes the preceding physical action with a clear confused reaction; every device screen stays hidden",
+                  "camera": "Top-down bird's-eye view zooming down onto a cluttered table with hands frantically arranging color-coded sticky notes.",
+                  "screen_content_policy": "non_product_context"
+                },
+                "media_plan": {
+                  "base": {
+                    "kind": "stock",
+                    "intent": "overwhelmed solo traveller planning on phone in airport",
+                    "asset_id": null,
+                    "placement": null,
+                    "role": null,
+                    "provider": null,
+                    "model": null,
+                    "mode": null,
+                    "duration_seconds": null
+                  },
+                  "overlays": []
+                },
+                "voiceover": "You saved fifty spots on the map, but how are you actually spending day one?",
+                "onscreen_text": "Too much planning?",
+                "call_to_action": "",
+                "layout_intent": null,
+                "expected_evidence": [
+                  "top-down view of cluttered map with sticky notes",
+                  "hands swapping sticky notes frantically",
+                  "continuous physical motion",
+                  "visible confused reaction",
+                  "device screens hidden"
+                ]
+              },
+              {
+                "scene_id": "product_demo",
+                "start_seconds": 5.0,
+                "end_seconds": 11.0,
+                "purpose": "product_demo",
+                "visual_intent": {
+                  "setting": "a deterministic tict product demonstration",
+                  "subject_action": "the approved trip overview screen moves into view and remains legible",
+                  "camera": "slow controlled push toward the exact application capture",
+                  "screen_content_policy": "approved_product_ui"
+                },
+                "media_plan": {
+                  "base": {
+                    "kind": "solid_or_graphic",
+                    "intent": "tict warm brand background",
+                    "asset_id": null,
+                    "placement": null,
+                    "role": null,
+                    "provider": null,
+                    "model": null,
+                    "mode": null,
+                    "duration_seconds": null
+                  },
+                  "overlays": [
+                    {
+                      "kind": "product_capture",
+                      "intent": null,
+                      "asset_id": "screens/Plan_Overview_Screen.png",
+                      "placement": "centered_phone",
+                      "role": null,
+                      "provider": null,
+                      "model": null,
+                      "mode": null,
+                      "duration_seconds": null
+                    }
+                  ]
+                },
+                "voiceover": "tict turns every booking, place, and next step into one clear trip plan.",
+                "onscreen_text": "Your whole trip. One plan.",
+                "call_to_action": "",
+                "layout_intent": null,
+                "expected_evidence": [
+                  "approved_tict_ui_visible",
+                  "trip_plan_visible",
+                  "product_text_legible"
+                ]
+              },
+              {
+                "scene_id": "cta",
+                "start_seconds": 11.0,
+                "end_seconds": 15.0,
+                "purpose": "cta",
+                "visual_intent": {
+                  "setting": "a deterministic tict brand end card",
+                  "subject_action": "the approved mascot and logo appear beside one call to action",
+                  "camera": "static end card with a subtle local push-in",
+                  "screen_content_policy": "unconstrained"
+                },
+                "media_plan": {
+                  "base": {
+                    "kind": "solid_or_graphic",
+                    "intent": "tict warm brand background",
+                    "asset_id": null,
+                    "placement": null,
+                    "role": null,
+                    "provider": null,
+                    "model": null,
+                    "mode": null,
+                    "duration_seconds": null
+                  },
+                  "overlays": [
+                    {
+                      "kind": "brand_asset",
+                      "intent": null,
+                      "asset_id": "tict-logo.png",
+                      "placement": "upper_center",
+                      "role": "logo",
+                      "provider": null,
+                      "model": null,
+                      "mode": null,
+                      "duration_seconds": null
+                    },
+                    {
+                      "kind": "brand_asset",
+                      "intent": null,
+                      "asset_id": "tict-mascot-1.png",
+                      "placement": "center",
+                      "role": "hero",
+                      "provider": null,
+                      "model": null,
+                      "mode": null,
+                      "duration_seconds": null
+                    }
+                  ]
+                },
+                "voiceover": "Plan less. Travel more with tict.",
+                "onscreen_text": "Plan less. Travel more.",
+                "call_to_action": "Create your trip",
+                "layout_intent": {
+                  "mode": "portrait_regions",
+                  "elements": [
+                    {
+                      "element_id": "logo",
+                      "vertical_region": "top",
+                      "horizontal_alignment": "center",
+                      "scale": "medium"
+                    },
+                    {
+                      "element_id": "hero",
+                      "vertical_region": "center",
+                      "horizontal_alignment": "center",
+                      "scale": "large"
+                    },
+                    {
+                      "element_id": "headline",
+                      "vertical_region": "lower",
+                      "horizontal_alignment": "center",
+                      "scale": "medium"
+                    },
+                    {
+                      "element_id": "action",
+                      "vertical_region": "bottom",
+                      "horizontal_alignment": "center",
+                      "scale": "medium"
+                    }
+                  ]
+                },
+                "expected_evidence": [
+                  "approved_logo_visible",
+                  "approved_mascot_visible",
+                  "single_cta_visible"
+                ]
+              }
+            ]
+          },
+          "request": {
+            "prompt_text": "A sunny coffee shop table covered with a physical paper map, sticky notes, and a phone.. Action timeline: 0-2s: Top-down shot of hands frantically shuffling messy color-coded sticky notes back and forth across a city map. 2-3.5s: The subject completes the preceding physical action with a clear confused reaction; every device screen stays hidden 3.5-5s: The subject completes the preceding physical action with a clear confused reaction; every device screen stays hidden. Camera: Top-down bird's-eye view zooming down onto a cluttered table with hands frantically arranging color-coded sticky notes.. Photoreal premium travel ad; natural human motion. A generic non-product phone interface may be visible only when the action requires it; it must not resemble tict or contain readable text. Exactly one stable device; its display never faces camera. No flips, duplicates, back-screen, or broken hand contact. No logos, watermarks, or subtitles.",
+            "model": "gen4.5",
+            "mode": "text_to_video",
+            "ratio": "720:1280",
+            "duration_seconds": 5
+          },
+          "estimated_cost_microusd": 600000,
+          "state": "planned"
+        }
+      ],
+      "total_estimated_cost_microusd": 1800000
+    }
+  },
+  "artifacts": {
+    "reference": {
+      "source_path": "feedback-loop/video-quality/experiments/012-screen-stable-runway-batch/artifacts/video.mp4",
+      "source_sha256": "bd3a17ef31339160eb19062568e6f4c0aac3e17ec8afbfa2007f841aeae13c52",
+      "snapshot_path": "artifacts/reference.mp4",
+      "snapshot_sha256": "bd3a17ef31339160eb19062568e6f4c0aac3e17ec8afbfa2007f841aeae13c52"
+    },
+    "candidate": {
+      "source_path": "feedback-loop/video-quality/experiments/013-hypothesis-aware-candidate-orchestration/artifacts/campaign/renders/browser-tab-chaos/final.mp4",
+      "source_sha256": "fb48ec133c903e1bb6e74c77e06b6dab1a511fc787f57ebca7802d4e9022ef5f",
+      "snapshot_path": "artifacts/video.mp4",
+      "snapshot_sha256": "fb48ec133c903e1bb6e74c77e06b6dab1a511fc787f57ebca7802d4e9022ef5f"
+    }
+  },
+  "evidence": {
+    "candidate": {
+      "source_path": "feedback-loop/video-quality/experiments/013-hypothesis-aware-candidate-orchestration/artifacts/campaign/judges/browser-tab-chaos-semantic-v1.2.json",
+      "source_sha256": "8cef89cb0cb629151f8c0f9f510eed5ce5167e15590d4b009e31c46cf74cd8ee",
+      "content_sha256": "deb5789043032e010f0e41af9d5d6480b1980ac9d5a705af636ec444fe2a06d7",
+      "content": {
+        "schema_version": 1,
+        "evaluator_version": "1.2.0",
+        "observation_mode": "gemini_candidate_contract_v1",
+        "status": "complete",
+        "concept_id": "browser-tab-chaos",
+        "concept_sha256": "17f48f8af4233032300ea6574dd9902edfed6b632be0428a3fff29706cc68119",
+        "storyboard_id": "mixed-media-first-slice-001-browser-tab-chaos",
+        "storyboard_sha256": "89e3a86c085aa8359f611e0767780950e9df4b6711c76acab75bc679dc2675eb",
+        "contract_sha256": "bbc865201d2283b459f032aeb67e15db2838ddd653b610dddc8d950e9cd60952",
+        "video_sha256": "fb48ec133c903e1bb6e74c77e06b6dab1a511fc787f57ebca7802d4e9022ef5f",
+        "video_duration_ms": 15000,
+        "prompt_sha256": "59512ab7b42affb83042297a58e1ae70dd48a69f84f3002c1e83561870444c25",
+        "response_schema_sha256": "0d6677b9c05d5b2886bf0f1c699c0152de2aaf708a52d84b750c04f47d42206b",
+        "requested_model": "gemini-3.6-flash",
+        "model_version": "gemini-3.6-flash",
+        "response": {
+          "observed_hook_summary": "A person looks intensely stressed while illuminated by a glowing laptop screen, frantically typing, closing the laptop lid in frustration, and slumping down over scattered paper notes on a desk.",
+          "observed_bridge_summary": "At 5000 ms, the scene transitions directly from the stressed traveler slumping over desk papers to a full-screen mobile app interface showing an organized trip plan titled 'Your whole trip. One plan.'",
+          "hypothesis_match": {
+            "status": "met",
+            "evidence": [
+              {
+                "timestamp_ms": 0,
+                "observation": "Close-up of a visibly stressed person facing a laptop glow, accompanied by onscreen text reading 'If your next vacation plan looks like forty open browser tabs and pure panic...'."
+              },
+              {
+                "timestamp_ms": 3000,
+                "observation": "Person closes the laptop lid and slumps onto scattered paper sheets on the desk in frustration."
+              }
+            ],
+            "reason": "The hook visually and textually portrays the overwhelm and frustration of chaotic travel planning using scattered notes and computer stress, matching the intended problem and hypothesis."
+          },
+          "target_emotion_strength": {
+            "status": "met",
+            "evidence": [
+              {
+                "timestamp_ms": 0,
+                "observation": "Subject displays anxious, wide-eyed distress while staring into the laptop light."
+              },
+              {
+                "timestamp_ms": 3000,
+                "observation": "Subject abruptly shuts laptop lid and buries head on hands over desk clutter, visually conveying an overwhelmed emotional state."
+              }
+            ],
+            "reason": "The subject's facial expressions and physical actions strongly and clearly depict the target emotion of overwhelm throughout the hook."
+          },
+          "first_two_seconds_hook_clarity": {
+            "status": "partially_met",
+            "evidence": [
+              {
+                "timestamp_ms": 0,
+                "observation": "Subject looks distressed while lit by laptop light."
+              },
+              {
+                "timestamp_ms": 1000,
+                "observation": "Hands are shown typing on a laptop keyboard above papers, but the laptop screen displaying browser tab overload is not visible on camera."
+              }
+            ],
+            "reason": "The initial two seconds show visual computer stress, but without showing the actual browser tabs on screen, the specific problem relies partly on text and narration."
+          },
+          "hook_to_product_bridge_coherence": {
+            "status": "met",
+            "evidence": [
+              {
+                "timestamp_ms": 4000,
+                "observation": "Subject finishes slumping head onto desk in defeat over paper clutter."
+              },
+              {
+                "timestamp_ms": 5000,
+                "observation": "Direct transition into the tict app UI displaying the single consolidated trip overview."
+              }
+            ],
+            "reason": "The transition logically moves from the peak moment of planning frustration directly into the product demo offering the unified solution."
+          },
+          "storyboard_action_alignment": {
+            "status": "partially_met",
+            "evidence": [
+              {
+                "timestamp_ms": 0,
+                "observation": "Shows tight facial close-up and keyboard shot rather than a laptop screen showing forty browser tabs."
+              },
+              {
+                "timestamp_ms": 2000,
+                "observation": "Subject closes laptop lid and puts head down on scattered paper sheets as planned."
+              }
+            ],
+            "reason": "The physical action of shutting the laptop and slumping over scattered papers aligns with the storyboard, but the specified visual shot of forty browser tabs on the screen is absent."
+          }
+        },
+        "dimension_scores": {
+          "hypothesis_match": 1.0,
+          "target_emotion_strength": 1.0,
+          "first_two_seconds_hook_clarity": 0.5,
+          "hook_to_product_bridge_coherence": 1.0,
+          "storyboard_action_alignment": 0.5
+        },
+        "provider": {
+          "response_id": "7HOEat-zMOb1xN8P-6qiiAE",
+          "usage": {
+            "prompt_tokens": 6034,
+            "output_tokens": 855,
+            "thinking_tokens": 1835,
+            "total_tokens": 8724
+          },
+          "estimated_actual_cost_microusd": 15464
+        },
+        "budget": {
+          "operation_id": "evaluator-120-candidate-013-browser-tab-chaos-v1-retry",
+          "preflight_maximum_microusd": 51000,
+          "charged_microusd": 15464,
+          "remaining_scope_microusd": 3804858
+        }
+      }
+    },
+    "invariant": {
+      "source_path": "feedback-loop/video-quality/experiments/013-hypothesis-aware-candidate-orchestration/artifacts/campaign/judges/browser-tab-chaos-invariant-v2.json",
+      "source_sha256": "20149512313569fad04508c9fe26afa98706845be851d5df9a28b8c1044ae1a9",
+      "content_sha256": "3b14fbe62eb60f5508e882e0c4bfecf59acf733fcda6543dd059aa20c031e7ff",
+      "content": {
+        "schema_version": 1,
+        "evaluator_version": "1.0.0",
+        "observation_mode": "gemini_invariant_pairwise_v1",
+        "scenario_id": "mixed-media-stock-baseline-001",
+        "scenario_sha256": "2c66b606c90eaaa3db9d550aeed3672b595da86d9812b547b969ac151e5b21da",
+        "shared_contract_sha256": "f8369261a23239d4e1f5db6e178353bb99f4105ad665d57648a4a8c9c65b820e",
+        "prompt_sha256": "e100cc551d58a4f44b33b9ea068f7e0644e903d12d13fc4784dc88b69fcd2f1a",
+        "response_schema_sha256": "33deefc50187521c79d44c4b6237e8324f17a439d42967835291f32d32f51926",
+        "requested_model": "gemini-3.6-flash",
+        "baseline_sha256": "bd3a17ef31339160eb19062568e6f4c0aac3e17ec8afbfa2007f841aeae13c52",
+        "candidate_sha256": "fb48ec133c903e1bb6e74c77e06b6dab1a511fc787f57ebca7802d4e9022ef5f",
+        "self_comparison": false,
+        "status": "complete",
+        "model_versions": [
+          "gemini-3.6-flash"
+        ],
+        "winner_diagnostic": {
+          "diagnostic_only": true,
+          "position_balanced": true,
+          "candidate_credit": 0.5,
+          "pass_candidate_credits": [
+            0.5,
+            0.5
+          ],
+          "outcome": "tie"
+        },
+        "passes": [
+          {
+            "pass_id": "baseline-a",
+            "order": {
+              "A": "bd3a17ef31339160eb19062568e6f4c0aac3e17ec8afbfa2007f841aeae13c52",
+              "B": "fb48ec133c903e1bb6e74c77e06b6dab1a511fc787f57ebca7802d4e9022ef5f"
+            },
+            "response": {
+              "winner": "tie",
+              "winner_reason": "Both videos execute the downstream product demo and call to action with identical clarity, correct brand assets, accurate audio-visual alignment, and clean transitions.",
+              "criteria": {
+                "transition_mechanics": {
+                  "video_a": {
+                    "status": "met",
+                    "evidence": [
+                      {
+                        "scene_purpose": "product_demo",
+                        "timestamp_ms": 5000,
+                        "observation": "Clean hard cut into the product UI screen."
+                      },
+                      {
+                        "scene_purpose": "cta",
+                        "timestamp_ms": 11000,
+                        "observation": "Smooth transition directly to the final CTA screen."
+                      }
+                    ],
+                    "reason": "Transitions into the demo and CTA are mechanically precise."
+                  },
+                  "video_b": {
+                    "status": "met",
+                    "evidence": [
+                      {
+                        "scene_purpose": "product_demo",
+                        "timestamp_ms": 5000,
+                        "observation": "Direct cut into the product UI presentation."
+                      },
+                      {
+                        "scene_purpose": "cta",
+                        "timestamp_ms": 11000,
+                        "observation": "Clean transition to the final CTA card."
+                      }
+                    ],
+                    "reason": "Transitions between scenes are executed smoothly without artifacts."
+                  }
+                },
+                "audiovisual_correctness": {
+                  "video_a": {
+                    "status": "met",
+                    "evidence": [
+                      {
+                        "scene_purpose": "product_demo",
+                        "timestamp_ms": 7000,
+                        "observation": "Narration and captions match visible UI content."
+                      }
+                    ],
+                    "reason": "Audio narration, captions, and visuals align perfectly."
+                  },
+                  "video_b": {
+                    "status": "met",
+                    "evidence": [
+                      {
+                        "scene_purpose": "product_demo",
+                        "timestamp_ms": 7000,
+                        "observation": "Voiceover timing matches displayed trip details."
+                      }
+                    ],
+                    "reason": "Audio track syncs accurately with video scenes."
+                  }
+                },
+                "product_brand_fidelity": {
+                  "video_a": {
+                    "status": "met",
+                    "evidence": [
+                      {
+                        "scene_purpose": "product_demo",
+                        "timestamp_ms": 8000,
+                        "observation": "Legible TICT trip plan UI displayed."
+                      },
+                      {
+                        "scene_purpose": "cta",
+                        "timestamp_ms": 12000,
+                        "observation": "Approved mascot and logo shown clearly."
+                      }
+                    ],
+                    "reason": "Brand assets and product UI meet all fidelity standards."
+                  },
+                  "video_b": {
+                    "status": "met",
+                    "evidence": [
+                      {
+                        "scene_purpose": "product_demo",
+                        "timestamp_ms": 8000,
+                        "observation": "Clear and legible TICT interface."
+                      },
+                      {
+                        "scene_purpose": "cta",
+                        "timestamp_ms": 12000,
+                        "observation": "Official logo and mascot visible."
+                      }
+                    ],
+                    "reason": "Product visuals and logo maintain correct fidelity."
+                  }
+                },
+                "cta_clarity": {
+                  "video_a": {
+                    "status": "met",
+                    "evidence": [
+                      {
+                        "scene_purpose": "cta",
+                        "timestamp_ms": 13000,
+                        "observation": "Clear yellow Create your trip button."
+                      }
+                    ],
+                    "reason": "CTA is visually distinct and uncluttered."
+                  },
+                  "video_b": {
+                    "status": "met",
+                    "evidence": [
+                      {
+                        "scene_purpose": "cta",
+                        "timestamp_ms": 13000,
+                        "observation": "Unobstructed action button and slogan."
+                      }
+                    ],
+                    "reason": "Call to action is readable and focused."
+                  }
+                },
+                "professional_finish": {
+                  "video_a": {
+                    "status": "met",
+                    "evidence": [
+                      {
+                        "scene_purpose": "product_demo",
+                        "timestamp_ms": 9000,
+                        "observation": "High quality render without graphical glitches."
+                      }
+                    ],
+                    "reason": "Overall production finish is polished."
+                  },
+                  "video_b": {
+                    "status": "met",
+                    "evidence": [
+                      {
+                        "scene_purpose": "product_demo",
+                        "timestamp_ms": 9000,
+                        "observation": "Clean rendering and high quality audio mix."
+                      }
+                    ],
+                    "reason": "Downstream scenes exhibit professional visual quality."
+                  }
+                }
+              },
+              "scene_evidence": [
+                {
+                  "video_label": "A",
+                  "scene_purpose": "product_demo",
+                  "timestamp_ms": 6000,
+                  "observation": "UI screen displaying trip details for Dubai."
+                },
+                {
+                  "video_label": "A",
+                  "scene_purpose": "cta",
+                  "timestamp_ms": 12500,
+                  "observation": "End screen featuring logo, mascot, and action button."
+                },
+                {
+                  "video_label": "B",
+                  "scene_purpose": "product_demo",
+                  "timestamp_ms": 6000,
+                  "observation": "UI screen displaying trip details for Dubai."
+                },
+                {
+                  "video_label": "B",
+                  "scene_purpose": "cta",
+                  "timestamp_ms": 12500,
+                  "observation": "End screen featuring logo, mascot, and action button."
+                }
+              ]
+            },
+            "criterion_scores": {
+              "video_a": {
+                "transition_mechanics": 1.0,
+                "audiovisual_correctness": 1.0,
+                "product_brand_fidelity": 1.0,
+                "cta_clarity": 1.0,
+                "professional_finish": 1.0
+              },
+              "video_b": {
+                "transition_mechanics": 1.0,
+                "audiovisual_correctness": 1.0,
+                "product_brand_fidelity": 1.0,
+                "cta_clarity": 1.0,
+                "professional_finish": 1.0
+              }
+            },
+            "provider": {
+              "requested_model": "gemini-3.6-flash",
+              "model_version": "gemini-3.6-flash",
+              "response_id": "lHSEaqf1NdK7kdUPteL1gQc",
+              "usage": {
+                "prompt_tokens": 9532,
+                "output_tokens": 828,
+                "thinking_tokens": 2493,
+                "total_tokens": 12853
+              },
+              "estimated_actual_cost_microusd": 20508
+            },
+            "budget": {
+              "operation_id": "evaluator-120-invariant-013-browser-tab-chaos-v2-pass-1",
+              "preflight_maximum_microusd": 57000,
+              "charged_microusd": 20508,
+              "remaining_scope_microusd": 3705079
+            }
+          },
+          {
+            "pass_id": "candidate-a",
+            "order": {
+              "A": "fb48ec133c903e1bb6e74c77e06b6dab1a511fc787f57ebca7802d4e9022ef5f",
+              "B": "bd3a17ef31339160eb19062568e6f4c0aac3e17ec8afbfa2007f841aeae13c52"
+            },
+            "response": {
+              "winner": "tie",
+              "winner_reason": "Both videos execute the downstream contract perfectly with clear UI displays, seamless scene cuts, accurate narration sync, and clear CTA end cards.",
+              "criteria": {
+                "transition_mechanics": {
+                  "video_a": {
+                    "status": "met",
+                    "evidence": [
+                      {
+                        "scene_purpose": "product_demo",
+                        "timestamp_ms": 5000,
+                        "observation": "Clean cut to product demo scene."
+                      },
+                      {
+                        "scene_purpose": "cta",
+                        "timestamp_ms": 11000,
+                        "observation": "Smooth transition to final CTA card."
+                      }
+                    ],
+                    "reason": "Transitions between scenes occur smoothly at contract timestamps."
+                  },
+                  "video_b": {
+                    "status": "met",
+                    "evidence": [
+                      {
+                        "scene_purpose": "product_demo",
+                        "timestamp_ms": 5000,
+                        "observation": "Clean transition into product demo scene."
+                      },
+                      {
+                        "scene_purpose": "cta",
+                        "timestamp_ms": 11000,
+                        "observation": "Smooth transition into CTA end card."
+                      }
+                    ],
+                    "reason": "Transitions occur seamlessly without frame drops or visual artifacts."
+                  }
+                },
+                "audiovisual_correctness": {
+                  "video_a": {
+                    "status": "met",
+                    "evidence": [
+                      {
+                        "scene_purpose": "product_demo",
+                        "timestamp_ms": 6000,
+                        "observation": "Voiceover and subtitles match on-screen product features."
+                      },
+                      {
+                        "scene_purpose": "cta",
+                        "timestamp_ms": 12000,
+                        "observation": "CTA audio tagline matches visible text."
+                      }
+                    ],
+                    "reason": "Audio narration, text captions, and screen visuals align accurately."
+                  },
+                  "video_b": {
+                    "status": "met",
+                    "evidence": [
+                      {
+                        "scene_purpose": "product_demo",
+                        "timestamp_ms": 6000,
+                        "observation": "Voiceover and subtitles align with screen animation."
+                      },
+                      {
+                        "scene_purpose": "cta",
+                        "timestamp_ms": 12000,
+                        "observation": "CTA voiceover aligns with visible text on card."
+                      }
+                    ],
+                    "reason": "Audio, subtitles, and timing align correctly across scenes."
+                  }
+                },
+                "product_brand_fidelity": {
+                  "video_a": {
+                    "status": "met",
+                    "evidence": [
+                      {
+                        "scene_purpose": "product_demo",
+                        "timestamp_ms": 7000,
+                        "observation": "Approved TICT app interface shown clearly with legible details."
+                      },
+                      {
+                        "scene_purpose": "cta",
+                        "timestamp_ms": 12500,
+                        "observation": "TICT brand logo and yellow pin mascot displayed clearly."
+                      }
+                    ],
+                    "reason": "Brand assets and app UI remain high resolution and on-brand."
+                  },
+                  "video_b": {
+                    "status": "met",
+                    "evidence": [
+                      {
+                        "scene_purpose": "product_demo",
+                        "timestamp_ms": 7000,
+                        "observation": "TICT mobile interface is sharp and easy to read."
+                      },
+                      {
+                        "scene_purpose": "cta",
+                        "timestamp_ms": 12500,
+                        "observation": "Official logo and mascot appear centrally on screen."
+                      }
+                    ],
+                    "reason": "Brand elements and interface are presented accurately and legibly."
+                  }
+                },
+                "cta_clarity": {
+                  "video_a": {
+                    "status": "met",
+                    "evidence": [
+                      {
+                        "scene_purpose": "cta",
+                        "timestamp_ms": 13000,
+                        "observation": "Yellow button with text 'Create your trip' is prominent and unobstructed."
+                      }
+                    ],
+                    "reason": "CTA is singular, readable, and prominently presented."
+                  },
+                  "video_b": {
+                    "status": "met",
+                    "evidence": [
+                      {
+                        "scene_purpose": "cta",
+                        "timestamp_ms": 13000,
+                        "observation": "Unobstructed CTA button reading 'Create your trip'."
+                      }
+                    ],
+                    "reason": "CTA button is unambiguous and centered."
+                  }
+                },
+                "professional_finish": {
+                  "video_a": {
+                    "status": "met",
+                    "evidence": [
+                      {
+                        "scene_purpose": "product_demo",
+                        "timestamp_ms": 8000,
+                        "observation": "High-quality UI layout without render glitches."
+                      },
+                      {
+                        "scene_purpose": "cta",
+                        "timestamp_ms": 13500,
+                        "observation": "Polished end card with animated mascot."
+                      }
+                    ],
+                    "reason": "Production quality is crisp and free of visual defects."
+                  },
+                  "video_b": {
+                    "status": "met",
+                    "evidence": [
+                      {
+                        "scene_purpose": "product_demo",
+                        "timestamp_ms": 8000,
+                        "observation": "Clear render quality throughout app preview."
+                      },
+                      {
+                        "scene_purpose": "cta",
+                        "timestamp_ms": 13500,
+                        "observation": "Clean animation and presentation on CTA end card."
+                      }
+                    ],
+                    "reason": "Overall edit feels professional and ready for delivery."
+                  }
+                }
+              },
+              "scene_evidence": [
+                {
+                  "video_label": "A",
+                  "scene_purpose": "product_demo",
+                  "timestamp_ms": 6000,
+                  "observation": "TICT app UI showing trip summary is clearly displayed."
+                },
+                {
+                  "video_label": "A",
+                  "scene_purpose": "cta",
+                  "timestamp_ms": 12000,
+                  "observation": "TICT logo, mascot, slogan, and button are visible."
+                },
+                {
+                  "video_label": "B",
+                  "scene_purpose": "product_demo",
+                  "timestamp_ms": 6000,
+                  "observation": "TICT app interface displaying trip details is shown."
+                },
+                {
+                  "video_label": "B",
+                  "scene_purpose": "cta",
+                  "timestamp_ms": 12000,
+                  "observation": "TICT logo, mascot, tagline, and CTA button are clear."
+                }
+              ]
+            },
+            "criterion_scores": {
+              "video_a": {
+                "transition_mechanics": 1.0,
+                "audiovisual_correctness": 1.0,
+                "product_brand_fidelity": 1.0,
+                "cta_clarity": 1.0,
+                "professional_finish": 1.0
+              },
+              "video_b": {
+                "transition_mechanics": 1.0,
+                "audiovisual_correctness": 1.0,
+                "product_brand_fidelity": 1.0,
+                "cta_clarity": 1.0,
+                "professional_finish": 1.0
+              }
+            },
+            "provider": {
+              "requested_model": "gemini-3.6-flash",
+              "model_version": "gemini-3.6-flash",
+              "response_id": "pnSEav2gJda8kdUPovvh0Ao",
+              "usage": {
+                "prompt_tokens": 9532,
+                "output_tokens": 981,
+                "thinking_tokens": 1581,
+                "total_tokens": 12094
+              },
+              "estimated_actual_cost_microusd": 21656
+            },
+            "budget": {
+              "operation_id": "evaluator-120-invariant-013-browser-tab-chaos-v2-pass-2",
+              "preflight_maximum_microusd": 57000,
+              "charged_microusd": 21656,
+              "remaining_scope_microusd": 3683423
+            }
+          }
+        ]
+      }
+    }
+  },
+  "product_owner_labels": [
+    {
+      "role": "reference",
+      "label": "accept",
+      "artifact_sha256": "bd3a17ef31339160eb19062568e6f4c0aac3e17ec8afbfa2007f841aeae13c52",
+      "reviewer": "user",
+      "reason": "The exact reference MP4 was previously accepted"
+    },
+    {
+      "role": "candidate",
+      "label": "pending",
+      "artifact_sha256": "fb48ec133c903e1bb6e74c77e06b6dab1a511fc787f57ebca7802d4e9022ef5f",
+      "reviewer": "user",
+      "reason": "Exact candidate MP4 review is still pending"
+    }
+  ],
+  "evaluator_costs": {
+    "accounting": "conservative_recorded_charge",
+    "operations": [
+      {
+        "operation_id": "evaluator-120-candidate-013-browser-tab-chaos-v1-retry",
+        "charged_microusd": 15464,
+        "preflight_maximum_microusd": 51000
+      },
+      {
+        "operation_id": "evaluator-120-invariant-013-browser-tab-chaos-v2-pass-1",
+        "charged_microusd": 20508,
+        "preflight_maximum_microusd": 57000
+      },
+      {
+        "operation_id": "evaluator-120-invariant-013-browser-tab-chaos-v2-pass-2",
+        "charged_microusd": 21656,
+        "preflight_maximum_microusd": 57000
+      }
+    ],
+    "total_charged_microusd": 57628,
+    "total_preflight_maximum_microusd": 165000
+  }
+}

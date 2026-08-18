@@ -553,6 +553,7 @@ def map_fragmentation_contract() -> dict[str, Any]:
             "hook_setting": "A table covered in maps, notes, and saved-place pins.",
             "hook_camera": "A controlled overhead push toward the scattered map.",
             "hook_voiceover": "Saved everything, but planned nothing?",
+            "hook_voice_delivery": "A tired, matter-of-fact person stating the obvious.",
             "hook_beats": [
                 {
                     "start_seconds": 0.0,

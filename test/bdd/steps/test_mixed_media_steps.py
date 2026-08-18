@@ -431,6 +431,7 @@ def _campaign_concept(
         "hook_setting": "a bright international airport departure hall",
         "hook_camera": "natural handheld push-in",
         "hook_voiceover": "Planning a trip should not feel like another job.",
+        "hook_voice_delivery": "A tired, matter-of-fact person stating the obvious.",
         "hook_beats": [
             {
                 "start_seconds": 0.0,

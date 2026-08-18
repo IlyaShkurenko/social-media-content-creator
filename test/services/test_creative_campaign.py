@@ -60,6 +60,7 @@ def concept(
         "hook_setting": "a bright international airport departure hall",
         "hook_camera": "natural handheld push-in",
         "hook_voiceover": "Planning a trip should not feel like another job.",
+        "hook_voice_delivery": "A tired, matter-of-fact person stating the obvious.",
         "hook_beats": [
             {
                 "start_seconds": 0.0,
@@ -252,6 +253,24 @@ def test_story_2_3_product_reveal_is_kept_out_of_generated_hook() -> None:
     assert "device screen stays hidden" in (
         compiled.storyboard.scenes[0].visual_intent.subject_action
     )
+
+
+def test_voice_1_1_compiled_hook_carries_delivery_direction_other_scenes_do_not() -> None:
+    template = validate_storyboard(
+        json.loads(TEMPLATE_PATH.read_text(encoding="utf-8"))
+    )
+    compiled = compile_concept_storyboards(
+        planned_batch(),
+        template_storyboard=template,
+    )
+
+    for item in compiled:
+        assert (
+            item.storyboard.scenes[0].voice_instructions
+            == item.concept.hook_voice_delivery
+        )
+        for scene in item.storyboard.scenes[1:]:
+            assert scene.voice_instructions is None
 
 
 def test_adpipe_2_1_campaign_plan_has_unique_jobs_and_total_cost() -> None:
