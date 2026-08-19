@@ -85,6 +85,8 @@ class StoryboardScene(CreativeModel):
     layout_intent: SceneLayoutIntent | None = None
     expected_evidence: list[str] = Field(default_factory=list)
     voice_instructions: str | None = Field(default=None, min_length=1)
+    mascot_line: str | None = Field(default=None, min_length=1)
+    mascot_pose: Literal["neutral", "excited"] | None = None
 
 
 class Storyboard(CreativeModel):
@@ -219,6 +221,7 @@ def validate_storyboard(payload: Storyboard | dict) -> Storyboard:
                         for layer in layers
                         if layer.kind == "brand_asset" and layer.role is not None
                     ),
+                    *(("mascot_line",) if scene.mascot_line is not None else ()),
                 }
                 if set(element_ids) != required_layout_ids:
                     raise StoryboardValidationError(

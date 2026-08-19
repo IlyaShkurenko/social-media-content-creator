@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import json
+import math
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 
+from app.services.creative.mascot_rig import MascotRig, MascotRigError, arm_raise_factor
 from app.services.creative.storyboard import (
     StoryboardScene,
     Storyboard,
@@ -114,6 +116,9 @@ class CtaLayout:
     action_text: str
     headline_font_size: int
     action_font_size: int
+    mascot_line: LayoutBox | None = None
+    mascot_line_text: str | None = None
+    mascot_line_font_size: int | None = None
 
 
 @dataclass(frozen=True)
@@ -126,6 +131,9 @@ class _PreparedCtaLayout:
     headline_text_bbox: tuple[int, int, int, int]
     action_font: ImageFont.FreeTypeFont
     action_text_bbox: tuple[int, int, int, int]
+    mascot_line_font: ImageFont.FreeTypeFont | None = None
+    mascot_line_wrapped: str | None = None
+    mascot_line_text_bbox: tuple[int, int, int, int] | None = None
 
 
 def _font_path(name: str) -> Path:
@@ -424,6 +432,33 @@ def _prepare_cta_layout(
         action_text_height + round(canvas_height * 0.036),
     )
 
+    mascot_line_text = (scene.mascot_line or "").strip() or None
+    mascot_line_font: ImageFont.FreeTypeFont | None = None
+    mascot_line_wrapped: str | None = None
+    mascot_line_bounds = (0, 0, 0, 0)
+    mascot_line_box_width = 0
+    mascot_line_box_height = 0
+    if mascot_line_text is not None:
+        mascot_line_horizontal_padding = round(canvas_width * 0.045)
+        mascot_line_vertical_padding = round(canvas_height * 0.018)
+        mascot_line_font, mascot_line_wrapped, mascot_line_bounds = _fit_text_block(
+            mascot_line_text,
+            max_width=round(safe_area.width * 0.7),
+            max_height=round(canvas_height * 0.07),
+            maximum_font_size=max(1, round(canvas_width * 0.036)),
+            minimum_font_size=max(1, round(canvas_width * 0.024)),
+            multiline=True,
+        )
+        mascot_line_text_width = round(mascot_line_bounds[2] - mascot_line_bounds[0])
+        mascot_line_text_height = round(mascot_line_bounds[3] - mascot_line_bounds[1])
+        mascot_line_box_width = min(
+            safe_area.width,
+            mascot_line_text_width + mascot_line_horizontal_padding * 2,
+        )
+        mascot_line_box_height = (
+            mascot_line_text_height + mascot_line_vertical_padding * 2
+        )
+
     if intent_by_id:
         vertical_anchors = {
             "top": 0.0,
@@ -462,7 +497,17 @@ def _prepare_cta_layout(
             headline_height,
         )
         action_box = intended_box("action", action_width, action_height)
+        mascot_line_box = (
+            intended_box(
+                "mascot_line",
+                mascot_line_box_width,
+                mascot_line_box_height,
+            )
+            if mascot_line_text is not None and "mascot_line" in intent_by_id
+            else None
+        )
     else:
+        mascot_line_box = None
         block_heights = (
             logo.height,
             hero.height,
@@ -496,7 +541,9 @@ def _prepare_cta_layout(
         headline_box = centered_box(headline_width, headline_height)
         action_box = centered_box(action_width, action_height)
 
-    element_boxes = (logo_box, hero_box, headline_box, action_box)
+    element_boxes = (logo_box, hero_box, headline_box, action_box) + (
+        (mascot_line_box,) if mascot_line_box is not None else ()
+    )
     if not all(safe_area.contains(box) for box in element_boxes):
         raise StoryboardValidationError(
             "brand layout intent places content outside the portrait safe area"
@@ -514,10 +561,9 @@ def _prepare_cta_layout(
                     "brand layout intent produces overlapping elements"
                 )
     stack = LayoutBox(
-        x=min(logo_box.x, hero_box.x, headline_box.x, action_box.x),
+        x=min(box.x for box in element_boxes),
         y=logo_box.y,
-        width=max(logo_box.right, hero_box.right, headline_box.right, action_box.right)
-        - min(logo_box.x, hero_box.x, headline_box.x, action_box.x),
+        width=max(box.right for box in element_boxes) - min(box.x for box in element_boxes),
         height=action_box.bottom - logo_box.y,
     )
     layout = CtaLayout(
@@ -533,6 +579,11 @@ def _prepare_cta_layout(
         action_text=action_text,
         headline_font_size=headline_font.size,
         action_font_size=action_font.size,
+        mascot_line=mascot_line_box,
+        mascot_line_text=mascot_line_wrapped,
+        mascot_line_font_size=(
+            mascot_line_font.size if mascot_line_font is not None else None
+        ),
     )
     return _PreparedCtaLayout(
         layout=layout,
@@ -543,6 +594,9 @@ def _prepare_cta_layout(
         headline_text_bbox=headline_bounds,
         action_font=action_font,
         action_text_bbox=action_bounds,
+        mascot_line_font=mascot_line_font if mascot_line_box is not None else None,
+        mascot_line_wrapped=mascot_line_wrapped if mascot_line_box is not None else None,
+        mascot_line_text_bbox=mascot_line_bounds if mascot_line_box is not None else None,
     )
 
 
@@ -591,22 +645,26 @@ def _render_cta_card(
     *,
     asset_root: Path,
     size: tuple[int, int],
+    include_hero: bool = True,
+    prepared: "_PreparedCtaLayout | None" = None,
 ) -> Image.Image:
-    prepared = _prepare_cta_layout(
-        scene,
-        asset_root=asset_root,
-        size=size,
-    )
+    if prepared is None:
+        prepared = _prepare_cta_layout(
+            scene,
+            asset_root=asset_root,
+            size=size,
+        )
     layout = prepared.layout
     canvas = Image.new("RGBA", size, _BACKGROUND)
     canvas.alpha_composite(
         prepared.logo_image,
         (layout.logo.x, layout.logo.y),
     )
-    canvas.alpha_composite(
-        prepared.hero_image,
-        (layout.hero.x, layout.hero.y),
-    )
+    if include_hero:
+        canvas.alpha_composite(
+            prepared.hero_image,
+            (layout.hero.x, layout.hero.y),
+        )
     draw = ImageDraw.Draw(canvas)
     _draw_text_in_box(
         draw,
@@ -636,6 +694,32 @@ def _render_cta_card(
         text_bbox=prepared.action_text_bbox,
         fill=_TEXT,
     )
+    if (
+        layout.mascot_line is not None
+        and prepared.mascot_line_wrapped is not None
+        and prepared.mascot_line_font is not None
+        and prepared.mascot_line_text_bbox is not None
+    ):
+        bubble_radius = min(24, layout.mascot_line.height // 2)
+        draw.rounded_rectangle(
+            (
+                layout.mascot_line.x,
+                layout.mascot_line.y,
+                layout.mascot_line.right,
+                layout.mascot_line.bottom,
+            ),
+            radius=bubble_radius,
+            fill=_YELLOW,
+        )
+        _draw_text_in_box(
+            draw,
+            box=layout.mascot_line,
+            text=prepared.mascot_line_wrapped,
+            font=prepared.mascot_line_font,
+            text_bbox=prepared.mascot_line_text_bbox,
+            fill=_TEXT,
+            spacing=max(3, round(prepared.mascot_line_font.size * 0.14)),
+        )
     return canvas
 
 
@@ -897,6 +981,122 @@ def _animate_card(
     )
 
 
+def mascot_pop_scale(
+    t: float,
+    *,
+    pop_duration: float = 0.4,
+    overshoot: float = 1.15,
+    idle_amplitude: float = 0.025,
+    idle_period: float = 1.6,
+) -> float:
+    """Bounce-in overshoot-then-settle, then a gentle sinusoidal idle pulse.
+
+    A pure function of elapsed seconds so the curve is directly unit-testable
+    without rendering anything; see RFC-0008.
+    """
+
+    if t < 0:
+        t = 0.0
+    if t < pop_duration:
+        rise = pop_duration * 0.45
+        if t < rise:
+            return (t / rise) * overshoot
+        settle_progress = (t - rise) / (pop_duration - rise)
+        return overshoot - settle_progress * (overshoot - 1.0)
+    idle_t = t - pop_duration
+    return 1.0 + idle_amplitude * math.sin(2 * math.pi * idle_t / idle_period)
+
+
+def _render_animated_cta_clip(
+    scene: StoryboardScene,
+    *,
+    asset_root: Path,
+    target: Path,
+    duration_seconds: float,
+    size: tuple[int, int],
+    frames_dir: Path,
+    fps: int = 30,
+) -> None:
+    """Render the CTA with the mascot bouncing in and idling independently
+    of its static background — see RFC-0008. Frames are pre-composited in
+    Pillow (matching how every other pixel in this renderer is drawn) rather
+    than expressed as a live ffmpeg time filter."""
+
+    prepared = _prepare_cta_layout(scene, asset_root=asset_root, size=size)
+    layout = prepared.layout
+    background = _render_cta_card(
+        scene,
+        asset_root=asset_root,
+        size=size,
+        include_hero=False,
+        prepared=prepared,
+    ).convert("RGBA")
+    hero = prepared.hero_image
+    hero_center_x = layout.hero.x + layout.hero.width / 2
+    hero_center_y = layout.hero.y + layout.hero.height / 2
+
+    # The vector rig (RFC-0009) performs a full raise/wave/settle arc from
+    # real approved poses; a storyboard whose asset root lacks those exact
+    # source files falls back to the Priority-1 static-image pop/idle only,
+    # so this stays optional rather than a hard requirement of every CTA.
+    try:
+        rig: MascotRig | None = MascotRig(asset_root)
+    except (MascotRigError, OSError):
+        rig = None
+
+    frames_dir.mkdir(parents=True, exist_ok=True)
+    frame_count = max(1, round(duration_seconds * fps))
+    for index in range(frame_count):
+        t = index / fps
+        # resvg fits the rig's own aspect ratio inside (width, height) rather
+        # than stretching to it; this only comes out exact because the PNG
+        # hero asset and the rig's SVG viewBox share the same 704:504 ratio
+        # (verified, not assumed — see RFC-0009).
+        performed = (
+            rig.render(arm_raise_factor(t), width=hero.width, height=hero.height)
+            if rig is not None
+            else hero
+        )
+        scale = mascot_pop_scale(t)
+        scaled_width = max(1, round(performed.width * scale))
+        scaled_height = max(1, round(performed.height * scale))
+        scaled_hero = performed.resize((scaled_width, scaled_height), Image.LANCZOS)
+        frame = background.copy()
+        frame.alpha_composite(
+            scaled_hero,
+            (
+                round(hero_center_x - scaled_width / 2),
+                round(hero_center_y - scaled_height / 2),
+            ),
+        )
+        frame.convert("RGB").save(
+            frames_dir / f"frame-{index:04d}.png", format="PNG"
+        )
+
+    _run_ffmpeg(
+        [
+            "-framerate",
+            str(fps),
+            "-i",
+            str(frames_dir / "frame-%04d.png"),
+            "-t",
+            f"{duration_seconds:.3f}",
+            "-an",
+            "-vf",
+            "setsar=1,format=yuv420p",
+            "-c:v",
+            "libx264",
+            "-preset",
+            "medium",
+            "-crf",
+            "18",
+            "-pix_fmt",
+            "yuv420p",
+            str(target),
+        ]
+    )
+
+
 def _concat_scenes(scene_paths: list[Path], target: Path) -> None:
     arguments: list[str] = []
     for scene_path in scene_paths:
@@ -1078,14 +1278,25 @@ def render_mixed_media_video(
         ),
         size=size,
     )
-    _animate_card(
-        cta_card,
-        cta_base_clip,
-        duration_seconds=(
-            storyboard.scenes[2].end_seconds - storyboard.scenes[2].start_seconds
-        ),
-        size=size,
+    cta_duration_seconds = (
+        storyboard.scenes[2].end_seconds - storyboard.scenes[2].start_seconds
     )
+    if storyboard.scenes[2].mascot_line is not None:
+        _render_animated_cta_clip(
+            storyboard.scenes[2],
+            asset_root=asset_root,
+            target=cta_base_clip,
+            duration_seconds=cta_duration_seconds,
+            size=size,
+            frames_dir=render_dir / "cta-mascot-frames",
+        )
+    else:
+        _animate_card(
+            cta_card,
+            cta_base_clip,
+            duration_seconds=cta_duration_seconds,
+            size=size,
+        )
 
     hook_clip = render_dir / "01-hook.mp4"
     product_clip = render_dir / "02-product-demo.mp4"

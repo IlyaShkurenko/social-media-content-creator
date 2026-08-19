@@ -61,6 +61,8 @@ def concept(
         "hook_camera": "natural handheld push-in",
         "hook_voiceover": "Planning a trip should not feel like another job.",
         "hook_voice_delivery": "A tired, matter-of-fact person stating the obvious.",
+        "mascot_line": "tict sorts the chaos for you.",
+        "mascot_pose": "excited",
         "hook_beats": [
             {
                 "start_seconds": 0.0,
@@ -225,8 +227,22 @@ def test_story_2_3_compilation_changes_only_hook_intent() -> None:
     assert len(compiled) == 3
     assert len({item.storyboard.hypothesis for item in compiled}) == 3
     for item in compiled:
-        assert item.storyboard.scenes[1:] == template.scenes[1:]
+        # product_demo is untouched; the hook always changes.
+        assert item.storyboard.scenes[1] == template.scenes[1]
         assert item.storyboard.scenes[0] != template.scenes[0]
+        # cta: only the mascot line/pose/hero-asset/layout_intent may differ —
+        # headline, action copy, logo, and the base layer stay exact (VOICE-1.1).
+        cta, template_cta = item.storyboard.scenes[2], template.scenes[2]
+        assert cta.onscreen_text == template_cta.onscreen_text
+        assert cta.call_to_action == template_cta.call_to_action
+        assert cta.media_plan.base == template_cta.media_plan.base
+        assert cta.mascot_line == item.concept.mascot_line
+        assert cta.mascot_pose == item.concept.mascot_pose
+        # The mascot's line replaces the generic tagline as the spoken CTA
+        # narration (Priority 2): same text drives both the caption and TTS.
+        assert cta.voiceover == item.concept.mascot_line
+        assert cta.voiceover != template_cta.voiceover
+        assert cta != template_cta
 
 
 def test_story_2_3_product_reveal_is_kept_out_of_generated_hook() -> None:

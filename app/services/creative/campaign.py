@@ -18,6 +18,8 @@ from app.services.creative.runway import (
 )
 from app.services.creative.storyboard import (
     CreativeModel,
+    LayoutElementIntent,
+    SceneLayoutIntent,
     Storyboard,
     StoryboardScene,
     VisualIntent,
@@ -60,6 +62,8 @@ class AdvertisingConcept(CreativeModel):
     hook_voice_delivery: str = Field(min_length=1)
     hook_beats: list[HookBeat] = Field(min_length=1)
     product_bridge: str = Field(min_length=1)
+    mascot_line: str = Field(min_length=1)
+    mascot_pose: Literal["neutral", "excited"]
     quality_criteria: list[str] = Field(min_length=1)
 
 
@@ -104,6 +108,26 @@ class AdvertisingConceptResponse(BaseModel):
     )
     hook_beats: list[HookBeatResponse]
     product_bridge: str
+    mascot_line: str = Field(
+        description=(
+            "A short line (under 45 characters, so it comfortably fits "
+            "spoken aloud inside the closing card's ~4-second duration) in "
+            "the tict mascot's voice, thematically tied to this concept's "
+            "specific hypothesis — never generic boilerplate reused across "
+            "concepts. It is both the speech-bubble caption above the "
+            "mascot and the spoken line for that card, replacing the "
+            "generic tagline voiceover."
+        )
+    )
+    mascot_pose: Literal["neutral", "excited"] = Field(
+        description=(
+            "Which approved mascot pose fits this line: 'neutral' is a calm "
+            "pin-shaped mascot with both arms resting straight out to the "
+            "sides; 'excited' is the same mascot with both arms raised in a "
+            "wave or cheer. Both use the identical calm smiling face — only "
+            "the arms differ."
+        )
+    )
     quality_criteria: list[str]
 
 
@@ -212,6 +236,13 @@ character terms. Never describe literal audio mechanics (volume, syllable
 stress, pacing percentages, fade behaviour) — an instructable narration model
 performs worse, not better, when told how to manipulate its own delivery
 mechanically instead of who to sound like.
+
+For each concept also write one short mascot_line (under 45 characters, so
+it fits spoken aloud in the closing card's ~4-second duration) in the tict
+mascot's own voice, specific to that concept's hypothesis — not a generic
+tagline reused across concepts. This line is both shown as a caption and
+spoken aloud as the closing card's narration. Also choose a mascot_pose of
+"neutral" or "excited" matching the two approved mascot arm poses.
 
 Set schema_version to exactly "1.0". Every concept_id must be a unique lowercase
 kebab-case identifier containing only a-z, 0-9, and hyphens; never use underscores.
@@ -368,16 +399,71 @@ def _compile_hook_scene(
     )
 
 
+_MASCOT_ASSET_BY_POSE = {
+    "neutral": "tict-mascot-1.png",
+    "excited": "tict-mascot-2.png",
+}
+
+
+def _compile_cta_scene(
+    template_cta: StoryboardScene,
+    concept: AdvertisingConcept,
+) -> StoryboardScene:
+    """Add the concept's mascot line/pose and speak it as the card's narration.
+
+    Replaces only the CTA's spoken voiceover — onscreen_text, call_to_action,
+    logo, and layout stay exactly the template's. The bottom subtitle overlay
+    is already unconditionally suppressed for CTA scenes, so this cannot
+    duplicate the mascot's line as a second on-screen caption.
+    """
+
+    hero_asset_id = _MASCOT_ASSET_BY_POSE[concept.mascot_pose]
+    overlays = [
+        layer.model_copy(update={"asset_id": hero_asset_id})
+        if layer.kind == "brand_asset" and layer.role == "hero"
+        else layer
+        for layer in template_cta.media_plan.overlays
+    ]
+    media_plan = template_cta.media_plan.model_copy(update={"overlays": overlays})
+
+    existing_intent = template_cta.layout_intent
+    mascot_line_element = LayoutElementIntent(
+        element_id="mascot_line",
+        vertical_region="upper",
+        horizontal_alignment="center",
+        scale="medium",
+    )
+    if existing_intent is None:
+        layout_intent = SceneLayoutIntent(elements=[mascot_line_element])
+    else:
+        layout_intent = existing_intent.model_copy(
+            update={"elements": [*existing_intent.elements, mascot_line_element]}
+        )
+
+    return template_cta.model_copy(
+        update={
+            "media_plan": media_plan,
+            "layout_intent": layout_intent,
+            "voiceover": concept.mascot_line,
+            "mascot_line": concept.mascot_line,
+            "mascot_pose": concept.mascot_pose,
+        }
+    )
+
+
 def compile_concept_storyboards(
     batch: HypothesisBatch,
     *,
     template_storyboard: Storyboard,
 ) -> list[CompiledConceptStoryboard]:
-    """Replace hook intent while preserving exact product-demo and CTA scenes."""
+    """Replace hook intent and add the mascot line; product-demo and the rest
+    of the CTA stay exactly as the template declares."""
 
     template = validate_storyboard(template_storyboard)
     if template.scenes[0].purpose != "hook":
         raise CampaignPlanningError("the controlled template must begin with a hook")
+    if template.scenes[-1].purpose != "cta":
+        raise CampaignPlanningError("the controlled template must end with a cta")
 
     compiled: list[CompiledConceptStoryboard] = []
     for concept in batch.concepts:
@@ -386,11 +472,12 @@ def compile_concept_storyboards(
             concept,
             product_name=batch.product_name,
         )
+        cta = _compile_cta_scene(template.scenes[-1], concept)
         storyboard = template.model_copy(
             update={
                 "storyboard_id": f"{template.storyboard_id}-{concept.concept_id}",
                 "hypothesis": concept.hypothesis,
-                "scenes": [hook, *template.scenes[1:]],
+                "scenes": [hook, *template.scenes[1:-1], cta],
             }
         )
         compiled.append(

@@ -554,6 +554,8 @@ def map_fragmentation_contract() -> dict[str, Any]:
             "hook_camera": "A controlled overhead push toward the scattered map.",
             "hook_voiceover": "Saved everything, but planned nothing?",
             "hook_voice_delivery": "A tired, matter-of-fact person stating the obvious.",
+            "mascot_line": "tict sorts the chaos for you.",
+            "mascot_pose": "excited",
             "hook_beats": [
                 {
                     "start_seconds": 0.0,

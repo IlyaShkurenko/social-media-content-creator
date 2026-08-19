@@ -49,6 +49,8 @@ def _concept() -> dict:
             "You saved fifty spots, but how are you spending day one?"
         ),
         "hook_voice_delivery": "A genuinely confused, quietly anxious person thinking out loud.",
+        "mascot_line": "tict sorts the chaos for you.",
+        "mascot_pose": "excited",
         "hook_beats": [
             {
                 "start_seconds": 0.0,

@@ -8,13 +8,14 @@ import subprocess
 from PIL import Image
 
 from app.services.creative.renderer import (
+    mascot_pop_scale,
     measure_cta_layout,
     render_brand_scene_card,
     render_mixed_media_video,
     render_subtitle_overlay,
     write_scene_subtitles,
 )
-from app.services.creative.storyboard import validate_storyboard
+from app.services.creative.storyboard import LayoutElementIntent, validate_storyboard
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -173,6 +174,136 @@ def test_brand_1_6_cta_layout_accepts_alternate_hero_and_longer_copy() -> None:
         for first, second in zip(elements, elements[1:])
     )
     assert layout.action_text == "Explore your complete trip plan"
+
+
+def _cta_scene_with_mascot_line(*, text: str = "tict sorts the chaos for you."):
+    """Mirror what campaign.py's _compile_cta_scene produces (RFC-0008)."""
+
+    storyboard = validate_storyboard(
+        json.loads(STORYBOARD_PATH.read_text(encoding="utf-8"))
+    )
+    scene = storyboard.scenes[2]
+    mascot_line_element = LayoutElementIntent(
+        element_id="mascot_line",
+        vertical_region="upper",
+        horizontal_alignment="center",
+        scale="medium",
+    )
+    layout_intent = scene.layout_intent.model_copy(
+        update={"elements": [*scene.layout_intent.elements, mascot_line_element]}
+    )
+    return storyboard, scene.model_copy(
+        update={
+            "layout_intent": layout_intent,
+            "mascot_line": text,
+            "mascot_pose": "excited",
+        }
+    )
+
+
+def test_voice_1_1_mascot_pop_scale_bounces_then_settles_then_idles() -> None:
+    assert mascot_pop_scale(0.0) == 0.0
+    # Rises through the first ~45% of the pop window, overshooting 1.0.
+    assert 0.4 < mascot_pop_scale(0.1) < 0.9
+    mid_rise = mascot_pop_scale(0.18)
+    assert mid_rise > 1.05
+    # Settles back to exactly 1.0 at the pop window's end.
+    assert abs(mascot_pop_scale(0.4) - 1.0) < 1e-9
+    # The idle phase oscillates in a small, bounded band around 1.0.
+    idle_samples = [mascot_pop_scale(0.4 + step * 0.1) for step in range(20)]
+    assert all(0.95 <= sample <= 1.05 for sample in idle_samples)
+    assert max(idle_samples) > 1.0
+    assert min(idle_samples) < 1.0
+    # Never asked to render behind the current time.
+    assert mascot_pop_scale(-1.0) == mascot_pop_scale(0.0)
+
+
+def test_brand_1_7_mascot_line_adds_a_fifth_non_overlapping_element() -> None:
+    _storyboard, scene = _cta_scene_with_mascot_line()
+
+    layout = measure_cta_layout(scene, asset_root=ASSET_ROOT, size=(720, 1280))
+
+    assert layout.mascot_line is not None
+    assert layout.mascot_line_text == "tict sorts the chaos for you."
+    elements = (
+        layout.logo,
+        layout.mascot_line,
+        layout.hero,
+        layout.headline,
+        layout.action,
+    )
+    assert all(layout.safe_area.contains(element) for element in elements)
+    for first, second in zip(elements, elements[1:]):
+        assert first.bottom <= second.top
+
+
+def test_brand_1_7_cta_without_mascot_line_has_no_fifth_element() -> None:
+    storyboard = validate_storyboard(
+        json.loads(STORYBOARD_PATH.read_text(encoding="utf-8"))
+    )
+    layout = measure_cta_layout(
+        storyboard.scenes[2], asset_root=ASSET_ROOT, size=(720, 1280)
+    )
+    assert layout.mascot_line is None
+
+
+def test_brand_1_7_animated_mascot_cta_renders_a_moving_mascot_over_a_still_background(
+    tmp_path: Path,
+) -> None:
+    hook = tmp_path / "hook.mp4"
+    subprocess.run(
+        [
+            "ffmpeg",
+            "-loglevel",
+            "error",
+            "-y",
+            "-f",
+            "lavfi",
+            "-i",
+            "color=c=#335577:s=360x640:r=30:d=2",
+            "-c:v",
+            "libx264",
+            "-pix_fmt",
+            "yuv420p",
+            str(hook),
+        ],
+        check=True,
+    )
+    storyboard, cta_scene = _cta_scene_with_mascot_line()
+    model = storyboard.model_copy(
+        update={"scenes": [storyboard.scenes[0], storyboard.scenes[1], cta_scene]}
+    )
+
+    rendered = render_mixed_media_video(
+        model,
+        hook_video_path=hook,
+        asset_root=ASSET_ROOT,
+        output_dir=tmp_path / "render",
+    )
+
+    probe = subprocess.run(
+        [
+            "ffprobe",
+            "-v",
+            "error",
+            "-show_format",
+            "-of",
+            "json",
+            str(rendered.video_path),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    assert 14.9 <= float(json.loads(probe.stdout)["format"]["duration"]) <= 15.1
+
+    frames_dir = tmp_path / "render" / "cta-mascot-frames"
+    frame_paths = sorted(frames_dir.glob("frame-*.png"))
+    cta_duration = model.scenes[2].end_seconds - model.scenes[2].start_seconds
+    assert len(frame_paths) == round(cta_duration * 30)
+    # The mascot pops in and idles — an early frame and a mid frame must
+    # differ (the background around it does not).
+    assert digest(frame_paths[0]) != digest(frame_paths[len(frame_paths) // 2])
 
 
 def test_adpipe_1_3_renderer_creates_exact_fifteen_second_portrait_video(

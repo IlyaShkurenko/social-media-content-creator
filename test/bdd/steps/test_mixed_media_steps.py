@@ -432,6 +432,8 @@ def _campaign_concept(
         "hook_camera": "natural handheld push-in",
         "hook_voiceover": "Planning a trip should not feel like another job.",
         "hook_voice_delivery": "A tired, matter-of-fact person stating the obvious.",
+        "mascot_line": "tict sorts the chaos for you.",
+        "mascot_pose": "excited",
         "hook_beats": [
             {
                 "start_seconds": 0.0,
