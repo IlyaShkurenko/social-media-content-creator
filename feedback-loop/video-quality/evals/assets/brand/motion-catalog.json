@@ -2,5 +2,19 @@
   "logo": {"path": "tict-logo.png", "kind": "brand_asset", "description": "Exact approved tict logo. Preserve identity and aspect ratio."},
   "mascot": {"path": "tict-mascot-1.png", "kind": "brand_asset", "description": "Exact yellow smiling map-pin mascot with outstretched arms. Full raster is wide; preserve proportions."},
   "trip_plan": {"path": "screens/Plan_Overview_Screen.png", "kind": "product_capture", "description": "Raw tict app capture, UAE Dubai trip overview. Exact interface; do not redraw. Can crop or zoom."},
-  "assistant": {"path": "screens/AI_Assistant_Chat_Screen_Phone_Size.png", "kind": "product_capture", "description": "Raw tict AI travel assistant chat capture. Exact interface; do not redraw."}
+  "assistant": {"path": "screens/AI_Assistant_Chat_Screen_Phone_Size.png", "kind": "product_capture", "description": "Raw tict AI travel assistant chat capture. Exact interface; do not redraw."},
+  "assistant_large": {"path": "screens/AI_Assistant_Chat_Screen_Bigger_Vertical_Size.png", "kind": "product_capture", "description": "Larger vertical AI assistant capture. Use exact supplied interface."},
+  "home": {"path": "screens/Home_Screen.png", "kind": "product_capture", "description": "Raw home screen capture. Use exact supplied interface."},
+  "plan_by_days": {"path": "screens/Plan_By_Days_Screen_Huge_Verical_Size.png", "kind": "product_capture", "description": "Tall day-by-day trip plan capture. Can crop or pan to reveal its content; do not redraw."},
+  "mascot_2": {"path": "tict-mascot-2.png", "kind": "brand_asset", "description": "Alternative supplied raster mascot. Preserve identity and proportions."},
+  "logo_vector": {"path": "tict-logo.svg", "kind": "brand_asset", "description": "Supplied vector tict logo. Preserve exact artwork."},
+  "logo_source": {"path": "Logo.svg", "kind": "brand_asset", "description": "Supplied Logo.svg artwork. Preserve exact artwork."},
+  "mascot_vector": {"path": "Mascot.svg", "kind": "brand_asset", "description": "Supplied Mascot.svg artwork. Preserve exact artwork."},
+  "persona_1": {"path": "persona_tict 1.svg", "kind": "brand_asset", "description": "Supplied mascot/persona variant 1. Inspect artwork to choose a suitable pose."},
+  "persona_2": {"path": "persona_tict 2.svg", "kind": "brand_asset", "description": "Supplied mascot/persona variant 2. Inspect artwork to choose a suitable pose."},
+  "persona_2_2": {"path": "persona_tict 2-2.svg", "kind": "brand_asset", "description": "Supplied mascot/persona variant 2-2. Inspect artwork to choose a suitable pose."},
+  "persona_3_2": {"path": "persona_tict-3 2.svg", "kind": "brand_asset", "description": "Supplied mascot/persona variant 3-2. Inspect artwork to choose a suitable pose."},
+  "persona_10_1": {"path": "persona_tict-10 1.svg", "kind": "brand_asset", "description": "Supplied mascot/persona variant 10-1. Inspect artwork to choose a suitable pose."},
+  "persona_15_2": {"path": "persona_tict-15 2.svg", "kind": "brand_asset", "description": "Supplied mascot/persona variant 15-2. Inspect artwork to choose a suitable pose."},
+  "persona_15_3": {"path": "persona_tict-15 3.svg", "kind": "brand_asset", "description": "Supplied mascot/persona variant 15-3. Inspect artwork to choose a suitable pose."}
 }

@@ -35,6 +35,16 @@ Astra defaults to `high` reasoning; override with `--author-reasoning` or
 `[app].motion_author_reasoning`. Model IDs are deliberately limited to verified
 adapters/pricing; unknown models fail rather than silently use another provider.
 
+All catalog images are attached, including nested paths; there is no local
+eight-entry or 5 MB cutoff. SVGs receive locally rendered PNG previews while their
+original vector files remain available to the composition. Each call writes
+`<stage>.references.json` listing image versus metadata delivery. Non-image media
+remain catalog metadata for the author. Provider request/context limits and the
+shared spending ceiling still apply; files are not silently dropped to fit them.
+The brand catalog covers all current artwork/screens; adding new files later still
+requires adding their catalog entries. `--materials-from` intentionally uses the
+old run's frozen material pool, not newly added catalog materials.
+
 Each run retains `author.json` and per-call public output/usage. Astra first counts
 text/image tokens, then checks input plus maximum output cost without reserving
 funds. Its conservative charge uses the input cache-write ceiling and all output

@@ -212,3 +212,64 @@ def test_request_rejection_retains_reason_without_charge_or_key(tmp_path, monkey
     with pytest.raises(RuntimeError, match="already submitted"):
         author("author", {}, tmp_path)
     assert len(calls) == 2
+
+
+@pytest.mark.parametrize("provider", ["astra", "gemini"])
+def test_all_references_including_ninth_and_large_file(tmp_path, monkeypatch, provider):
+    import base64
+    catalog = {}
+    for index in range(10):
+        path = tmp_path / f"image-{index}.png"
+        path.write_bytes(b"fixture" if index != 9 else b"x" * 5_000_001)
+        catalog[f"image_{index}"] = {"path": str(path)}
+    calls = []
+    def post(url, **kwargs):
+        calls.append(kwargs["json"])
+        if url.endswith("input_tokens"):
+            return httpx.Response(200, json={"input_tokens": 100})
+        if provider == "astra":
+            return httpx.Response(200, json=answer())
+        return httpx.Response(200, json={"usageMetadata": {"promptTokenCount": 100,
+            "candidatesTokenCount": 200}, "candidates": [{"finishReason": "STOP",
+            "content": {"parts": [{"text": "export default () => <div />;"}]}}]})
+    monkeypatch.setattr(httpx, "post", post)
+    author = create_author({"openai_api_key": "key", "gemini_api_key": "gem"},
+                            budget(tmp_path), "run", catalog, provider=provider)
+    author("author", {}, tmp_path)
+    body = calls[-1]
+    if provider == "astra":
+        images = [p["image_url"].split(",", 1)[1] for p in body["input"][0]["content"]
+                  if p["type"] == "input_image"]
+    else:
+        images = [p["inlineData"]["data"] for p in body["contents"][0]["parts"] if "inlineData" in p]
+    assert len(images) == 10
+    assert len(base64.b64decode(images[-1])) == 5_000_001
+    assert len(json.loads((tmp_path / "author.references.json").read_text())) == 10
+
+
+def test_svg_preview_preserves_original(tmp_path):
+    from app.services.creative.motion import image_reference
+    path = tmp_path / "art.svg"
+    original = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="10"><rect width="20" height="10" fill="yellow"/></svg>'
+    path.write_text(original)
+    mime, data = image_reference(path)
+    assert mime == "image/png" and data.startswith(b"\x89PNG")
+    assert path.read_text() == original
+
+
+def test_svg_external_reference_is_explicit_error(tmp_path):
+    from app.services.creative.motion import image_reference
+    path = tmp_path / "art.svg"
+    path.write_text('<svg xmlns="http://www.w3.org/2000/svg"><image href="file:///private/secret.png"/></svg>')
+    with pytest.raises(ValueError, match="self-contained"):
+        image_reference(path)
+
+
+def test_brand_catalog_covers_all_current_images():
+    from app.services.creative.motion import REPO, managed_file
+    root = REPO / "feedback-loop/video-quality/evals/assets/brand"
+    catalog = json.loads((root / "motion-catalog.json").read_text())
+    catalog_paths = {managed_file(root, entry["path"]) for entry in catalog.values()}
+    media = {p.resolve() for p in root.rglob("*") if p.is_file()
+             and p.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp", ".svg"}}
+    assert catalog_paths == media

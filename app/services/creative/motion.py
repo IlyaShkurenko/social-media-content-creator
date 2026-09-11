@@ -5,6 +5,7 @@ import argparse
 import hashlib
 import json
 import math
+import mimetypes
 import os
 from pathlib import Path
 import re
@@ -14,6 +15,7 @@ import socket
 import subprocess
 import sys
 import tempfile
+import xml.etree.ElementTree as ET
 
 
 REPO = Path(__file__).resolve().parents[3]
@@ -28,6 +30,35 @@ def write_json(path: Path, value: object) -> None:
 def sha256(path: Path) -> str:
     with path.open("rb") as handle:
         return hashlib.file_digest(handle, "sha256").hexdigest()
+
+
+def image_reference(path: Path) -> tuple[str, bytes] | None:
+    """Attach every catalog image; rasterize vector/other image formats locally."""
+    mime = mimetypes.guess_type(path)[0] or "application/octet-stream"
+    if not mime.startswith("image/"):
+        return None  # Audio/video remain catalog metadata, not fake image inputs.
+    if mime == "image/svg+xml":
+        import resvg_py
+        svg = path.read_text()
+        if re.search(r"<!DOCTYPE|<!ENTITY|@import", svg, re.I):
+            raise ValueError(f"SVG reference must be self-contained: {path.name}")
+        root = ET.fromstring(svg)
+        refs = [v for element in root.iter() for k, v in element.attrib.items()
+                if k.rsplit("}", 1)[-1] == "href"]
+        refs += re.findall(r"url\(\s*['\"]?([^)'\"]+)", svg, re.I)
+        if any(not value.strip().startswith(("#", "data:")) for value in refs):
+            raise ValueError(f"SVG reference must be self-contained: {path.name}")
+        return "image/png", bytes(resvg_py.svg_to_bytes(svg_string=svg))
+    if mime in {"image/png", "image/jpeg", "image/webp"}:
+        return mime, path.read_bytes()
+    import io
+    from PIL import Image
+    with Image.open(path) as picture:
+        if getattr(picture, "n_frames", 1) > 1:
+            raise ValueError(f"Animated image needs explicit frame handling: {path.name}")
+        output = io.BytesIO()
+        picture.convert("RGBA").save(output, format="PNG")
+        return "image/png", output.getvalue()
 
 
 def managed_file(root: Path, name: str) -> Path:

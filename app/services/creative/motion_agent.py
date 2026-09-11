@@ -5,7 +5,6 @@ import argparse
 import base64
 import json
 import math
-import mimetypes
 from pathlib import Path
 import re
 import shutil
@@ -18,7 +17,7 @@ import httpx
 
 from app.services.creative.budget import IterationBudgetLedger
 from app.services.creative.motion import (
-    REPO, managed_file, render_project, sha256, validate_project, write_json,
+    REPO, image_reference, managed_file, render_project, sha256, validate_project, write_json,
 )
 
 
@@ -364,12 +363,17 @@ class GeminiAuthor:
         self.ledger.ensure_available(allowance)
         parts = [{"text": json.dumps(payload, ensure_ascii=False)}]
         # Source assets are supplied for visual understanding, not instructions.
-        for aid, item in list(self.catalog.items())[:8]:
+        references = []
+        for aid, item in self.catalog.items():
             path = Path(item["path"])
-            mime = mimetypes.guess_type(path)[0]
-            if mime in {"image/png", "image/jpeg"} and path.stat().st_size < 5_000_000:
+            visual = image_reference(path)
+            references.append({"asset_id": aid, "file": path.name,
+                               "delivery": "image" if visual else "catalog_metadata"})
+            if visual:
+                mime, data = visual
                 parts.extend([{"text": f"Reference asset {aid}:"}, {"inlineData": {
-                    "mimeType": mime, "data": base64.b64encode(path.read_bytes()).decode()}}])
+                    "mimeType": mime, "data": base64.b64encode(data).decode()}}])
+        write_json(directory / f"{stage}.references.json", references)
         write_json(marker, {"operation": operation, "status": "submitted", "model": self.model})
         charged = False
         started = time.monotonic()
