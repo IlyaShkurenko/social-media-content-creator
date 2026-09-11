@@ -8,7 +8,13 @@ The project is intended to turn a product brief into multiple publishable conten
 
 The repository already contains a working short-video assembly pipeline. It can generate scripts, find or accept media, synthesize voiceover, create subtitles, mix music, and render final videos.
 
-The broader advertising-production workflow is under active development. Structured storyboards, generated video providers, mascot animation, exact product-screen composition, automated visual evaluation, and campaign-performance feedback are planned capabilities rather than completed features.
+The broader advertising-production workflow is under active development. Experimental storyboard campaigns, a Runway adapter, exact product-screen composition, mascot motion and diagnostic video evaluators are implemented as opt-in paths. Campaign-performance learning and production-quality creative selection are not yet established.
+
+An additional [agent-authored React/Remotion workflow](motion/README.md) now creates
+the composition itself from a brief instead of filling the legacy montage slots.
+It supports material requests, isolated local rendering, bounded build repair and
+confirmed-feedback revisions, retaining each MP4 and editable source. It currently
+runs through a separate CLI on macOS Apple Silicon, not the existing WebUI button.
 
 ## Current capabilities
 
@@ -63,7 +69,11 @@ The intended production system will support:
 6. Clips are normalized, ordered, composited, and mixed with narration and music.
 7. FFmpeg renders the final video into the task artifact directory.
 
-The current pipeline is primarily an orchestration and rendering system. It does not yet contain a general-purpose generative video model. Generated-video providers will be connected through explicit adapters so that models and costs can be compared experimentally.
+This legacy pipeline is primarily an orchestration and rendering system; it does
+not contain a locally trained general-purpose video model. The experimental paths
+use external models through explicit adapters. In the motion workflow, the author
+model writes React source while Remotion/FFmpeg execute it; Runway remains an
+optional material tool, not the renderer.
 
 ## Local setup
 

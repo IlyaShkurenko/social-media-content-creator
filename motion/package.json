@@ -1,0 +1,13 @@
+{
+  "name": "social-content-motion-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@remotion/bundler": "4.0.523",
+    "@remotion/renderer": "4.0.523",
+    "remotion": "4.0.523",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  }
+}

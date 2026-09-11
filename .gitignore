@@ -15,6 +15,8 @@ __pycache__
 logs/
 
 node_modules
+/motion/.remotion/
+/motion/.cache/
 # VuePress 默认临时文件目录
 /sites/docs/.vuepress/.temp
 # VuePress 默认缓存目录
@@ -34,6 +36,7 @@ debug/
 debug_*.py
 test_*.py
 !test/services/test_*.py
+!test/bdd/steps/test_*.py
 !test/test_*.py
 !feedback-loop/video-quality/evals/tests/test_*.py
 streamlit.log

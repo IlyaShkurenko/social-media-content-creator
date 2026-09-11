@@ -1,0 +1,21 @@
+{
+  "status": "architecture_pilot_delivered_pending_creative_review",
+  "technically_valid_ad_outputs": 3,
+  "distinct_request_count": 2,
+  "technical_pass": true,
+  "runtime_authorship_observed": true,
+  "automatic_compile_repair_observed": true,
+  "confirmed_feedback_revision_observed": true,
+  "sandbox_fixture_checks": {"outside_read_denied": true, "outside_write_denied": true, "external_network_denied": true, "secret_environment_removed": true},
+  "creative_quality": null,
+  "visual_judge_win_rate": null,
+  "unavailable_reason": "Different construction baseline; no calibrated creative acceptance or old-storyboard pairwise comparison applies.",
+  "videos": {
+    "first_20s": {"path": "artifacts/agent-02/attempt-03/render-replay-01/video.mp4", "sha256": "8499bd8c1243ef85af8f16aedd511537db97ac63473be4f2810a6ccb0f95a5dd", "duration_seconds": 20},
+    "teaser_10s": {"path": "artifacts/teaser.mp4", "sha256": "750ab4f4fa8b3c5da39779c5029e5bea8899e8452125db49f587465468c38dde", "duration_seconds": 10},
+    "revised_20s": {"path": "artifacts/video.mp4", "sha256": "de390e9edce0a9f8d555560dd3a6a9a7c2c8af292f66921ddc026e9f548bbd38", "duration_seconds": 20}
+  },
+  "estimated_spend_microusd": 844731,
+  "shared_budget_remaining_microusd": 2631993,
+  "cost_note": "Conservative usage-based estimates, including failed author responses, not provider invoices. No durable reservations were added."
+}

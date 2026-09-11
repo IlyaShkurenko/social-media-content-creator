@@ -13,6 +13,58 @@ Define the first implementation slice of the provider-neutral advertising pipeli
 
 ## Contract requirements
 
+### STORY-3 — Free montage project (opt-in)
+
+#### STORY-3.1 — Request-bound construction
+
+A motion project MUST explicitly declare user constraints separately from its
+creative hypothesis, content language, geometry, frame rate, total duration and
+contiguous timed beats. It MUST support different scene counts and durations
+without imposing the legacy three-scene construction. Declared requested duration
+MUST equal rendered frame duration; malformed timing MUST fail before rendering.
+
+#### STORY-3.2 — Explicit media and audio intent
+
+The contract MUST map asset IDs to managed local files, declare required assets,
+and explicitly choose `music`, `voiceover`, `music_and_voiceover` or `silent`.
+Declared non-silent audio MUST reference a staged audio asset. Asset validation
+alone MUST NOT be reported as visual or semantic fidelity measurement.
+
+### ADPIPE-3 — Agent-authored composition execution
+
+#### ADPIPE-3.1 — Isolated opt-in renderer
+
+The free-montage path MUST remain opt-in and MUST NOT alter the legacy renderer.
+Execution MUST stage managed assets and agent-authored composition source, exclude
+credentials, reject path escapes and restrict the worker to local rendering.
+Unavailable isolation MUST fail closed rather than run unrestricted.
+
+#### ADPIPE-3.2 — Reproducible inspectable output
+
+Each successful render MUST preserve the MP4, editable composition, exact contract,
+dependency-lock hash and source/asset/output hashes. Failed runs MUST retain
+sanitized failure evidence. Existing experiment outputs MUST NOT be overwritten.
+Subjective quality MUST remain unmeasured until explicitly evaluated.
+
+#### ADPIPE-3.3 — Runtime authorship and bounded revision
+
+The agent MUST generate a creative plan and React source from the supplied brief
+and available asset catalog at runtime, not substitute a fixed composition. User
+duration, geometry, language and required assets MUST remain immutable across
+revisions. Material acquisition MUST use registered trusted tools; unsupported
+requests fail visibly rather than silently substitute another source. Each attempt
+MUST retain its prompt, response, source, validation and rendered result or failure.
+Compile/render errors MAY drive bounded code repairs. Semantic feedback MUST
+include an explicit confirmation/hypothesis before it drives a revision. Paid work
+uses the existing shared budget, with no automatic retry of ambiguous submissions.
+
+Implementation scope: RFC-0011; `app/services/creative/motion.py` owns validation,
+staging and execution; `motion/` owns the pinned worker and reviewed compositions.
+Unit/BDD contract tests precede implementation. Experiment 020 supplies the real
+render and sandbox/technical evidence. `motion_agent.py` owns runtime authorship
+and bounded repair/revision through injected author and material tools. WebUI
+integration is outside this first slice.
+
 ### STORY-1 — Versioned storyboard contract
 
 #### STORY-1.1 — Explicit timed intent

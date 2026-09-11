@@ -1,0 +1,8 @@
+{
+  "schema_version": "1.0", "composition_id": "Smoke", "entrypoint": "Scene.tsx",
+  "hypothesis": "A local sandbox can render arbitrary React.", "language": "en-US",
+  "width": 360, "height": 640, "fps": 30, "duration_seconds": 1,
+  "user_constraints": {"duration_seconds": 1},
+  "beats": [{"id": "motion", "start": 0, "end": 1, "intent": "Moving text"}],
+  "assets": {}, "required_assets": [], "audio": {"mode": "silent", "asset_ids": []}
+}

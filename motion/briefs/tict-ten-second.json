@@ -1,0 +1,14 @@
+{
+  "request": "Make a playful, beautifully typeset ten-second brand teaser for tict. No app screenshot, no phone, no live-action footage, no voiceover and no generic CTA button. Only the approved logo, mascot and original animated graphics/text. Choose your own construction and timing; make the concept legible immediately and end on a memorable brand thought. Think expressive editorial motion, not the previous travel-research-to-app-demo construction. Use English text, lowercase tict, and preserve the supplied mascot/logo. Music is required. Do not request stock or generated video: this request is explicitly about graphical motion design.",
+  "hypothesis": "Travel should feel like play, not another task list. A playful transformation can make this emotional promise memorable without a product walkthrough.",
+  "duration_seconds": 10,
+  "width": 720,
+  "height": 1280,
+  "fps": 30,
+  "language": "en-US",
+  "required_assets": ["logo", "mascot"],
+  "allowed_assets": ["logo", "mascot"],
+  "allowed_tools": ["music"],
+  "audio_mode": "music",
+  "brand_tokens": {"background": "#FFFCEE", "text": "#1D1E18", "yellow": "#FFCC00"}
+}

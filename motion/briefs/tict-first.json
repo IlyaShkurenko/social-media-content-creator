@@ -1,0 +1,15 @@
+{
+  "request": "Create an original, polished vertical social ad for tict. Make the viewer feel the contrast between wanting a memorable trip and the effort of arranging it. The hypothesis is supplied below, but you choose the construction, scenes, rhythm, transitions and media. Do not reuse the old woman-with-phone footage or the old three-slot template. Use our actual app capture and brand assets deliberately, not as an afterthought. Avoid pretending the app does things not visible in the supplied captures. English copy; canonical brand spelling is tict. End with an actionable invitation to create a trip. Quality and coherent motion matter more than the number of effects. You may request stock photos, new generated footage, music or voice through available tools if the concept benefits. This is a real architecture pilot, not a production-approved campaign.",
+  "hypothesis": "Travel planning feels like work; seeing scattered travel intentions become one understandable trip should turn overwhelm into anticipation.",
+  "duration_seconds": 20,
+  "width": 720,
+  "height": 1280,
+  "fps": 30,
+  "language": "en-US",
+  "required_assets": ["logo", "mascot", "trip_plan"],
+  "audio_mode": "auto",
+  "pronunciations": {"tict": "tickt"},
+  "brand_tokens": {"background": "#FFFCEE", "text": "#1D1E18", "yellow": "#FFCC00"},
+  "typography": "Use a locally available sans-serif; the approved Figma font is unknown.",
+  "provider_spend_limit_note": "Shared remaining budget is approximately $3.48, covering authoring and judging too. Use only material that the concept actually needs."
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "agent_authored_motion_architecture_pilot",
+  "version": "1.0",
+  "baseline_revision": "e71fcd6",
+  "rfc": "records/rfcs/0011-agent-authored-motion-compositions.md",
+  "author_model": "gemini-3.6-flash",
+  "renderer": "remotion-4.0.523",
+  "briefs": ["motion/briefs/tict-first.json", "motion/briefs/tict-ten-second.json"],
+  "runs": {
+    "agent-02": {
+      "result_sha256": "cfb5a4522821b264950d4b5cec9567dd28df82d778e17d9b5029d86a2bce2415",
+      "plan_sha256": "73576d4983012a53291ed5e47538940976c181aebce4094b07620bc7105d4f2f",
+      "source_sha256": "f72a9a157991a4fae6423be869b8e4cfea97c4b9e104defbfcb2407242ae8c3c"
+    },
+    "teaser-01": {
+      "result_sha256": "cc6786614d713883679ab7126de0e9640aadba2dd149aa30cfe11003e2d150e2",
+      "plan_sha256": "e64ae8aedc88241999e86e8adae02c9c42e19b5496d3fd73bfa6d6ba8e051d52",
+      "source_sha256": "db20eadcef0fbf53ca495c80bd1fc042d71211f230f4819e531f559cf4ce98d2"
+    },
+    "revision-01": {
+      "result_sha256": "bf21d2b3f40b707fe6db6ba7ee6c40af0cc08ad7547f49e4b405be8526afac9b",
+      "plan_sha256": "73576d4983012a53291ed5e47538940976c181aebce4094b07620bc7105d4f2f",
+      "source_sha256": "fb551e853c63fedd1e3750682b66d4b743b068bec7d7e1cd307fbaa8c294c8d4"
+    }
+  },
+  "disclosure_authorization": "User explicitly approved sending briefs, selected source app screenshots, logo, mascot, React source and rendered results to Google Gemini for this task within the remaining shared budget.",
+  "feedback": "artifacts/confirmed-feedback.json",
+  "paid_generation_note": "No Runway job was requested by these live plans. New Pexels photo, Edge narration, original procedural music, runtime-authored React and local rendering were used."
+}

@@ -23,6 +23,24 @@ MoneyPrinterTurbo is a single Python application with several entrypoints over t
 
 ## Runtime boundaries
 
+The opt-in **motion agent** (`app/services/creative/motion_agent.py`) is a separate
+construction path, not another legacy template. It asks a model to produce a plan
+and React source from a brief and approved asset catalog. Trusted registered tools
+acquire requested media/audio. Python stages each source/asset revision and invokes
+the pinned Remotion worker in `motion/` through macOS Seatbelt. The worker receives
+no provider keys and cannot read user files outside its staged project/dependency
+root or make outbound requests beyond its two rendering loopback ports. System
+read/IPC access needed by headless Chromium is allowed; this is a local development
+boundary, not a hardened multi-tenant execution service.
+
+The trusted wrapper owns duration, dimensions and audio attachment; generated React
+owns visual construction. Compile failures feed bounded code repair. Optional
+request-specific video judging records diagnostics without accepting/rejecting
+creative work automatically; a revision requires confirmed, video-hash-bound
+evidence and a hypothesis. Every attempt remains inspectable. Existing MoviePy,
+API and Streamlit paths are unchanged. See [motion workflow](../motion/README.md)
+and RFC-0011 for scope, constraints and reproducible commands.
+
 The WebUI can run without the FastAPI process and calls the service layer directly. The API uses an in-memory or Redis-backed queue manager; WebUI generation uses its own in-process manager. Cross-platform publishing also runs in the current process and is not a durable external worker queue.
 
 Generated state and artifacts live under `storage/`. The API mounts task artifacts at `/tasks`; `resource/public` is mounted as the root static site. Uploaded paths are resolved inside managed directories before they reach the media pipeline.

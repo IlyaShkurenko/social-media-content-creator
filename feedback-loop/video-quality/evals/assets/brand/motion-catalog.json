@@ -1,0 +1,6 @@
+{
+  "logo": {"path": "tict-logo.png", "kind": "brand_asset", "description": "Exact approved tict logo. Preserve identity and aspect ratio."},
+  "mascot": {"path": "tict-mascot-1.png", "kind": "brand_asset", "description": "Exact yellow smiling map-pin mascot with outstretched arms. Full raster is wide; preserve proportions."},
+  "trip_plan": {"path": "screens/Plan_Overview_Screen.png", "kind": "product_capture", "description": "Raw tict app capture, UAE Dubai trip overview. Exact interface; do not redraw. Can crop or zoom."},
+  "assistant": {"path": "screens/AI_Assistant_Chat_Screen_Phone_Size.png", "kind": "product_capture", "description": "Raw tict AI travel assistant chat capture. Exact interface; do not redraw."}
+}
