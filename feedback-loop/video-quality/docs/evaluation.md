@@ -1,5 +1,57 @@
 # Video-quality evaluation
 
+## Optional request-driven agentic comparison
+
+Version 1.2.0 in `evals/agentic_video_judge.py` is a diagnostic sidecar, not a new
+acceptance gate. It sends the same MP4, JSON contract, model, prompt and response
+schema through static and agentic Interactions processing. A contract may contain
+any user request, hypothesis, storyboard and material/audio/layout policies;
+there are no required props or settings. Existing semantic, invariant and
+temporal evaluators remain available and unchanged. Their historical scores
+are not numerically interchangeable with this new protocol.
+
+From the loop directory, supply managed paths (not API keys):
+
+```bash
+make video-judge-preflight \
+  VIDEO_CONTRACT=path/to/contract.json \
+  VIDEO=feedback-loop/video-quality/path/to/final.mp4 \
+  VIDEO_JUDGE_OUTPUT=experiments/NNN-agentic-baseline \
+  OPERATION_PREFIX=unique-evaluation-id
+
+# Same arguments; two paid calls using the configured Gemini API key:
+make video-judge-compare CONFIRM_PAID=YES \
+  VIDEO_CONTRACT=path/to/contract.json \
+  VIDEO=feedback-loop/video-quality/path/to/final.mp4 \
+  VIDEO_JUDGE_OUTPUT=experiments/NNN-agentic-baseline \
+  OPERATION_PREFIX=unique-evaluation-id
+
+make evaluate EXPERIMENT=experiments/NNN-agentic-baseline
+```
+
+`VIDEO_PROCESSING=static|agentic|both` defaults to `both`.
+`CANDIDATE_ID=...` selects a concept and compiled storyboard from a campaign
+plan instead of a standalone contract. `make evaluate` replays retained evidence
+offline, verifies hashes and metrics, and never reruns inference. Completed
+paid calls also resume without resubmission. Only a proven pre-inference upload
+failure may retry with explicit `RETRY_UPLOAD=YES`; ambiguous inference outcomes
+never retry automatically. Failures and prior upload attempts remain inspectable.
+
+The shared ledger checks an allowance of $0.15 per pending call without creating
+a reservation. It records usage-based estimates including tool input and
+reasoning output, using conservative undiscounted standard rates; these are not
+invoices or provider-enforced cost caps. Unknown/ambiguous usage retains the
+allowance. Do not run concurrent paid experiments against the same remaining
+budget. No MP4, credential, or thought signatures are sent to git; sanitized
+observations and public processing metadata are retained alongside the local MP4.
+
+SDK 2.11.0 drops the new processing field. The Interactions call therefore uses
+the documented REST JSON directly. Agentic requests without linked processing
+call/result steps are explicitly marked unverified. Comparison reports separate
+findings, latency and cost; no evaluator accuracy or automatic winner is invented
+without artifact-bound human labels. Rendered reference-asset identity and
+subjective judgements still need independent verification before acceptance.
+
 ## What evaluator 0.6 measures
 
 The evaluator consumes a fixed scenario, a rendered MP4, stored versioned

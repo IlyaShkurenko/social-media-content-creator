@@ -1,0 +1,23 @@
+[
+  {
+    "status": "failed",
+    "binding": {
+      "evaluator_version": "1.0.0",
+      "video_sha256": "7412f0e49389cfdac8b984eae0d406dc5af691bf77cc9cb34790d756022d93ae",
+      "duration_ms": 15000,
+      "contract_sha256": "69cadbf332d541e4b8eb56dea7935148edc318117e0767d6554d93fa364223ac",
+      "prompt_sha256": "02296231d3e6e7659eb7f017e73201fd793280415ed4d4d2ab0949bc7dd29176",
+      "schema_sha256": "0b513f0cb936580687127d31b4548749385e6f6a0502bd92a2a15f5b195c7659",
+      "model": "gemini-3.6-flash",
+      "mode": "static",
+      "operation_id": "experiment-017-video-judge-static"
+    },
+    "error_type": "ConnectError",
+    "http_status": null,
+    "provider_submission_attempted": false,
+    "automatic_retry": false,
+    "provider_response_id": null,
+    "usage": null,
+    "charged_microusd": 0
+  }
+]

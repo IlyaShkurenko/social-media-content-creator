@@ -18,6 +18,15 @@ make evaluate EXPERIMENT=experiments/<evaluator-0.6-baseline>
 
 See `feedback-loop/video-quality/goal.md` and `feedback-loop/video-quality/docs/evaluation.md` for metric contracts and experiment rules.
 
+An optional request-driven video evaluator (`evals/agentic_video_judge.py`,
+version 1.2.0, RFC-0010) compares Gemini Interactions static and agentic processing
+on the same MP4, model and arbitrary creative contract. It derives requirements
+from that contract, without fixed objects or scenes. It retains timestamped
+observations, suspected issues, public processing call/result metadata, latency
+and usage-based conservative accounting. It does not replace candidate semantic,
+invariant, temporal or human-review acceptance gates. Agentic navigation is only
+reported as verified when linked processing steps actually appear.
+
 New experiment directories are intentionally compact: tracked decision notes, metrics, one content-addressed input manifest, and a failure log only when needed. The exact final MP4 is mandatory at `artifacts/video.mp4` for every evaluated result, while large video/frame artifacts remain local and ignored. Sanitized pairwise and temporal evidence is embedded in the manifest, so replay validates hashes and never repeats a paid or nondeterministic Gemini call.
 
 Product experiments use a staged lifecycle. `experiment-start` reproduces and freezes a baseline plus the pre-change engineering hypothesis; `experiment-evaluate` attaches the candidate and metrics without changing that plan; `experiment-finish` records keep/revert learning and requires explicit artifact-bound review evidence for provisional results. `experiment-review` can apply a later product-owner label without rewriting the original model metrics. Git revert, validation, commit, and push remain deliberate post-decision actions.

@@ -12,6 +12,7 @@ Define the deterministic acceptance boundary for a candidate advertising-video e
 - `records/rfcs/0004-human-calibrated-video-acceptance.md`
 - `records/rfcs/0005-hypothesis-aware-candidate-orchestration.md`
 - `records/rfcs/0006-evidence-bound-candidate-evaluation.md`
+- `records/rfcs/0010-agentic-video-evaluation.md`
 
 ## Requirements
 
@@ -183,6 +184,29 @@ or labelled reference before automatic acceptance policy may consume it.
 ### EVAL-8.1 — Narration audio evidence is pairwise and diagnostic, not a gate
 
 A Gemini audio judge MUST assess two narration clips of the same spoken line against each other, not one clip against an absolute standard: an uncalibrated absolute-scoring version was falsified by a live check in which it scored a clip a human had identified as having an inconsistent, mismatched ending a perfect score on that exact dimension. Each pairwise comparison MUST run two passes with clip order reversed; a clip preferred in both is retained as signal, while a clip that wins only through its position in one pass MUST cancel to a diagnostic tie. Comparing more than two narration variants MUST run every unique pair (a full round robin), not anchor every variant against one fixed reference, and MUST produce a per-variant ranking of average pairwise preference credit. Its evidence MUST follow the same fail-closed ledger pattern as the video judges: ambiguous provider outcomes retain a worst-case charge per pass and a pass already holding a ledger operation is never resubmitted. No automatic accept/reject decision MAY be wired to this evidence until it is calibrated against artifact-bound human labels the same way RFC-0006 requires for video evaluators.
+
+### EVAL-9.1 — Request-driven agentic video evaluation
+
+The optional Interactions evaluator MUST accept arbitrary user/creative/storyboard
+requirements without object-specific rules. Static and agentic modes MUST share
+the same prompt and schema. Findings MUST cite in-range observations; intended
+edits MUST be interpreted in context. Outputs are diagnostic only.
+
+### EVAL-9.2 — Auditable processing and comparison
+
+Evidence MUST bind the exact video, contract, model, evaluator, processing mode
+and operation. Agentic execution MUST be verified using linked processing call
+and result steps; absent traces MUST NOT be reported as verified agentic work.
+Comparison MUST reject different videos/contracts/prompts/models and report
+per-mode findings, usage and latency without inventing accuracy or a winner.
+
+### EVAL-9.3 — Resume and paid accounting
+
+Paid attempts MUST use the shared ledger, retain usage including tool/reasoning
+tokens, disable automatic retries and retain failed evidence. Exact completed
+outputs MAY replay with zero network work; mismatched or ambiguous operations
+MUST stop. Offline preflight MUST require no key or network. Coverage:
+`evals/tests/test_agentic_video_judge.py` covers EVAL-9.1 through EVAL-9.3.
 
 ## Executable coverage
 

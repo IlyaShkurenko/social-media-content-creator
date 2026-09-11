@@ -1,0 +1,110 @@
+[
+  {
+    "status": "failed",
+    "binding": {
+      "evaluator_version": "1.1.0",
+      "video_sha256": "7412f0e49389cfdac8b984eae0d406dc5af691bf77cc9cb34790d756022d93ae",
+      "duration_ms": 15000,
+      "contract_sha256": "69cadbf332d541e4b8eb56dea7935148edc318117e0767d6554d93fa364223ac",
+      "prompt_sha256": "02296231d3e6e7659eb7f017e73201fd793280415ed4d4d2ab0949bc7dd29176",
+      "schema_sha256": "0b513f0cb936580687127d31b4548749385e6f6a0502bd92a2a15f5b195c7659",
+      "model": "gemini-3.6-flash",
+      "mode": "agentic",
+      "operation_id": "experiment-018-video-judge-agentic"
+    },
+    "previous_attempts": [],
+    "error_type": "ValueError",
+    "http_status": null,
+    "provider_submission_attempted": true,
+    "automatic_retry": false,
+    "provider_response_id": null,
+    "usage": {
+      "total_tokens": 5257,
+      "total_input_tokens": 2169,
+      "input_tokens_by_modality": [
+        {
+          "modality": "text",
+          "tokens": 2169
+        }
+      ],
+      "total_cached_tokens": 0,
+      "total_output_tokens": 54,
+      "total_tool_use_tokens": 2790,
+      "tool_use_tokens_by_modality": [
+        {
+          "modality": "text",
+          "tokens": 2790
+        }
+      ],
+      "total_thought_tokens": 244,
+      "raw_prompt_token": 5718,
+      "model_invocation_token_counts": [
+        {
+          "prompt_tokens_details": [
+            {
+              "modality": "text",
+              "tokens": 3074
+            }
+          ],
+          "candidates_tokens_details": [
+            {
+              "modality": "text",
+              "tokens": 31
+            }
+          ],
+          "thoughts_tokens_details": [
+            {
+              "modality": "text",
+              "tokens": 78
+            }
+          ]
+        },
+        {
+          "prompt_tokens_details": [
+            {
+              "modality": "text",
+              "tokens": 3210
+            }
+          ],
+          "candidates_tokens_details": [
+            {
+              "modality": "text",
+              "tokens": 35
+            }
+          ],
+          "thoughts_tokens_details": [
+            {
+              "modality": "text",
+              "tokens": 83
+            }
+          ]
+        },
+        {
+          "prompt_tokens_details": [
+            {
+              "modality": "text",
+              "tokens": 3413
+            },
+            {
+              "modality": "image",
+              "tokens": 1980
+            }
+          ],
+          "candidates_tokens_details": [
+            {
+              "modality": "text",
+              "tokens": 705
+            }
+          ],
+          "thoughts_tokens_details": [
+            {
+              "modality": "text",
+              "tokens": 3391
+            }
+          ]
+        }
+      ]
+    },
+    "charged_microusd": 9674
+  }
+]

@@ -1,0 +1,247 @@
+{
+  "kind": "agentic_video_evaluator_baseline",
+  "evaluator_version": "1.2.0",
+  "contract": {
+    "concept": {
+      "concept_id": "scattered-map-pins",
+      "hypothesis": "Highlighting the disconnect between saved map pins and actual day-by-day itinerary flow will attract structured travellers who want clear execution.",
+      "audience_problem": "Having dozens of saved places on a map but no clear sequence or actionable plan for how to visit them.",
+      "target_emotion": "Confused",
+      "emotional_arc": "Disorganized confusion to streamlined clarity",
+      "hook_setting": "A sunny coffee shop table covered with a physical paper map, sticky notes, and a phone.",
+      "hook_camera": "Top-down bird's-eye view zooming down onto a cluttered table with hands frantically arranging color-coded sticky notes.",
+      "hook_voiceover": "You saved fifty spots on the map, but how are you actually spending day one?",
+      "hook_beats": [
+        {
+          "start_seconds": 0.0,
+          "end_seconds": 2.0,
+          "visible_action": "Top-down shot of hands frantically shuffling messy color-coded sticky notes back and forth across a city map.",
+          "expected_evidence": [
+            "top-down view of cluttered map with sticky notes",
+            "hands swapping sticky notes frantically"
+          ]
+        },
+        {
+          "start_seconds": 2.0,
+          "end_seconds": 3.5,
+          "visible_action": "Hands sweep away the physical paper clutter, leaving a single clean smartphone centered on the table alongside tict-mascot-1.png.",
+          "expected_evidence": [
+            "hand sweeping paper notes off table",
+            "clean focal point on central smartphone"
+          ]
+        },
+        {
+          "start_seconds": 3.5,
+          "end_seconds": 5.0,
+          "visible_action": "The smartphone screen illuminates with the clear trip timeline in tict.",
+          "expected_evidence": [
+            "smartphone screen showing tict plan overview",
+            "organized digital trip layout"
+          ]
+        }
+      ],
+      "product_bridge": "Match-cut to screens/Plan_Overview_Screen.png showing how tict turns bookings, saved places, and next steps into one clear trip plan.",
+      "quality_criteria": [
+        "Top-down visual contrast between physical paper clutter and organized digital plan in first 2 seconds",
+        "No generic or generated UI presented as tict",
+        "Maintains valid json structure and correct kebab-case concept_id"
+      ]
+    },
+    "storyboard": {
+      "schema_version": "1.2",
+      "storyboard_id": "mixed-media-first-slice-001-scattered-map-pins",
+      "content_language": "en-US",
+      "aspect_ratio": "9:16",
+      "target_duration_seconds": 15.0,
+      "hypothesis": "Highlighting the disconnect between saved map pins and actual day-by-day itinerary flow will attract structured travellers who want clear execution.",
+      "brand_pronunciations": [
+        {
+          "canonical": "tict",
+          "spoken_alias": "tickt",
+          "ipa": "tɪkt"
+        }
+      ],
+      "scenes": [
+        {
+          "scene_id": "hook",
+          "start_seconds": 0.0,
+          "end_seconds": 5.0,
+          "purpose": "hook",
+          "visual_intent": {
+            "setting": "A sunny coffee shop table covered with a physical paper map, sticky notes, and a phone.",
+            "subject_action": "0-2s: Top-down shot of hands frantically shuffling messy color-coded sticky notes back and forth across a city map. 2-3.5s: The subject completes the preceding physical action with a clear confused reaction; every device screen stays hidden 3.5-5s: The subject completes the preceding physical action with a clear confused reaction; every device screen stays hidden",
+            "camera": "Top-down bird's-eye view zooming down onto a cluttered table with hands frantically arranging color-coded sticky notes.",
+            "screen_content_policy": "non_product_context"
+          },
+          "media_plan": {
+            "base": {
+              "kind": "stock",
+              "intent": "overwhelmed solo traveller planning on phone in airport",
+              "asset_id": null,
+              "placement": null,
+              "role": null,
+              "provider": null,
+              "model": null,
+              "mode": null,
+              "duration_seconds": null
+            },
+            "overlays": []
+          },
+          "voiceover": "You saved fifty spots on the map, but how are you actually spending day one?",
+          "onscreen_text": "Too much planning?",
+          "call_to_action": "",
+          "layout_intent": null,
+          "expected_evidence": [
+            "top-down view of cluttered map with sticky notes",
+            "hands swapping sticky notes frantically",
+            "continuous physical motion",
+            "visible confused reaction",
+            "device screens hidden"
+          ]
+        },
+        {
+          "scene_id": "product_demo",
+          "start_seconds": 5.0,
+          "end_seconds": 11.0,
+          "purpose": "product_demo",
+          "visual_intent": {
+            "setting": "a deterministic tict product demonstration",
+            "subject_action": "the approved trip overview screen moves into view and remains legible",
+            "camera": "slow controlled push toward the exact application capture",
+            "screen_content_policy": "approved_product_ui"
+          },
+          "media_plan": {
+            "base": {
+              "kind": "solid_or_graphic",
+              "intent": "tict warm brand background",
+              "asset_id": null,
+              "placement": null,
+              "role": null,
+              "provider": null,
+              "model": null,
+              "mode": null,
+              "duration_seconds": null
+            },
+            "overlays": [
+              {
+                "kind": "product_capture",
+                "intent": null,
+                "asset_id": "screens/Plan_Overview_Screen.png",
+                "placement": "centered_phone",
+                "role": null,
+                "provider": null,
+                "model": null,
+                "mode": null,
+                "duration_seconds": null
+              }
+            ]
+          },
+          "voiceover": "tict turns every booking, place, and next step into one clear trip plan.",
+          "onscreen_text": "Your whole trip. One plan.",
+          "call_to_action": "",
+          "layout_intent": null,
+          "expected_evidence": [
+            "approved_tict_ui_visible",
+            "trip_plan_visible",
+            "product_text_legible"
+          ]
+        },
+        {
+          "scene_id": "cta",
+          "start_seconds": 11.0,
+          "end_seconds": 15.0,
+          "purpose": "cta",
+          "visual_intent": {
+            "setting": "a deterministic tict brand end card",
+            "subject_action": "the approved mascot and logo appear beside one call to action",
+            "camera": "static end card with a subtle local push-in",
+            "screen_content_policy": "unconstrained"
+          },
+          "media_plan": {
+            "base": {
+              "kind": "solid_or_graphic",
+              "intent": "tict warm brand background",
+              "asset_id": null,
+              "placement": null,
+              "role": null,
+              "provider": null,
+              "model": null,
+              "mode": null,
+              "duration_seconds": null
+            },
+            "overlays": [
+              {
+                "kind": "brand_asset",
+                "intent": null,
+                "asset_id": "tict-logo.png",
+                "placement": "upper_center",
+                "role": "logo",
+                "provider": null,
+                "model": null,
+                "mode": null,
+                "duration_seconds": null
+              },
+              {
+                "kind": "brand_asset",
+                "intent": null,
+                "asset_id": "tict-mascot-1.png",
+                "placement": "center",
+                "role": "hero",
+                "provider": null,
+                "model": null,
+                "mode": null,
+                "duration_seconds": null
+              }
+            ]
+          },
+          "voiceover": "Plan less. Travel more with tict.",
+          "onscreen_text": "Plan less. Travel more.",
+          "call_to_action": "Create your trip",
+          "layout_intent": {
+            "mode": "portrait_regions",
+            "elements": [
+              {
+                "element_id": "logo",
+                "vertical_region": "top",
+                "horizontal_alignment": "center",
+                "scale": "medium"
+              },
+              {
+                "element_id": "hero",
+                "vertical_region": "center",
+                "horizontal_alignment": "center",
+                "scale": "large"
+              },
+              {
+                "element_id": "headline",
+                "vertical_region": "lower",
+                "horizontal_alignment": "center",
+                "scale": "medium"
+              },
+              {
+                "element_id": "action",
+                "vertical_region": "bottom",
+                "horizontal_alignment": "center",
+                "scale": "medium"
+              }
+            ]
+          },
+          "expected_evidence": [
+            "approved_logo_visible",
+            "approved_mascot_visible",
+            "single_cta_visible"
+          ]
+        }
+      ]
+    }
+  },
+  "contract_sha256": "69cadbf332d541e4b8eb56dea7935148edc318117e0767d6554d93fa364223ac",
+  "video_sha256": "7412f0e49389cfdac8b984eae0d406dc5af691bf77cc9cb34790d756022d93ae",
+  "model": "gemini-3.6-flash",
+  "modes": [
+    "static",
+    "agentic"
+  ],
+  "duration_ms": 15000,
+  "operation_prefix": "experiment-019-video-judge"
+}

@@ -87,6 +87,16 @@ def main() -> int:
     if LOOP_ROOT.resolve() not in experiment.parents or not experiment.is_dir():
         raise ValueError(f"experiment must stay inside {LOOP_ROOT}: {experiment}")
     manifest = json.loads((experiment / "inputs.json").read_text(encoding="utf-8"))
+    if manifest.get("kind") == "agentic_video_evaluator_baseline":
+        if not args.verify_only:
+            raise ValueError("agentic evaluator baselines are immutable; use --verify-only")
+        sys.path.insert(0, str(LOOP_ROOT))
+        from evals.agentic_video_judge import replay_experiment
+        report = json.loads((experiment / "metrics.json").read_text())
+        replay_experiment(experiment, manifest, report)
+        print(f"verified={experiment.relative_to(LOOP_ROOT)}")
+        print("acceptance_authority=false")
+        return 0
     if manifest.get("kind") == "candidate_evaluator_calibration_attempt":
         if not args.verify_only:
             raise ValueError(

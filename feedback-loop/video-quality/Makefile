@@ -1,4 +1,5 @@
 SHELL := /bin/sh
+.DEFAULT_GOAL := baseline
 
 LOOP_ROOT := $(abspath .)
 REPO_ROOT := $(abspath ../..)
@@ -16,6 +17,17 @@ CAMPAIGN_GEMINI_MODEL ?= gemini-3.6-flash
 CAMPAIGN_PREFLIGHT ?= $(CAMPAIGN_OUTPUT)/campaign-preflight.json
 CAMPAIGN_INVARIANT_SCENARIO ?= $(EXPERIMENT_SCENARIO)
 BUDGET_STATUS ?= open
+VIDEO_PROCESSING ?= both
+VIDEO_JUDGE_ARGS = --contract "$(VIDEO_CONTRACT)" --video "$(VIDEO)" --output "$(VIDEO_JUDGE_OUTPUT)" --operation-prefix "$(OPERATION_PREFIX)" --mode "$(VIDEO_PROCESSING)" --model "$(CAMPAIGN_GEMINI_MODEL)" --budget-database "$(CAMPAIGN_BUDGET_DATABASE)" $(if $(CANDIDATE_ID),--candidate-id "$(CANDIDATE_ID)",) $(if $(filter YES,$(RETRY_UPLOAD)),--retry-upload,)
+
+.PHONY: video-judge-preflight video-judge-compare
+
+video-judge-preflight:
+	$(PYTHON) evals/agentic_video_judge.py $(VIDEO_JUDGE_ARGS) --preflight
+
+video-judge-compare:
+	@test "$(CONFIRM_PAID)" = "YES" || (echo "CONFIRM_PAID=YES is required" >&2; exit 2)
+	$(PYTHON) evals/agentic_video_judge.py $(VIDEO_JUDGE_ARGS) --confirm-paid YES
 
 .PHONY: baseline judge candidate-judge invariant-judge candidate-evaluator-baseline temporal-judge budget-audit experiment experiment-start experiment-evaluate experiment-finish experiment-review evaluate verify mixed-prepare mixed-render-stock mixed-rerender-runway mixed-runway campaign-preflight campaign-run campaign-finalize
 

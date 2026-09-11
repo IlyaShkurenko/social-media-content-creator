@@ -1,0 +1,491 @@
+{
+  "evaluator_version": "1.2.0",
+  "status": "complete",
+  "acceptance_authority": false,
+  "automatic_winner": null,
+  "accuracy": null,
+  "accuracy_unavailable_reason": "No artifact-bound human labels supplied",
+  "modes": {
+    "static": {
+      "assessment": {
+        "summary": "The video follows the general structure of the contract, showcasing the initial problem with sticky notes on a map, transitioning to the product plan screen, and finishing with the brand end card. However, specific visual actions and onscreen text from the hook beat specification were omitted.",
+        "observations": [
+          {
+            "start_ms": 0,
+            "end_ms": 5000,
+            "description": "Top-down view of hands shuffling sticky notes across a physical paper map on a wooden table."
+          },
+          {
+            "start_ms": 5000,
+            "end_ms": 11000,
+            "description": "Product screen UI showing trip plan details under headline 'Your whole trip. One plan.'"
+          },
+          {
+            "start_ms": 11000,
+            "end_ms": 15000,
+            "description": "Brand end card featuring tict logo, yellow mascot, headline, and 'Create your trip' button."
+          }
+        ],
+        "checks": [
+          {
+            "requirement": "Hook scene visual setup with cluttered map and sticky notes",
+            "status": "met",
+            "observation_indices": [
+              0
+            ],
+            "reason": "Top-down view shows cluttered map and hands shuffling notes."
+          },
+          {
+            "requirement": "Hands sweeping notes off table to reveal central smartphone by 3.5s",
+            "status": "not_met",
+            "observation_indices": [
+              0
+            ],
+            "reason": "Hands continue shuffling notes throughout the 5-second hook without sweeping them away."
+          },
+          {
+            "requirement": "Product demo showing approved trip plan overview screen",
+            "status": "met",
+            "observation_indices": [
+              1
+            ],
+            "reason": "Approved app layout and plan details are displayed clearly."
+          },
+          {
+            "requirement": "End card displaying logo, mascot, and CTA button",
+            "status": "met",
+            "observation_indices": [
+              2
+            ],
+            "reason": "Required brand elements and 'Create your trip' CTA are present."
+          },
+          {
+            "requirement": "Onscreen text 'Too much planning?' during hook scene",
+            "status": "not_met",
+            "observation_indices": [
+              0
+            ],
+            "reason": "Video displays voiceover captions instead of required hook text."
+          }
+        ],
+        "issues": [
+          {
+            "category": "contract_mismatch",
+            "severity": "medium",
+            "observation_indices": [
+              0
+            ],
+            "description": "Omitted the required physical action of sweeping notes away to highlight the smartphone.",
+            "intended_effect_considered": "Designed to transition from physical chaos to digital resolution."
+          },
+          {
+            "category": "contract_mismatch",
+            "severity": "low",
+            "observation_indices": [
+              0
+            ],
+            "description": "Hook onscreen text shows voiceover line instead of 'Too much planning?'.",
+            "intended_effect_considered": "Designed to pose a concise visual hook question."
+          }
+        ]
+      },
+      "agentic_verified": false,
+      "usage": {
+        "total_tokens": 5505,
+        "total_input_tokens": 3373,
+        "total_cached_tokens": 0,
+        "total_output_tokens": 716,
+        "total_tool_use_tokens": 0,
+        "total_thought_tokens": 1416
+      },
+      "latency_seconds": 18.627,
+      "charged_microusd": 21050
+    },
+    "agentic": {
+      "assessment": {
+        "summary": "The 15-second vertical (9:16) video consists of a 5-second physical hook scene, a 6-second product demo scene, and a 4-second brand end card CTA. Scene 2 (product demo) and Scene 3 (CTA) align with contract requirements, displaying approved tict UI, brand logo, mascot, onscreen text, and matching voiceovers. However, Scene 1 (hook) omits the required onscreen text headline ('Too much planning?'), extends the sticky note shuffling across the entire 5 seconds without sweeping the paper away or illuminating the phone screen, and shows no facial expression or visible reaction beyond hand movements.",
+        "observations": [
+          {
+            "start_ms": 0,
+            "end_ms": 5000,
+            "description": "Top-down view of hands frantically shuffling color-coded sticky notes across a paper city map on a wooden table, with a dark smartphone resting on the right. Spoken voiceover states: 'You saved fifty spots on the map, but how are you actually spending day one?' accompanied by onscreen voiceover captions at the bottom. The headline text 'Too much planning?' is absent. The paper notes are not swept away, the phone screen remains off, and no face is visible."
+          },
+          {
+            "start_ms": 5000,
+            "end_ms": 11000,
+            "description": "Cut to a centered smartphone display showing the approved tict trip overview interface (Dubai itinerary details, stays, flights, activities, total cost, and RESERVE button). Headline text at top reads 'Your whole trip. One plan.' Bottom text and voiceover state: 'tict turns every booking, place, and next step into one clear trip plan.'"
+          },
+          {
+            "start_ms": 11000,
+            "end_ms": 15000,
+            "description": "Cut to the brand end card featuring the tict logo at top center, yellow location pin mascot (tict-mascot-1) in the center, headline text 'Plan less. Travel more.', and a yellow button CTA reading 'Create your trip' at the bottom. Spoken voiceover and captions state: 'Plan less. Travel more with tict.'"
+          }
+        ],
+        "checks": [
+          {
+            "requirement": "Scene 1 (hook, 0–5s) onscreen text 'Too much planning?' must be displayed.",
+            "status": "not_met",
+            "observation_indices": [
+              0
+            ],
+            "reason": "The required headline 'Too much planning?' does not appear onscreen during Scene 1; only the spoken voiceover captions are present."
+          },
+          {
+            "requirement": "Scene 1 expected evidence: top-down view of cluttered map with sticky notes, hands swapping sticky notes frantically, continuous physical motion, visible confused reaction, device screens hidden.",
+            "status": "partially_met",
+            "observation_indices": [
+              0
+            ],
+            "reason": "Top-down map view, frantic hands swapping sticky notes, continuous motion, and hidden/dark phone screen are present. However, no face or visible confused reaction beyond hand motion is depicted."
+          },
+          {
+            "requirement": "Scene 1 voiceover line: 'You saved fifty spots on the map, but how are you actually spending day one?'",
+            "status": "met",
+            "observation_indices": [
+              0
+            ],
+            "reason": "The spoken audio and captions match the required script word-for-word."
+          },
+          {
+            "requirement": "Scene 2 (product_demo, 5–11s) expected evidence: approved tict UI visible, trip plan visible, product text legible, headline 'Your whole trip. One plan.', and voiceover 'tict turns every booking, place, and next step into one clear trip plan.'",
+            "status": "met",
+            "observation_indices": [
+              1
+            ],
+            "reason": "All visual assets, top headline text, legible UI screens, and voiceover audio match the contract specifications."
+          },
+          {
+            "requirement": "Scene 3 (cta, 11–15s) expected evidence: approved logo, approved mascot, single CTA 'Create your trip', headline 'Plan less. Travel more.', and voiceover 'Plan less. Travel more with tict.'",
+            "status": "met",
+            "observation_indices": [
+              2
+            ],
+            "reason": "The end card presents the tict logo, mascot asset, headline text, single CTA button, and matching voiceover line in accordance with the specified layout."
+          },
+          {
+            "requirement": "Quality criterion: Top-down visual contrast between physical paper clutter and organized digital plan in first 2 seconds.",
+            "status": "not_met",
+            "observation_indices": [
+              0
+            ],
+            "reason": "Only physical paper map shuffling is shown during the first 2 seconds (and through 5 seconds); the digital plan interface is not shown until 5.0 seconds."
+          },
+          {
+            "requirement": "Quality criterion: No generic or generated UI presented as tict.",
+            "status": "met",
+            "observation_indices": [
+              1
+            ],
+            "reason": "The product demo uses the official tict application capture with brand-specific styling and legible details."
+          }
+        ],
+        "issues": [
+          {
+            "category": "contract_mismatch",
+            "severity": "medium",
+            "observation_indices": [
+              0
+            ],
+            "description": "Scene 1 is missing the designated onscreen text 'Too much planning?'.",
+            "intended_effect_considered": "Voiceover captions were rendered at the bottom of the screen, but the dedicated scene headline was omitted."
+          },
+          {
+            "category": "contract_mismatch",
+            "severity": "medium",
+            "observation_indices": [
+              0
+            ],
+            "description": "The visual action in Scene 1 maintains paper note shuffling across all 5 seconds, skipping the planned transition where paper clutter is swept away to reveal an illuminated smartphone screen before 5.0 seconds.",
+            "intended_effect_considered": "Sustaining the hand shuffling for 5 full seconds reinforces manual confusion, but fails to execute the planned hook beats and early digital contrast requirement."
+          }
+        ]
+      },
+      "agentic_verified": true,
+      "usage": {
+        "total_tokens": 14852,
+        "total_input_tokens": 2169,
+        "total_cached_tokens": 0,
+        "total_output_tokens": 1484,
+        "total_tool_use_tokens": 7691,
+        "total_thought_tokens": 3508
+      },
+      "latency_seconds": 35.869,
+      "charged_microusd": 52230
+    }
+  },
+  "total_charged_microusd": 73280,
+  "evidence": [
+    {
+      "status": "complete",
+      "binding": {
+        "evaluator_version": "1.2.0",
+        "video_sha256": "7412f0e49389cfdac8b984eae0d406dc5af691bf77cc9cb34790d756022d93ae",
+        "duration_ms": 15000,
+        "contract_sha256": "69cadbf332d541e4b8eb56dea7935148edc318117e0767d6554d93fa364223ac",
+        "prompt_sha256": "02296231d3e6e7659eb7f017e73201fd793280415ed4d4d2ab0949bc7dd29176",
+        "schema_sha256": "0b513f0cb936580687127d31b4548749385e6f6a0502bd92a2a15f5b195c7659",
+        "generation_config_sha256": "823010b155e208c5e32992a9e30ec5655d417961e01d5872b34852eba14489e9",
+        "model": "gemini-3.6-flash",
+        "mode": "static",
+        "operation_id": "experiment-019-video-judge-static"
+      },
+      "previous_attempts": [],
+      "acceptance_authority": false,
+      "assessment": {
+        "summary": "The video follows the general structure of the contract, showcasing the initial problem with sticky notes on a map, transitioning to the product plan screen, and finishing with the brand end card. However, specific visual actions and onscreen text from the hook beat specification were omitted.",
+        "observations": [
+          {
+            "start_ms": 0,
+            "end_ms": 5000,
+            "description": "Top-down view of hands shuffling sticky notes across a physical paper map on a wooden table."
+          },
+          {
+            "start_ms": 5000,
+            "end_ms": 11000,
+            "description": "Product screen UI showing trip plan details under headline 'Your whole trip. One plan.'"
+          },
+          {
+            "start_ms": 11000,
+            "end_ms": 15000,
+            "description": "Brand end card featuring tict logo, yellow mascot, headline, and 'Create your trip' button."
+          }
+        ],
+        "checks": [
+          {
+            "requirement": "Hook scene visual setup with cluttered map and sticky notes",
+            "status": "met",
+            "observation_indices": [
+              0
+            ],
+            "reason": "Top-down view shows cluttered map and hands shuffling notes."
+          },
+          {
+            "requirement": "Hands sweeping notes off table to reveal central smartphone by 3.5s",
+            "status": "not_met",
+            "observation_indices": [
+              0
+            ],
+            "reason": "Hands continue shuffling notes throughout the 5-second hook without sweeping them away."
+          },
+          {
+            "requirement": "Product demo showing approved trip plan overview screen",
+            "status": "met",
+            "observation_indices": [
+              1
+            ],
+            "reason": "Approved app layout and plan details are displayed clearly."
+          },
+          {
+            "requirement": "End card displaying logo, mascot, and CTA button",
+            "status": "met",
+            "observation_indices": [
+              2
+            ],
+            "reason": "Required brand elements and 'Create your trip' CTA are present."
+          },
+          {
+            "requirement": "Onscreen text 'Too much planning?' during hook scene",
+            "status": "not_met",
+            "observation_indices": [
+              0
+            ],
+            "reason": "Video displays voiceover captions instead of required hook text."
+          }
+        ],
+        "issues": [
+          {
+            "category": "contract_mismatch",
+            "severity": "medium",
+            "observation_indices": [
+              0
+            ],
+            "description": "Omitted the required physical action of sweeping notes away to highlight the smartphone.",
+            "intended_effect_considered": "Designed to transition from physical chaos to digital resolution."
+          },
+          {
+            "category": "contract_mismatch",
+            "severity": "low",
+            "observation_indices": [
+              0
+            ],
+            "description": "Hook onscreen text shows voiceover line instead of 'Too much planning?'.",
+            "intended_effect_considered": "Designed to pose a concise visual hook question."
+          }
+        ]
+      },
+      "processing": {
+        "verified": false,
+        "steps": []
+      },
+      "agentic_verified": false,
+      "provider_response_id": null,
+      "model_version": "gemini-3.6-flash",
+      "usage": {
+        "total_tokens": 5505,
+        "total_input_tokens": 3373,
+        "total_cached_tokens": 0,
+        "total_output_tokens": 716,
+        "total_tool_use_tokens": 0,
+        "total_thought_tokens": 1416
+      },
+      "estimated_cost_microusd": 21050,
+      "charged_microusd": 21050,
+      "preflight_allowance_microusd": 150000,
+      "latency_seconds": 18.627,
+      "evidence_sha256": "2fd5dfedd5466f59f3ca9987a1f8e89bd14e96119e5ca13da64d8c3ef745b63f"
+    },
+    {
+      "status": "complete",
+      "binding": {
+        "evaluator_version": "1.2.0",
+        "video_sha256": "7412f0e49389cfdac8b984eae0d406dc5af691bf77cc9cb34790d756022d93ae",
+        "duration_ms": 15000,
+        "contract_sha256": "69cadbf332d541e4b8eb56dea7935148edc318117e0767d6554d93fa364223ac",
+        "prompt_sha256": "02296231d3e6e7659eb7f017e73201fd793280415ed4d4d2ab0949bc7dd29176",
+        "schema_sha256": "0b513f0cb936580687127d31b4548749385e6f6a0502bd92a2a15f5b195c7659",
+        "generation_config_sha256": "823010b155e208c5e32992a9e30ec5655d417961e01d5872b34852eba14489e9",
+        "model": "gemini-3.6-flash",
+        "mode": "agentic",
+        "operation_id": "experiment-019-video-judge-agentic"
+      },
+      "previous_attempts": [],
+      "acceptance_authority": false,
+      "assessment": {
+        "summary": "The 15-second vertical (9:16) video consists of a 5-second physical hook scene, a 6-second product demo scene, and a 4-second brand end card CTA. Scene 2 (product demo) and Scene 3 (CTA) align with contract requirements, displaying approved tict UI, brand logo, mascot, onscreen text, and matching voiceovers. However, Scene 1 (hook) omits the required onscreen text headline ('Too much planning?'), extends the sticky note shuffling across the entire 5 seconds without sweeping the paper away or illuminating the phone screen, and shows no facial expression or visible reaction beyond hand movements.",
+        "observations": [
+          {
+            "start_ms": 0,
+            "end_ms": 5000,
+            "description": "Top-down view of hands frantically shuffling color-coded sticky notes across a paper city map on a wooden table, with a dark smartphone resting on the right. Spoken voiceover states: 'You saved fifty spots on the map, but how are you actually spending day one?' accompanied by onscreen voiceover captions at the bottom. The headline text 'Too much planning?' is absent. The paper notes are not swept away, the phone screen remains off, and no face is visible."
+          },
+          {
+            "start_ms": 5000,
+            "end_ms": 11000,
+            "description": "Cut to a centered smartphone display showing the approved tict trip overview interface (Dubai itinerary details, stays, flights, activities, total cost, and RESERVE button). Headline text at top reads 'Your whole trip. One plan.' Bottom text and voiceover state: 'tict turns every booking, place, and next step into one clear trip plan.'"
+          },
+          {
+            "start_ms": 11000,
+            "end_ms": 15000,
+            "description": "Cut to the brand end card featuring the tict logo at top center, yellow location pin mascot (tict-mascot-1) in the center, headline text 'Plan less. Travel more.', and a yellow button CTA reading 'Create your trip' at the bottom. Spoken voiceover and captions state: 'Plan less. Travel more with tict.'"
+          }
+        ],
+        "checks": [
+          {
+            "requirement": "Scene 1 (hook, 0–5s) onscreen text 'Too much planning?' must be displayed.",
+            "status": "not_met",
+            "observation_indices": [
+              0
+            ],
+            "reason": "The required headline 'Too much planning?' does not appear onscreen during Scene 1; only the spoken voiceover captions are present."
+          },
+          {
+            "requirement": "Scene 1 expected evidence: top-down view of cluttered map with sticky notes, hands swapping sticky notes frantically, continuous physical motion, visible confused reaction, device screens hidden.",
+            "status": "partially_met",
+            "observation_indices": [
+              0
+            ],
+            "reason": "Top-down map view, frantic hands swapping sticky notes, continuous motion, and hidden/dark phone screen are present. However, no face or visible confused reaction beyond hand motion is depicted."
+          },
+          {
+            "requirement": "Scene 1 voiceover line: 'You saved fifty spots on the map, but how are you actually spending day one?'",
+            "status": "met",
+            "observation_indices": [
+              0
+            ],
+            "reason": "The spoken audio and captions match the required script word-for-word."
+          },
+          {
+            "requirement": "Scene 2 (product_demo, 5–11s) expected evidence: approved tict UI visible, trip plan visible, product text legible, headline 'Your whole trip. One plan.', and voiceover 'tict turns every booking, place, and next step into one clear trip plan.'",
+            "status": "met",
+            "observation_indices": [
+              1
+            ],
+            "reason": "All visual assets, top headline text, legible UI screens, and voiceover audio match the contract specifications."
+          },
+          {
+            "requirement": "Scene 3 (cta, 11–15s) expected evidence: approved logo, approved mascot, single CTA 'Create your trip', headline 'Plan less. Travel more.', and voiceover 'Plan less. Travel more with tict.'",
+            "status": "met",
+            "observation_indices": [
+              2
+            ],
+            "reason": "The end card presents the tict logo, mascot asset, headline text, single CTA button, and matching voiceover line in accordance with the specified layout."
+          },
+          {
+            "requirement": "Quality criterion: Top-down visual contrast between physical paper clutter and organized digital plan in first 2 seconds.",
+            "status": "not_met",
+            "observation_indices": [
+              0
+            ],
+            "reason": "Only physical paper map shuffling is shown during the first 2 seconds (and through 5 seconds); the digital plan interface is not shown until 5.0 seconds."
+          },
+          {
+            "requirement": "Quality criterion: No generic or generated UI presented as tict.",
+            "status": "met",
+            "observation_indices": [
+              1
+            ],
+            "reason": "The product demo uses the official tict application capture with brand-specific styling and legible details."
+          }
+        ],
+        "issues": [
+          {
+            "category": "contract_mismatch",
+            "severity": "medium",
+            "observation_indices": [
+              0
+            ],
+            "description": "Scene 1 is missing the designated onscreen text 'Too much planning?'.",
+            "intended_effect_considered": "Voiceover captions were rendered at the bottom of the screen, but the dedicated scene headline was omitted."
+          },
+          {
+            "category": "contract_mismatch",
+            "severity": "medium",
+            "observation_indices": [
+              0
+            ],
+            "description": "The visual action in Scene 1 maintains paper note shuffling across all 5 seconds, skipping the planned transition where paper clutter is swept away to reveal an illuminated smartphone screen before 5.0 seconds.",
+            "intended_effect_considered": "Sustaining the hand shuffling for 5 full seconds reinforces manual confusion, but fails to execute the planned hook beats and early digital contrast requirement."
+          }
+        ]
+      },
+      "processing": {
+        "verified": true,
+        "steps": [
+          {
+            "type": "processing_call",
+            "id": "call_615656"
+          },
+          {
+            "type": "processing_result",
+            "call_id": "call_615656"
+          },
+          {
+            "type": "processing_call",
+            "id": "call_615698"
+          },
+          {
+            "type": "processing_result",
+            "call_id": "call_615698"
+          }
+        ]
+      },
+      "agentic_verified": true,
+      "provider_response_id": null,
+      "model_version": "gemini-3.6-flash",
+      "usage": {
+        "total_tokens": 14852,
+        "total_input_tokens": 2169,
+        "total_cached_tokens": 0,
+        "total_output_tokens": 1484,
+        "total_tool_use_tokens": 7691,
+        "total_thought_tokens": 3508
+      },
+      "estimated_cost_microusd": 52230,
+      "charged_microusd": 52230,
+      "preflight_allowance_microusd": 150000,
+      "latency_seconds": 35.869,
+      "evidence_sha256": "a84cd95b9dc9944c0f3decbc29f7ffc7a611e9a32116ce9353943a2adcb3a9e2"
+    }
+  ],
+  "failures": []
+}

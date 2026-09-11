@@ -1,0 +1,394 @@
+{
+  "evaluator_version": "1.0.0",
+  "status": "complete",
+  "acceptance_authority": false,
+  "automatic_winner": null,
+  "accuracy": null,
+  "accuracy_unavailable_reason": "No artifact-bound human labels supplied",
+  "modes": {
+    "static": {
+      "assessment": {
+        "summary": "The video aligns with the storyboard structure, transitioning from a cluttered map hook to a product plan overview and concluding with the brand CTA end card.",
+        "observations": [
+          {
+            "start_ms": 0,
+            "end_ms": 5000,
+            "description": "Top-down view of hands moving sticky notes on a paper map accompanied by voiceover and captions."
+          },
+          {
+            "start_ms": 5000,
+            "end_ms": 11000,
+            "description": "Product UI display showing trip plan overview alongside narrator voiceover."
+          },
+          {
+            "start_ms": 11000,
+            "end_ms": 15000,
+            "description": "Brand closing screen featuring logo, mascot illustration, headline, and CTA button."
+          }
+        ],
+        "checks": [
+          {
+            "requirement": "Hook visual actions and voiceover line (0-5s)",
+            "status": "met",
+            "observation_indices": [
+              0
+            ],
+            "reason": "Top-down camera angle and sticky note shuffling match requirements."
+          },
+          {
+            "requirement": "Hook onscreen text 'Too much planning?'",
+            "status": "partially_met",
+            "observation_indices": [
+              0
+            ],
+            "reason": "Displays full voiceover captioning rather than specified headline text."
+          },
+          {
+            "requirement": "Product demo UI screen clarity (5-11s)",
+            "status": "met",
+            "observation_indices": [
+              1
+            ],
+            "reason": "Approved plan overview interface rendered legibly with correct text."
+          },
+          {
+            "requirement": "CTA end card elements (11-15s)",
+            "status": "met",
+            "observation_indices": [
+              2
+            ],
+            "reason": "Logo, mascot, headline, and button appear in target layout."
+          }
+        ],
+        "issues": [
+          {
+            "category": "contract_mismatch",
+            "severity": "medium",
+            "observation_indices": [
+              0
+            ],
+            "description": "Scene 1 overlay shows verbatim speech transcript instead of contracted hook copy.",
+            "intended_effect_considered": "Enhances narrative clarity but alters planned visual messaging."
+          }
+        ]
+      },
+      "agentic_verified": false,
+      "usage": {
+        "total_cached_tokens": 0,
+        "total_input_tokens": 3373,
+        "total_output_tokens": 561,
+        "total_thought_tokens": 2216,
+        "total_tokens": 6150,
+        "total_tool_use_tokens": 0
+      },
+      "latency_seconds": 21.071,
+      "charged_microusd": 25887
+    },
+    "agentic": {
+      "assessment": {
+        "summary": "The video aligns with most contract requirements, presenting the physical map hook, product UI demo, and end card CTA, with a minor overlay text discrepancy in the hook.",
+        "observations": [
+          {
+            "start_ms": 0,
+            "end_ms": 5000,
+            "description": "Top-down view of hands shuffling sticky notes on a map with speech captions."
+          },
+          {
+            "start_ms": 5000,
+            "end_ms": 10600,
+            "description": "Product demo displaying the tict app trip overview UI."
+          },
+          {
+            "start_ms": 10600,
+            "end_ms": 15000,
+            "description": "Brand CTA end card featuring logo, mascot, headline, and button."
+          }
+        ],
+        "checks": [
+          {
+            "requirement": "Hook scene visual concept and clutter setup",
+            "status": "met",
+            "observation_indices": [
+              0
+            ],
+            "reason": "Shows top-down cluttered map with sticky notes and matching voiceover."
+          },
+          {
+            "requirement": "Hook scene onscreen text overlay 'Too much planning?'",
+            "status": "not_met",
+            "observation_indices": [
+              0
+            ],
+            "reason": "The required text overlay is replaced by speech captions."
+          },
+          {
+            "requirement": "Product demo scene with approved UI",
+            "status": "met",
+            "observation_indices": [
+              1
+            ],
+            "reason": "Displays the approved trip plan overview screen clearly."
+          },
+          {
+            "requirement": "CTA end card with logo, mascot, and action button",
+            "status": "met",
+            "observation_indices": [
+              2
+            ],
+            "reason": "Includes logo, mascot hero element, headline, and 'Create your trip' button."
+          }
+        ],
+        "issues": [
+          {
+            "category": "contract_mismatch",
+            "severity": "medium",
+            "observation_indices": [
+              0
+            ],
+            "description": "Missing required onscreen text 'Too much planning?' in scene 1.",
+            "intended_effect_considered": "Spoken captions were substituted for text overlays."
+          }
+        ]
+      },
+      "agentic_verified": false,
+      "usage": {
+        "total_cached_tokens": 0,
+        "total_input_tokens": 3373,
+        "total_output_tokens": 532,
+        "total_thought_tokens": 1290,
+        "total_tokens": 5195,
+        "total_tool_use_tokens": 0
+      },
+      "latency_seconds": 16.111,
+      "charged_microusd": 18725
+    }
+  },
+  "total_charged_microusd": 44612,
+  "evidence": [
+    {
+      "status": "complete",
+      "binding": {
+        "evaluator_version": "1.0.0",
+        "video_sha256": "7412f0e49389cfdac8b984eae0d406dc5af691bf77cc9cb34790d756022d93ae",
+        "duration_ms": 15000,
+        "contract_sha256": "69cadbf332d541e4b8eb56dea7935148edc318117e0767d6554d93fa364223ac",
+        "prompt_sha256": "02296231d3e6e7659eb7f017e73201fd793280415ed4d4d2ab0949bc7dd29176",
+        "schema_sha256": "0b513f0cb936580687127d31b4548749385e6f6a0502bd92a2a15f5b195c7659",
+        "model": "gemini-3.6-flash",
+        "mode": "static",
+        "operation_id": "experiment-017-video-judge-static"
+      },
+      "previous_attempts": [
+        {
+          "status": "failed",
+          "binding": {
+            "evaluator_version": "1.0.0",
+            "video_sha256": "7412f0e49389cfdac8b984eae0d406dc5af691bf77cc9cb34790d756022d93ae",
+            "duration_ms": 15000,
+            "contract_sha256": "69cadbf332d541e4b8eb56dea7935148edc318117e0767d6554d93fa364223ac",
+            "prompt_sha256": "02296231d3e6e7659eb7f017e73201fd793280415ed4d4d2ab0949bc7dd29176",
+            "schema_sha256": "0b513f0cb936580687127d31b4548749385e6f6a0502bd92a2a15f5b195c7659",
+            "model": "gemini-3.6-flash",
+            "mode": "static",
+            "operation_id": "experiment-017-video-judge-static"
+          },
+          "error_type": "ConnectError",
+          "http_status": null,
+          "provider_submission_attempted": false,
+          "automatic_retry": false,
+          "provider_response_id": null,
+          "usage": null,
+          "charged_microusd": 0
+        }
+      ],
+      "acceptance_authority": false,
+      "assessment": {
+        "summary": "The video aligns with the storyboard structure, transitioning from a cluttered map hook to a product plan overview and concluding with the brand CTA end card.",
+        "observations": [
+          {
+            "start_ms": 0,
+            "end_ms": 5000,
+            "description": "Top-down view of hands moving sticky notes on a paper map accompanied by voiceover and captions."
+          },
+          {
+            "start_ms": 5000,
+            "end_ms": 11000,
+            "description": "Product UI display showing trip plan overview alongside narrator voiceover."
+          },
+          {
+            "start_ms": 11000,
+            "end_ms": 15000,
+            "description": "Brand closing screen featuring logo, mascot illustration, headline, and CTA button."
+          }
+        ],
+        "checks": [
+          {
+            "requirement": "Hook visual actions and voiceover line (0-5s)",
+            "status": "met",
+            "observation_indices": [
+              0
+            ],
+            "reason": "Top-down camera angle and sticky note shuffling match requirements."
+          },
+          {
+            "requirement": "Hook onscreen text 'Too much planning?'",
+            "status": "partially_met",
+            "observation_indices": [
+              0
+            ],
+            "reason": "Displays full voiceover captioning rather than specified headline text."
+          },
+          {
+            "requirement": "Product demo UI screen clarity (5-11s)",
+            "status": "met",
+            "observation_indices": [
+              1
+            ],
+            "reason": "Approved plan overview interface rendered legibly with correct text."
+          },
+          {
+            "requirement": "CTA end card elements (11-15s)",
+            "status": "met",
+            "observation_indices": [
+              2
+            ],
+            "reason": "Logo, mascot, headline, and button appear in target layout."
+          }
+        ],
+        "issues": [
+          {
+            "category": "contract_mismatch",
+            "severity": "medium",
+            "observation_indices": [
+              0
+            ],
+            "description": "Scene 1 overlay shows verbatim speech transcript instead of contracted hook copy.",
+            "intended_effect_considered": "Enhances narrative clarity but alters planned visual messaging."
+          }
+        ]
+      },
+      "processing": {
+        "verified": false,
+        "steps": []
+      },
+      "agentic_verified": false,
+      "provider_response_id": "",
+      "model_version": "gemini-3.6-flash",
+      "usage": {
+        "total_cached_tokens": 0,
+        "total_input_tokens": 3373,
+        "total_output_tokens": 561,
+        "total_thought_tokens": 2216,
+        "total_tokens": 6150,
+        "total_tool_use_tokens": 0
+      },
+      "estimated_cost_microusd": 25887,
+      "charged_microusd": 25887,
+      "preflight_allowance_microusd": 150000,
+      "latency_seconds": 21.071,
+      "evidence_sha256": "b841f440d17932200484f64563e76772958ed3ac0a9829842628315f54d22e66"
+    },
+    {
+      "status": "complete",
+      "binding": {
+        "evaluator_version": "1.0.0",
+        "video_sha256": "7412f0e49389cfdac8b984eae0d406dc5af691bf77cc9cb34790d756022d93ae",
+        "duration_ms": 15000,
+        "contract_sha256": "69cadbf332d541e4b8eb56dea7935148edc318117e0767d6554d93fa364223ac",
+        "prompt_sha256": "02296231d3e6e7659eb7f017e73201fd793280415ed4d4d2ab0949bc7dd29176",
+        "schema_sha256": "0b513f0cb936580687127d31b4548749385e6f6a0502bd92a2a15f5b195c7659",
+        "model": "gemini-3.6-flash",
+        "mode": "agentic",
+        "operation_id": "experiment-017-video-judge-agentic"
+      },
+      "previous_attempts": [],
+      "acceptance_authority": false,
+      "assessment": {
+        "summary": "The video aligns with most contract requirements, presenting the physical map hook, product UI demo, and end card CTA, with a minor overlay text discrepancy in the hook.",
+        "observations": [
+          {
+            "start_ms": 0,
+            "end_ms": 5000,
+            "description": "Top-down view of hands shuffling sticky notes on a map with speech captions."
+          },
+          {
+            "start_ms": 5000,
+            "end_ms": 10600,
+            "description": "Product demo displaying the tict app trip overview UI."
+          },
+          {
+            "start_ms": 10600,
+            "end_ms": 15000,
+            "description": "Brand CTA end card featuring logo, mascot, headline, and button."
+          }
+        ],
+        "checks": [
+          {
+            "requirement": "Hook scene visual concept and clutter setup",
+            "status": "met",
+            "observation_indices": [
+              0
+            ],
+            "reason": "Shows top-down cluttered map with sticky notes and matching voiceover."
+          },
+          {
+            "requirement": "Hook scene onscreen text overlay 'Too much planning?'",
+            "status": "not_met",
+            "observation_indices": [
+              0
+            ],
+            "reason": "The required text overlay is replaced by speech captions."
+          },
+          {
+            "requirement": "Product demo scene with approved UI",
+            "status": "met",
+            "observation_indices": [
+              1
+            ],
+            "reason": "Displays the approved trip plan overview screen clearly."
+          },
+          {
+            "requirement": "CTA end card with logo, mascot, and action button",
+            "status": "met",
+            "observation_indices": [
+              2
+            ],
+            "reason": "Includes logo, mascot hero element, headline, and 'Create your trip' button."
+          }
+        ],
+        "issues": [
+          {
+            "category": "contract_mismatch",
+            "severity": "medium",
+            "observation_indices": [
+              0
+            ],
+            "description": "Missing required onscreen text 'Too much planning?' in scene 1.",
+            "intended_effect_considered": "Spoken captions were substituted for text overlays."
+          }
+        ]
+      },
+      "processing": {
+        "verified": false,
+        "steps": []
+      },
+      "agentic_verified": false,
+      "provider_response_id": "",
+      "model_version": "gemini-3.6-flash",
+      "usage": {
+        "total_cached_tokens": 0,
+        "total_input_tokens": 3373,
+        "total_output_tokens": 532,
+        "total_thought_tokens": 1290,
+        "total_tokens": 5195,
+        "total_tool_use_tokens": 0
+      },
+      "estimated_cost_microusd": 18725,
+      "charged_microusd": 18725,
+      "preflight_allowance_microusd": 150000,
+      "latency_seconds": 16.111,
+      "evidence_sha256": "4303fd275a170a992b4f5ea6f4e216c7c3c284762b72e723bd9079de96f0dab7"
+    }
+  ],
+  "failures": []
+}
