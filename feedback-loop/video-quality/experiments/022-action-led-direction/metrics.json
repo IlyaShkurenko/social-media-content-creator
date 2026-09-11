@@ -1,0 +1,23 @@
+{
+  "status": "planning_checkpoint_not_video_evaluation",
+  "candidate_video": null,
+  "creative_acceptance": null,
+  "unavailable_reason": "No material generation or candidate render has occurred; director plan awaits user review.",
+  "baseline_hash_replay": "passed",
+  "repository_tests": {
+    "passed": 765,
+    "skipped": 12,
+    "subtests_passed": 4183,
+    "coverage_percent": 76
+  },
+  "evaluator_tests_passed": 104,
+  "estimated_planning_cost_microusd": 1414438,
+  "budget": {
+    "scope_id": "mixed-media-iteration-001",
+    "cap_microusd": 20000000,
+    "reserved_microusd": 0,
+    "charged_microusd": 9937930,
+    "remaining_microusd": 10062070
+  },
+  "proposed_runway_cost_microusd": 1200000
+}

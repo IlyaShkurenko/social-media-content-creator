@@ -1,0 +1,169 @@
+{
+  "kind": "motion_direction_experiment",
+  "status": "awaiting_user_plan_review",
+  "starting_revision": "2d02400",
+  "budget_implementation_revision": "2f22f94",
+  "baseline_video_sha256": "73546ad4f879e8644565aa07193db64cacac7456eb60d9b90dbe801c4afad303",
+  "baseline_user_review": "rejected_creative_quality",
+  "budget_authorization": {
+    "scope_id": "mixed-media-iteration-001",
+    "old_total_microusd": 10000000,
+    "new_total_microusd": 20000000,
+    "prior_charged_microusd": 8523492,
+    "operations_preserved": 95,
+    "user_instruction": "Raise the limit to 20 and continue",
+    "audit": "artifacts/budget-authorization.json"
+  },
+  "author": {
+    "provider": "astra",
+    "model": "gpt-6-astra",
+    "reasoning": "high",
+    "visual_references": 18
+  },
+  "prompt": "artifacts/director-01/plan.prompt.json",
+  "refinement_prompt": "artifacts/director-01/plan-repair.prompt.json",
+  "original_plan": "artifacts/director-01/plan.json",
+  "proposed_plan": "artifacts/director-01/plan-revised.json",
+  "proposed_plan_sha256": "497019e1bcde4d5a1097a46896accfeeeab939740c244c654a760766d44d4a8d",
+  "plan": {
+    "hypothesis": "Travel planning feels like work; seeing scattered travel intentions become one understandable trip should turn overwhelm into anticipation.",
+    "creative_rationale": {
+      "title": "The View Is Waiting",
+      "treatment": "At a Dubai waterfront café, one traveler is ready to explore; their companion is still negotiating a guidebook and loose planning notes. A raised 'one moment' finger gently interrupts their departure. The planner turns to their phone. An explicit editorial cut takes us into a grounded, readable device close-up showing the real tict overview. We return to the same human take: the guidebook closes, the planner looks up, and the waiting companion gets their smile. The trip finally feels more interesting than the planning.",
+      "construction": "Use one continuous generated ten-second human scene, interrupted at its midpoint by a five-second product insert. This preserves cast and location continuity without requiring matching independently generated people. The opening is already a human travel moment, not a title or a collection of photographs. The product answers an established need; the return to the travelers completes the scene rather than abandoning it for a screenshot.",
+      "format": {
+        "duration_seconds": 20,
+        "width": 720,
+        "height": 1280,
+        "fps": 30,
+        "total_frames": 600,
+        "language": "en-US",
+        "palette": {
+          "background": "#FFFCEE",
+          "text": "#1D1E18",
+          "accent": "#FFCC00"
+        },
+        "typography": "Use a verified locally available sans-serif, not an assumed Figma match.",
+        "safe_area": "Keep essential copy and brand artwork within x=60–640 and y=170–1080."
+      },
+      "human_direction": {
+        "source_id": "view_waiting",
+        "location": "An outdoor café beside Dubai Creek, with water and creekside architecture behind the travelers. This connects to the supplied UAE, Dubai overview without asserting that this café is an itinerary entry.",
+        "performance": "Affectionate impatience, not an argument. The planner's divided attention is the problem: a guidebook, loose notes, a waiting companion. The release is a closed book and an exchanged look, not a magical interface operation.",
+        "camera": "One seated-eye-level medium two-shot, gentle forward movement, natural afternoon light. Keep the planner's face, hands and companion readable in the vertical composition. The phone screen always faces away from the camera.",
+        "continuity": "Play source seconds 0–5 before the product insert and 5–10 afterward. Both passages come from the same generated take; no matching second cast is requested."
+      },
+      "product_direction": {
+        "source_id": "trip_plan",
+        "presentation": "A deliberately separate studio insert: a generic portrait handset resting flat on a broad cream plinth, with a charcoal bezel, restrained contact shadow and diagonal warm light. Build the simple geometry deterministically in Remotion. Composite the exact capture inside the handset; do not place it into generated footage.",
+        "movement": "At 5 seconds, establish the handset with a screen approximately 400 pixels wide, centered below the external brand label. From 5.8–6.4 seconds, enlarge the entire handset and capture together to a screen width of approximately 600 pixels. Let the lower handset leave the frame naturally. Settle with 'UAE, Dubai' and the four planning categories in the central reading area, then hold until 10 seconds. This is a camera-like push, not an app scroll.",
+        "external_artwork_and_copy": "Place the exact logo above the handset, approximately 130 pixels wide. Beside it, outside the interface, set 'Demo interface · data not real' in readable dark sans-serif. Both remain fixed throughout the insert.",
+        "evidence": "The exact overview puts UAE, Dubai together with Stays, Flights, Activities and Car Rentals. That visible grouping supports the organizational hypothesis. No taps, loading states, category expansion, automatic import or creation sequence are demonstrated.",
+        "data_integrity": "Keep the screenshot intact, including its inconsistent demo dates and any prices or controls visible in the wider framing. These are supplied interface pixels, not advertised prices or real bookings. Do not emphasize totals or the RESERVE control, activate them, correct the data or construct a cleaner replacement screen.",
+        "readability_gate": "Check the final settled framing at 720-pixel output width: destination and category names must be readable, with no glare or perspective distortion across them. The brief establishing view is not intended for reading every field."
+      },
+      "audio_choice": {
+        "resolved_mode": "music",
+        "reason": "A modest instrumental pulse gives the waiting gesture a little friction and carries momentum through the product insert. No narration is needed to explain what the actors already show, and the viewer can read the app without competing speech.",
+        "execution": "Use creek_pulse from time zero at one fixed, low volume. Repeat or trim the procedural sketch to exactly 20 seconds. No gain automation, dialogue, café ambience, paper foley or synchronized sound effects are assumed.",
+        "compromise": "This is a simple procedural musical sketch, not a bespoke cinematic arrangement. Picture rhythm carries the emotional change. There is no spoken brand name; visible spelling remains tict."
+      },
+      "execution_risks_and_compromises": [
+        "The ten-second generation must deliver a readable waiting gesture, a phone glance around the midpoint and a relaxed look up afterward. This is a performance request, not a guaranteed timed result. Review before assembly; stop if the intended midpoint cut cannot be made coherently.",
+        "Hands, paper persistence and phone orientation are generation risks. Keep props few and movement ordinary. Reject melting objects, distracting anatomy or a visible invented screen.",
+        "The device insert is an honest editorial cut to a stylized studio setup, not the reverse angle of the generated phone. No screen tracking, rotoscoping, reference conditioning or photorealistic 3D rendering is promised.",
+        "The app demonstration remains a static approved capture with a short camera move. It proves an overview exists, not that tict automatically resolved the travelers' notes or booked their trip.",
+        "The scene suggests anticipation within Dubai, not a before-and-after transportation claim. No named attraction, accommodation or purchased activity is promised.",
+        "Use logo and mascot directly, preserving complete artwork and aspect ratios. Do not regenerate or deform either asset.",
+        "Any tool failure, unusable generated action, missing local asset, illegible product framing or unexpected charge stops production with the specific blocker reported. No silent substitution or automatic regeneration."
+      ],
+      "material_cost_quote": {
+        "status": "Planning only; no tools executed.",
+        "currency": "USD",
+        "runway": {
+          "clips": 1,
+          "duration_seconds": 10,
+          "estimated_cost_per_second": 0.12,
+          "estimated_total": 1.2
+        },
+        "music": {
+          "estimated_external_cost": 0,
+          "basis": "Supplied local procedural music capability; verify before execution."
+        },
+        "catalog_assets": "Already local; no material requests or external cost.",
+        "estimated_external_material_total": 1.2,
+        "reported_remaining_shared_budget": 11.476508,
+        "control": "The quote excludes continuing authoring and judging consumption. Recheck the live balance before execution. No authorization to exceed the shared $20 ceiling, incur unquoted charges or automatically retry generation."
+      }
+    },
+    "beats": [
+      {
+        "id": "one_moment",
+        "start": 0,
+        "end": 5,
+        "intent": "SEE: view_waiting, source 0–5 seconds. Open directly on the companion leaning forward to leave the Dubai waterfront café. The planner raises a gentle 'one moment' finger, glances between an open guidebook and loose notes, then looks down at their phone. Show faces and the inviting water beyond, not a tabletop-only study. No title. HEAR: creek_pulse begins immediately, quiet and even. TRANSITION: cut on the planner's downward eyeline to the separate product insert; do not attempt a moving-screen replacement. CONNECTION: the visible problem is fragmented planning holding up a shared travel moment."
+      },
+      {
+        "id": "one_readable_trip",
+        "start": 5,
+        "end": 10,
+        "intent": "SEE: Exact trip_plan inside the grounded handset composition, with logo and the external demo-data label. Establish for 0.8 seconds; push the complete device closer over 0.6 seconds; hold the readable destination and category rows for 3.6 seconds. Keep all interface pixels unchanged and introduce no interaction. HEAR: uninterrupted creek_pulse at the same volume. TRANSITION: cut back to the existing human take, not another destination shot. EVIDENCE: UAE, Dubai and the four planning categories share one overview. COMPROMISE: this demonstrates organization visually, not a functioning trip-creation flow."
+      },
+      {
+        "id": "the_look_up",
+        "start": 10,
+        "end": 15,
+        "intent": "SEE: Resume view_waiting, source 5–10 seconds. The planner lowers the phone, closes the guidebook over the notes and looks up with a small, genuine smile. The companion responds; their attention turns together toward the waterfront. Let the final shared look breathe rather than accelerating into a montage. HEAR: the same fixed-volume music, with no invented café sound. TRANSITION: cut from the relaxed human composition to the mascot's open-armed pose on cream. CONNECTION: relief becomes anticipation through behavior; no completed booking or instant organization is claimed."
+      },
+      {
+        "id": "create_your_trip",
+        "start": 15,
+        "end": 20,
+        "intent": "SEE: A complete end composition appears at the cut and remains for five seconds. Exact logo centered near y=290 at 280 pixels wide; complete mascot centered beneath it at approximately 520 pixels wide; 'Create your trip.' near y=950 in approximately 52-pixel dark sans-serif. Use #FFFCEE throughout, generous spacing and the mascot's original yellow. No typewriter reveal, fabricated app button, store badge, URL or download claim. HEAR: creek_pulse continues at its fixed level and ends at 20 seconds. SOURCES: logo and mascot only. PURPOSE: an unmistakable, readable invitation to act after the human scene has resolved."
+      }
+    ],
+    "materials": [
+      {
+        "id": "view_waiting",
+        "tool": "runway",
+        "prompt_text": "Ten-second cinematic live-action continuous medium two-shot, vertical 9:16. Two adult friends at an outdoor cafe beside Dubai Creek; sunlit water and creekside architecture behind them. Seated eye-level camera, gentle push forward, warm natural light, understated clothes. First half: one friend leans forward ready to leave; the seated planner raises a gentle 'one moment' finger, looks between an open travel guidebook and two loose notes, then checks a phone held with its screen facing away from camera. Second half: the planner lowers the phone, closes the guidebook over the notes and looks up with a small relieved smile. The companion smiles back; both turn their attention toward the waterfront. Affectionate impatience becoming anticipation, not an argument. Few props, natural hands, no dramatic wind. Keep both faces and gestures visible. No cuts, dialogue, readable lettering, visible screen content, logos, captions or graphics.",
+        "duration_seconds": 10
+      },
+      {
+        "id": "creek_pulse",
+        "tool": "music",
+        "bpm": 96,
+        "notes": [
+          60,
+          64,
+          67,
+          69,
+          67,
+          64,
+          62,
+          67
+        ],
+        "mood": "Warm, lightly propulsive instrumental anticipation. Restrained and spacious rather than triumphant; a simple repeating pulse that supports natural human action and leaves room to read the app. No vocals."
+      }
+    ],
+    "audio": {
+      "mode": "music",
+      "asset_ids": [
+        "creek_pulse"
+      ]
+    }
+  },
+  "planning_observations": [
+    {
+      "source": "deterministic_validation",
+      "issue": "Initial gather_table Runway prompt had 1135 characters; limit is 1000. No Runway call was made."
+    },
+    {
+      "source": "coding_agent_editorial_review",
+      "issue": "Six-second static reading-board UI risked repeating the user's rejected flat-capture presentation.",
+      "measurement": false
+    }
+  ],
+  "revised_plan_validation": "passed",
+  "material_calls": 0
+}
