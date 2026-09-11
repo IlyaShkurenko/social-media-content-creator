@@ -287,10 +287,10 @@ def test_adpipe_2_6_absent_ledger_is_zero_spend_and_remains_absent(
 
     snapshot = _read_budget_snapshot(database)
 
-    assert snapshot.cap_microusd == 10_000_000
+    assert snapshot.cap_microusd == run_campaign.ITERATION_CAP_MICROUSD
     assert snapshot.reserved_microusd == 0
     assert snapshot.charged_microusd == 0
-    assert snapshot.remaining_microusd == 10_000_000
+    assert snapshot.remaining_microusd == run_campaign.ITERATION_CAP_MICROUSD
     assert not database.exists()
     assert not database.parent.exists()
 

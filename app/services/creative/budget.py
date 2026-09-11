@@ -8,6 +8,11 @@ from pathlib import Path
 from typing import Iterable, Iterator
 
 
+# User-approved total ceiling for mixed-media-iteration-001 (2026-09-11).
+# Changing this constant does not reset spending or migrate an existing ledger.
+ITERATION_CAP_MICROUSD = 20_000_000
+
+
 _BUDGET_OPERATION_STATUSES = frozenset(
     {"reserved", "submitted", "released", "manual_charge"}
 )

@@ -11,5 +11,5 @@
   "pronunciations": {"tict": "tickt"},
   "brand_tokens": {"background": "#FFFCEE", "text": "#1D1E18", "yellow": "#FFCC00"},
   "typography": "Use a locally available sans-serif; the approved Figma font is unknown.",
-  "provider_spend_limit_note": "Shared remaining budget is approximately $3.48, covering authoring and judging too. Use only material that the concept actually needs."
+  "provider_spend_limit_note": "The shared total budget ceiling is $20, including previous spending, authoring, material generation and judging. The trusted ledger determines the actual remaining allowance; do not treat the total as unspent funds. Use only material that the concept actually needs."
 }

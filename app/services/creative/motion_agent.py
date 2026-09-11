@@ -15,7 +15,7 @@ import tomllib
 
 import httpx
 
-from app.services.creative.budget import IterationBudgetLedger
+from app.services.creative.budget import ITERATION_CAP_MICROUSD, IterationBudgetLedger
 from app.services.creative.motion import (
     REPO, image_reference, managed_file, render_project, sha256, validate_project, write_json,
 )
@@ -489,7 +489,7 @@ def main():
         catalog = {aid: item for aid, item in catalog.items() if aid in brief["allowed_assets"]}
     config = tomllib.loads((REPO / "config.toml").read_text())["app"]
     ledger = IterationBudgetLedger(REPO / "feedback-loop/video-quality/.state/mixed-media-iteration-001.sqlite3",
-        scope_id="mixed-media-iteration-001", cap_microusd=10_000_000)
+        scope_id="mixed-media-iteration-001", cap_microusd=ITERATION_CAP_MICROUSD)
     tools = build_tools(config, ledger, args.output.name)
     author = create_author(config, ledger, args.output.name, catalog,
                            provider=args.author_provider, model=args.author_model,

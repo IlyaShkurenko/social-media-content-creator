@@ -21,7 +21,7 @@ if str(REPO_ROOT) not in sys.path:
 if str(LOOP_ROOT) not in sys.path:
     sys.path.insert(0, str(LOOP_ROOT))
 
-from app.services.creative.budget import IterationBudgetLedger  # noqa: E402
+from app.services.creative.budget import ITERATION_CAP_MICROUSD, IterationBudgetLedger  # noqa: E402
 from evals.gemini_judge import (  # noqa: E402
     JUDGE_MODEL,
     MODEL_PRICING_USD_PER_MILLION_TOKENS,
@@ -45,7 +45,6 @@ PROMPT_CHARACTERS_PER_TOKEN = 4
 COST_SAFETY_MULTIPLIER = 1.25
 MAX_INLINE_AUDIO_BYTES = 20 * 1024 * 1024
 ITERATION_SCOPE_ID = "mixed-media-iteration-001"
-ITERATION_CAP_MICROUSD = 10_000_000
 DEFAULT_BUDGET_DATABASE = LOOP_ROOT / ".state" / "mixed-media-iteration-001.sqlite3"
 
 DIMENSION_NAMES = ("naturalness", "emotional_match", "ending_consistency")

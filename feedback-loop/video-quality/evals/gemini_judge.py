@@ -22,14 +22,13 @@ REPO_ROOT = LOOP_ROOT.parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from app.services.creative.budget import IterationBudgetLedger  # noqa: E402
+from app.services.creative.budget import ITERATION_CAP_MICROUSD, IterationBudgetLedger  # noqa: E402
 
 
 EVALUATOR_VERSION = "0.6.0"
 JUDGE_SCHEMA_VERSION = 1
 JUDGE_MODEL = "gemini-3.6-flash"
 ITERATION_SCOPE_ID = "mixed-media-iteration-001"
-ITERATION_CAP_MICROUSD = 10_000_000
 DEFAULT_BUDGET_DATABASE = (
     LOOP_ROOT / ".state" / "mixed-media-iteration-001.sqlite3"
 )

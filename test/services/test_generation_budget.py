@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from app.services.creative.budget import (
+    ITERATION_CAP_MICROUSD,
     BudgetExceededError,
     BudgetStateError,
     IterationBudgetLedger,
@@ -29,6 +30,21 @@ def ledger(path: Path) -> IterationBudgetLedger:
         scope_id="iteration-001",
         cap_microusd=10_000_000,
     )
+
+
+def test_authorized_iteration_cap_is_used_by_audit_default(tmp_path: Path) -> None:
+    database = tmp_path / "budget.sqlite3"
+    budget = IterationBudgetLedger(database, scope_id="mixed-media-iteration-001",
+                                   cap_microusd=ITERATION_CAP_MICROUSD)
+    budget.record_manual_charge("prior", 8_523_492, "prior usage remains charged")
+    result = subprocess.run(
+        [sys.executable, str(AUDIT_SCRIPT), "--budget-database", str(database)],
+        check=True, capture_output=True, text=True,
+    )
+    snapshot = json.loads(result.stdout)["budget"]
+    assert snapshot["cap_microusd"] == 20_000_000
+    assert snapshot["charged_microusd"] == 8_523_492
+    assert snapshot["remaining_microusd"] == 11_476_508
 
 
 def test_runway_1_2_reservation_reduces_remaining_budget(tmp_path: Path) -> None:

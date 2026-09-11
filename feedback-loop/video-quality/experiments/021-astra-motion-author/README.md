@@ -114,3 +114,13 @@ Reproduce locally without another provider call:
 ```bash
 make motion-verify OUTPUT=feedback-loop/video-quality/experiments/021-astra-motion-author/artifacts/astra-03/attempt-01/render
 ```
+
+## Subsequent product-owner review
+
+The user rejected the retained candidate's creative quality: it mainly displays
+text followed by an unframed static app capture and feels unfinished. This label
+applies to MP4 `73546ad4f879e8644565aa07193db64cacac7456eb60d9b90dbe801c4afad303`;
+it does not change the historical technical measurements. The requested author
+integration is retained, but this film is not a creative improvement or an accepted
+production reference. Experiment 022 tests action-led acquisition and direction
+instead of another author swap or the same frozen pool of still materials.

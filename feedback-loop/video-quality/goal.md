@@ -57,7 +57,7 @@ Unavailable metrics must be emitted as `null` with a reason, never silently omit
 ## Current authorized iteration budget
 
 - Scope ID: `mixed-media-iteration-001`.
-- Shared paid-call ceiling: **$10.00 USD** (`10_000_000` micro-USD) for the whole iteration, not per generation.
+- Shared paid-call ceiling: **$20.00 USD** (`20_000_000` micro-USD) for the whole iteration, not per generation. Explicitly raised by the user on 2026-09-11 from $10 total to $20 total; all prior spending remains charged to this same scope.
 - The durable ledger is `feedback-loop/video-quality/.state/mixed-media-iteration-001.sqlite3`.
 - Every paid request must pass a fail-closed budget check before submission. The check creates no durable reservation; completed calls record their usage-based charge and ambiguous outcomes record a worst-case charge.
 - Dry runs, local rendering, FFmpeg evaluation, and stock-provider searches do not consume this paid-call budget. Any paid planner, TTS, vision judge, or generated-media call introduced later must use this same scope.
