@@ -102,6 +102,12 @@ openai_api_key = ""
 openai_base_url = ""
 openai_model_name = ""
 
+# Independent director/React author for the opt-in motion CLI (not legacy LLM).
+# Astra uses openai_api_key or OPENAI_API_KEY and the official Responses endpoint.
+# It intentionally does not inherit openai_base_url/openai_model_name.
+motion_author_provider = "astra" # astra | gemini; video judging stays Gemini
+motion_author_reasoning = "high" # Astra: low | medium | high | xhigh | max
+
 # Google Gemini
 # API key: https://aistudio.google.com/app/apikey
 gemini_api_key = ""

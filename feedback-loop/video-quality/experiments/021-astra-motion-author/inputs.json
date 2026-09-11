@@ -1,0 +1,38 @@
+{
+  "kind": "motion_author_integration_comparison",
+  "baseline_revision": "4037fc9",
+  "brief": "motion/briefs/tict-first.json",
+  "baseline_video_sha256": "de390e9edce0a9f8d555560dd3a6a9a7c2c8af292f66921ddc026e9f548bbd38",
+  "material_run": "experiments/020-free-montage-pilot/artifacts/agent-02",
+  "author_provider": "astra",
+  "author_model": "gpt-6-astra",
+  "reasoning_effort": "high",
+  "judge": "existing Gemini agentic diagnostic evaluator",
+  "public_probe": {
+    "request": "Return an empty JSON object.",
+    "http_status": 200,
+    "input_tokens": 19,
+    "output_tokens": 8,
+    "conservative_microusd": 638
+  },
+  "candidate_video_sha256": "73546ad4f879e8644565aa07193db64cacac7456eb60d9b90dbe801c4afad303",
+  "source_sha256": "a4f623d75f5ed48b6b2c75cec1411a72f275b04323d08026e00e0cb2cad94c4e",
+  "plan_sha256": "59954bb239b90267e4afa29e04a00203a28682340de6fd8c7271dffb8286d509",
+  "same_asset_hashes": {
+    "logo": true,
+    "mascot": true,
+    "trip_plan": true,
+    "assistant": true,
+    "pexels_stress": true,
+    "voice_narration": true,
+    "bg_music": true
+  },
+  "same_brief": true,
+  "request_fix": "Explicit JSON instruction added to input messages, not only top-level instructions",
+  "budget_reconciliation": {
+    "operation": "astra-01-astra-01-plan",
+    "status": "released",
+    "reason": "HTTP 400 JSON-mode request rejected before generation",
+    "amount_microusd": 988013
+  }
+}

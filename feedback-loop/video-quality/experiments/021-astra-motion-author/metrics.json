@@ -1,0 +1,370 @@
+{
+  "status": "pending_creative_review",
+  "technical": {
+    "status": "verified",
+    "network_calls": 0,
+    "hash_checks": {
+      "contract": true,
+      "source": true,
+      "dependencies": true,
+      "video": true,
+      "assets": true
+    },
+    "technical_pass": true,
+    "creative_acceptance": null
+  },
+  "baseline_technical": {
+    "status": "verified",
+    "network_calls": 0,
+    "hash_checks": {
+      "contract": true,
+      "source": true,
+      "dependencies": true,
+      "video": true,
+      "assets": true
+    },
+    "technical_pass": true,
+    "creative_acceptance": null
+  },
+  "creative_acceptance": null,
+  "creative_quality": null,
+  "unavailable_reason": "No calibrated human comparison of these two MP4s yet",
+  "review_status": "complete",
+  "judge_evidence": {
+    "evaluator_version": "1.2.0",
+    "status": "complete",
+    "acceptance_authority": false,
+    "automatic_winner": null,
+    "accuracy": null,
+    "accuracy_unavailable_reason": "No artifact-bound human labels supplied",
+    "modes": {
+      "agentic": {
+        "assessment": {
+          "summary": "Evaluation of video_1.mp4 against the AgentFilm contract. The video follows the editorial visual design, typography layout, asset positioning, and core narrative flow well. However, during the crowding sequence in Beat 2, the opening headline fails to translate upward or scale down as incoming questions enter.",
+          "observations": [
+            {
+              "start_ms": 0,
+              "end_ms": 2800,
+              "description": "Opens on cream background (#FFFCEE) with the logo positioned at x=48, y=112 (width 128). The headline 'A trip worth\\nremembering.' smoothly settles upward to x=56, y=350 with a short yellow underline under 'remembering'."
+            },
+            {
+              "start_ms": 2800,
+              "end_ms": 6400,
+              "description": "Four editorial questions enter at staggered intervals ('Which flight?', 'Where to stay?', 'What to do?', 'Getting around?'). At ~4250ms, 'So much to arrange.' appears centrally. The opening text 'A trip worth remembering.' stays fixed at its initial position and scale until ~4250ms, when it fades out abruptly."
+            },
+            {
+              "start_ms": 6400,
+              "end_ms": 8200,
+              "description": "The crowded composition holds still from 6400ms to 6800ms before questions move outward offscreen and 'So much to arrange.' fades away. The mascot ascends to x=180, y=826 (width 360) with arms extended. At 7800ms, cuts to reveal the trip_plan crop with headline 'One trip.\\nIn view.'."
+            },
+            {
+              "start_ms": 8200,
+              "end_ms": 13600,
+              "description": "Stationary hold on the crop of trip_plan (x=48, y=410, width 624) displaying UAE, Dubai trip sections (Stays, Flights, Activities, Car Rentals). Headline 'One trip.\\nIn view.' sits at x=56, y=216. Logo and mascot remain motionless in their respective positions."
+            },
+            {
+              "start_ms": 13600,
+              "end_ms": 16400,
+              "description": "Headline transitions via opacity dissolve to 'Now picture\\nbeing there.' at x=56, y=216. All other elements (trip_plan crop, logo, mascot) remain flat, sharp, and stationary."
+            },
+            {
+              "start_ms": 16400,
+              "end_ms": 20000,
+              "description": "Over 16400ms to 17000ms, headline clears, logo animates to center top (y=160, width 260), mascot repositions to x=210, y=786 (width 300), and a yellow editorial banner appears at x=48, y=984 with dark text 'Create your trip.'. Layout holds until 20000ms."
+            }
+          ],
+          "checks": [
+            {
+              "requirement": "Open on generous cream space with logo at x48, y112, width128, and left-aligned copy 'A trip worth\\nremembering.' with yellow underline beneath 'remembering' revealing with a smooth 12-frame upward settle.",
+              "status": "met",
+              "observation_indices": [
+                0
+              ],
+              "reason": "The video opens on cream space with the logo accurately placed at x=48, y=112 and headline 'A trip worth remembering.' settling smoothly upward with the yellow underline accent."
+            },
+            {
+              "requirement": "Introduce staggered questions ('Which flight?', 'Where to stay?', 'What to do?', 'Getting around?') and 'So much\\nto arrange.' at 4.2s, progressively displacing the opening aspiration upward and reducing its scale before exit.",
+              "status": "partially_met",
+              "observation_indices": [
+                1
+              ],
+              "reason": "The editorial questions and 'So much to arrange.' enter as specified, but the opening text 'A trip worth remembering.' remains stationary without moving upward or scaling down, fading out abruptly at ~4.2s."
+            },
+            {
+              "requirement": "Hold crowded composition from 6.4 to 6.8s, move questions outward, bring mascot to x180, y826, width360, and cut to trip_plan crop at 7.8s with headline 'One trip.\\nIn view.'.",
+              "status": "met",
+              "observation_indices": [
+                2
+              ],
+              "reason": "The hold, outward movement of questions, entry of the mascot to x=180, y=826, width 360, and cut to the trip_plan crop at 7.8s occur as mandated."
+            },
+            {
+              "requirement": "Hold uninterrupted reading view of trip_plan crop (bounds x0.045, y0.280, width0.910, height0.255) at x48, y410, width624 with headline 'One trip.\\nIn view.' at x56, y216.",
+              "status": "met",
+              "observation_indices": [
+                3
+              ],
+              "reason": "The UI screenshot crop is presented at x=48, y=410, width 624 with 'One trip.\\nIn view.' placed above at x=56, y=216 during a clean reading hold."
+            },
+            {
+              "requirement": "Replace headline with 'Now picture\\nbeing there.' via 8-frame opacity transition while holding UI screenshot, logo, and mascot stationary.",
+              "status": "met",
+              "observation_indices": [
+                4
+              ],
+              "reason": "The headline smoothly fades into 'Now picture\\nbeing there.' while keeping all other screen elements completely motionless."
+            },
+            {
+              "requirement": "Resolve to branded invitation: center logo at y160 (width260), reposition mascot to x210, y786 (width300), and add flat yellow band at x48, y984 with dark text 'Create your trip.' from 17.0 to 20.0s.",
+              "status": "met",
+              "observation_indices": [
+                5
+              ],
+              "reason": "The final stage resolves smoothly into the centered logo, resized mascot, and yellow callout band 'Create your trip.' held through frame 20.0s."
+            },
+            {
+              "requirement": "Start bg_music with a 0.3-second fade-in, dip during pause (6.4s-6.8s), restore smoothly, and fade over final 0.6s.",
+              "status": "unverifiable",
+              "observation_indices": [
+                0,
+                2,
+                5
+              ],
+              "reason": "Audio track presence is verified, but exact decibel dip levels and fade curves cannot be precisely measured from visual analysis alone."
+            }
+          ],
+          "issues": [
+            {
+              "category": "contract_mismatch",
+              "severity": "medium",
+              "observation_indices": [
+                1
+              ],
+              "description": "The opening headline 'A trip worth remembering.' does not displace upward or reduce in scale when incoming questions enter; it remains static and then abruptly fades out at ~4250ms.",
+              "intended_effect_considered": "The deliberate effect intended by the contract was to visually show the initial aspiration being crowded out by the incoming workload questions. Skipping the translation/scale animation degrades this narrative transition."
+            }
+          ]
+        },
+        "agentic_verified": true,
+        "usage": {
+          "total_tokens": 62986,
+          "total_input_tokens": 3959,
+          "total_cached_tokens": 14152,
+          "total_output_tokens": 2113,
+          "total_tool_use_tokens": 50899,
+          "total_thought_tokens": 6015
+        },
+        "latency_seconds": 53.664,
+        "charged_microusd": 143247
+      }
+    },
+    "total_charged_microusd": 143247,
+    "evidence": [
+      {
+        "status": "complete",
+        "binding": {
+          "evaluator_version": "1.2.0",
+          "video_sha256": "73546ad4f879e8644565aa07193db64cacac7456eb60d9b90dbe801c4afad303",
+          "duration_ms": 20000,
+          "contract_sha256": "fc3a46511a893b479ecdf9632dd314d293fea3255a842d58852d564bc7a6c0fb",
+          "prompt_sha256": "83c8ec5b68ffa0828f44eec3ce211247a7b1a7e7c0f10ae9b41b343905cddd11",
+          "schema_sha256": "0b513f0cb936580687127d31b4548749385e6f6a0502bd92a2a15f5b195c7659",
+          "generation_config_sha256": "823010b155e208c5e32992a9e30ec5655d417961e01d5872b34852eba14489e9",
+          "model": "gemini-3.6-flash",
+          "mode": "agentic",
+          "operation_id": "motion-review-astra-03-agentic"
+        },
+        "previous_attempts": [],
+        "acceptance_authority": false,
+        "assessment": {
+          "summary": "Evaluation of video_1.mp4 against the AgentFilm contract. The video follows the editorial visual design, typography layout, asset positioning, and core narrative flow well. However, during the crowding sequence in Beat 2, the opening headline fails to translate upward or scale down as incoming questions enter.",
+          "observations": [
+            {
+              "start_ms": 0,
+              "end_ms": 2800,
+              "description": "Opens on cream background (#FFFCEE) with the logo positioned at x=48, y=112 (width 128). The headline 'A trip worth\\nremembering.' smoothly settles upward to x=56, y=350 with a short yellow underline under 'remembering'."
+            },
+            {
+              "start_ms": 2800,
+              "end_ms": 6400,
+              "description": "Four editorial questions enter at staggered intervals ('Which flight?', 'Where to stay?', 'What to do?', 'Getting around?'). At ~4250ms, 'So much to arrange.' appears centrally. The opening text 'A trip worth remembering.' stays fixed at its initial position and scale until ~4250ms, when it fades out abruptly."
+            },
+            {
+              "start_ms": 6400,
+              "end_ms": 8200,
+              "description": "The crowded composition holds still from 6400ms to 6800ms before questions move outward offscreen and 'So much to arrange.' fades away. The mascot ascends to x=180, y=826 (width 360) with arms extended. At 7800ms, cuts to reveal the trip_plan crop with headline 'One trip.\\nIn view.'."
+            },
+            {
+              "start_ms": 8200,
+              "end_ms": 13600,
+              "description": "Stationary hold on the crop of trip_plan (x=48, y=410, width 624) displaying UAE, Dubai trip sections (Stays, Flights, Activities, Car Rentals). Headline 'One trip.\\nIn view.' sits at x=56, y=216. Logo and mascot remain motionless in their respective positions."
+            },
+            {
+              "start_ms": 13600,
+              "end_ms": 16400,
+              "description": "Headline transitions via opacity dissolve to 'Now picture\\nbeing there.' at x=56, y=216. All other elements (trip_plan crop, logo, mascot) remain flat, sharp, and stationary."
+            },
+            {
+              "start_ms": 16400,
+              "end_ms": 20000,
+              "description": "Over 16400ms to 17000ms, headline clears, logo animates to center top (y=160, width 260), mascot repositions to x=210, y=786 (width 300), and a yellow editorial banner appears at x=48, y=984 with dark text 'Create your trip.'. Layout holds until 20000ms."
+            }
+          ],
+          "checks": [
+            {
+              "requirement": "Open on generous cream space with logo at x48, y112, width128, and left-aligned copy 'A trip worth\\nremembering.' with yellow underline beneath 'remembering' revealing with a smooth 12-frame upward settle.",
+              "status": "met",
+              "observation_indices": [
+                0
+              ],
+              "reason": "The video opens on cream space with the logo accurately placed at x=48, y=112 and headline 'A trip worth remembering.' settling smoothly upward with the yellow underline accent."
+            },
+            {
+              "requirement": "Introduce staggered questions ('Which flight?', 'Where to stay?', 'What to do?', 'Getting around?') and 'So much\\nto arrange.' at 4.2s, progressively displacing the opening aspiration upward and reducing its scale before exit.",
+              "status": "partially_met",
+              "observation_indices": [
+                1
+              ],
+              "reason": "The editorial questions and 'So much to arrange.' enter as specified, but the opening text 'A trip worth remembering.' remains stationary without moving upward or scaling down, fading out abruptly at ~4.2s."
+            },
+            {
+              "requirement": "Hold crowded composition from 6.4 to 6.8s, move questions outward, bring mascot to x180, y826, width360, and cut to trip_plan crop at 7.8s with headline 'One trip.\\nIn view.'.",
+              "status": "met",
+              "observation_indices": [
+                2
+              ],
+              "reason": "The hold, outward movement of questions, entry of the mascot to x=180, y=826, width 360, and cut to the trip_plan crop at 7.8s occur as mandated."
+            },
+            {
+              "requirement": "Hold uninterrupted reading view of trip_plan crop (bounds x0.045, y0.280, width0.910, height0.255) at x48, y410, width624 with headline 'One trip.\\nIn view.' at x56, y216.",
+              "status": "met",
+              "observation_indices": [
+                3
+              ],
+              "reason": "The UI screenshot crop is presented at x=48, y=410, width 624 with 'One trip.\\nIn view.' placed above at x=56, y=216 during a clean reading hold."
+            },
+            {
+              "requirement": "Replace headline with 'Now picture\\nbeing there.' via 8-frame opacity transition while holding UI screenshot, logo, and mascot stationary.",
+              "status": "met",
+              "observation_indices": [
+                4
+              ],
+              "reason": "The headline smoothly fades into 'Now picture\\nbeing there.' while keeping all other screen elements completely motionless."
+            },
+            {
+              "requirement": "Resolve to branded invitation: center logo at y160 (width260), reposition mascot to x210, y786 (width300), and add flat yellow band at x48, y984 with dark text 'Create your trip.' from 17.0 to 20.0s.",
+              "status": "met",
+              "observation_indices": [
+                5
+              ],
+              "reason": "The final stage resolves smoothly into the centered logo, resized mascot, and yellow callout band 'Create your trip.' held through frame 20.0s."
+            },
+            {
+              "requirement": "Start bg_music with a 0.3-second fade-in, dip during pause (6.4s-6.8s), restore smoothly, and fade over final 0.6s.",
+              "status": "unverifiable",
+              "observation_indices": [
+                0,
+                2,
+                5
+              ],
+              "reason": "Audio track presence is verified, but exact decibel dip levels and fade curves cannot be precisely measured from visual analysis alone."
+            }
+          ],
+          "issues": [
+            {
+              "category": "contract_mismatch",
+              "severity": "medium",
+              "observation_indices": [
+                1
+              ],
+              "description": "The opening headline 'A trip worth remembering.' does not displace upward or reduce in scale when incoming questions enter; it remains static and then abruptly fades out at ~4250ms.",
+              "intended_effect_considered": "The deliberate effect intended by the contract was to visually show the initial aspiration being crowded out by the incoming workload questions. Skipping the translation/scale animation degrades this narrative transition."
+            }
+          ]
+        },
+        "processing": {
+          "verified": true,
+          "steps": [
+            {
+              "type": "processing_call",
+              "id": "call_778447"
+            },
+            {
+              "type": "processing_result",
+              "call_id": "call_778447"
+            },
+            {
+              "type": "processing_call",
+              "id": "call_778534"
+            },
+            {
+              "type": "processing_result",
+              "call_id": "call_778534"
+            },
+            {
+              "type": "processing_call",
+              "id": "call_778606"
+            },
+            {
+              "type": "processing_result",
+              "call_id": "call_778606"
+            },
+            {
+              "type": "processing_call",
+              "id": "call_778662"
+            },
+            {
+              "type": "processing_result",
+              "call_id": "call_778662"
+            },
+            {
+              "type": "processing_call",
+              "id": "call_778725"
+            },
+            {
+              "type": "processing_result",
+              "call_id": "call_778725"
+            },
+            {
+              "type": "processing_call",
+              "id": "call_778775"
+            },
+            {
+              "type": "processing_result",
+              "call_id": "call_778775"
+            },
+            {
+              "type": "processing_call",
+              "id": "call_778839"
+            },
+            {
+              "type": "processing_result",
+              "call_id": "call_778839"
+            }
+          ]
+        },
+        "agentic_verified": true,
+        "provider_response_id": null,
+        "model_version": "gemini-3.6-flash",
+        "usage": {
+          "total_tokens": 62986,
+          "total_input_tokens": 3959,
+          "total_cached_tokens": 14152,
+          "total_output_tokens": 2113,
+          "total_tool_use_tokens": 50899,
+          "total_thought_tokens": 6015
+        },
+        "estimated_cost_microusd": 143247,
+        "charged_microusd": 143247,
+        "preflight_allowance_microusd": 150000,
+        "latency_seconds": 53.664,
+        "evidence_sha256": "5900d44e5deb6133836deafb1c99b672063c1b39f54230a92f79440731c28465"
+      }
+    ],
+    "failures": []
+  },
+  "remaining_microusd": 1476508,
+  "experiment_conservative_microusd": 1155485,
+  "video": "artifacts/video.mp4",
+  "editable_project": "artifacts/astra-03/attempt-01/project.json"
+}

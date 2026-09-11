@@ -1,8 +1,9 @@
 # Agent-authored motion workflow
 
 This opt-in path creates React/Remotion source at runtime from a request. It does
-not select a fixed hook/product/CTA template. The current author is Gemini
-3.6 Flash; the author and material-tool interfaces are injected Python callables.
+not select a fixed hook/product/CTA template. The default author is GPT-6 Astra;
+Gemini 3.6 Flash remains explicitly selectable. The author and material-tool
+interfaces are injected Python callables. Video judging still uses Gemini.
 Remotion renders the composition; it is not the creative or video-generation model.
 
 ## Setup and first run
@@ -25,6 +26,31 @@ Use a new output directory for a new run. The CLI reads existing untracked
 `mixed-media-iteration-001` ledger and $10 total cap. No global installs, automatic
 top-ups or retries of ambiguous paid submissions. Remotion licensing must be
 reviewed before commercial deployment: https://www.remotion.dev/license.
+
+Author settings are independent of the legacy `llm_provider` and judge. Astra
+uses `OPENAI_API_KEY` or `[app].openai_api_key` and the official Responses API,
+not `openai_base_url` or `openai_model_name`. Set `[app].motion_author_provider`
+to `astra` (default) or `gemini`, or pass `--author-provider` in `MOTION_ARGS`.
+Astra defaults to `high` reasoning; override with `--author-reasoning` or
+`[app].motion_author_reasoning`. Model IDs are deliberately limited to verified
+adapters/pricing; unknown models fail rather than silently use another provider.
+
+Each run retains `author.json` and per-call public output/usage. Astra first counts
+text/image tokens, then checks input plus maximum output cost without reserving
+funds. Its conservative charge uses the input cache-write ceiling and all output
+tokens (reasoning included once). No hidden reasoning is saved. Incomplete/refused
+responses fail visibly; account access or budget failures do not fall back to Gemini.
+Changing author settings on resume is rejected; use a new run for comparisons.
+
+For a controlled comparison add `--materials-from path/to/completed-run`.
+This verifies the rendered snapshot and reuses its exact resolved material pool,
+including provenance, while disabling new acquisition. It requires the identical
+brief and asks for a fresh plan/source without supplying the old source as a
+template. It does not require the new author to choose the same scene structure.
+`--materials-from` cannot be combined with `--revision-of`.
+
+Official adapter references: https://developers.openai.com/api/docs/models/gpt-6-astra,
+https://developers.openai.com/api/docs/guides/token-counting.
 
 An interrupted run with a completed author response and hash-verified material
 files can continue with `--resume`; this appends a new source attempt without

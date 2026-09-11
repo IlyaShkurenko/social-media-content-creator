@@ -25,7 +25,12 @@ MoneyPrinterTurbo is a single Python application with several entrypoints over t
 
 The opt-in **motion agent** (`app/services/creative/motion_agent.py`) is a separate
 construction path, not another legacy template. It asks a model to produce a plan
-and React source from a brief and approved asset catalog. Trusted registered tools
+and React source from a brief and approved asset catalog. It uses a separately
+selected author: GPT-6 Astra through Responses by default, or
+explicit Gemini 3.6 Flash. Video judging remains Gemini and legacy LLM settings
+are unchanged. Author identity is persisted and immutable on resume. For controlled
+comparisons, `--materials-from` verifies and reuses a completed material pool but
+replans without the old source or new acquisition. Trusted registered tools
 acquire requested media/audio. Python stages each source/asset revision and invokes
 the pinned Remotion worker in `motion/` through macOS Seatbelt. The worker receives
 no provider keys and cannot read user files outside its staged project/dependency

@@ -65,6 +65,26 @@ render and sandbox/technical evidence. `motion_agent.py` owns runtime authorship
 and bounded repair/revision through injected author and material tools. WebUI
 integration is outside this first slice.
 
+#### ADPIPE-3.4 — Independently selected, accountable motion author
+
+Motion author selection MUST be independent of legacy script-provider and video
+judge selection. The CLI MUST support Astra (default, `gpt-6-astra`) and explicit
+Gemini (`gemini-3.6-flash`) without silent substitution. Persist provider/model
+identity and relevant generation settings; resume MUST NOT change that identity.
+Invalid settings or missing credentials MUST fail before paid submission. Astra
+MUST use Responses-compatible text/image input, retain public output and usage,
+and account for all output tokens including reasoning without logging reasoning.
+Count inputs and bound outputs before checking the shared budget; no reservation
+or implicit retry may be introduced. Incomplete, refused or ambiguous responses
+MUST remain failed evidence, not be reported as completed compositions.
+
+The `--materials-from` comparison mode MUST reuse hash-verified resolved assets
+from a completed run with the identical brief while generating a new plan/source.
+It MUST disable fresh material acquisition and preserve material provenance. The
+previous source MUST NOT be supplied as a creative template. The resulting MP4
+remains pending creative review, irrespective of author choice or render success.
+Coverage: `test/services/test_motion_authors.py`, existing motion-agent BDD.
+
 ### STORY-1 — Versioned storyboard contract
 
 #### STORY-1.1 — Explicit timed intent

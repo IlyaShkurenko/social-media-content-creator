@@ -113,7 +113,8 @@ def validate_plan(plan: dict, brief: dict, catalog: dict, tools: dict) -> None:
 
 def run_agent(brief: dict, catalog: dict, output: Path, *, author, tools: dict,
               renderer=render_project, max_attempts: int = 3, feedback: dict | None = None,
-              revision_of: Path | None = None, resume: bool = False) -> dict:
+              revision_of: Path | None = None, resume: bool = False,
+              materials_from: Path | None = None) -> dict:
     if not 1 <= max_attempts <= 5:
         raise ValueError("attempt limit must be 1..5")
     if "allowed_assets" in brief:
@@ -137,6 +138,38 @@ def run_agent(brief: dict, catalog: dict, output: Path, *, author, tools: dict,
         raise ValueError("H.264 canvas dimensions must be even and at least 64")
     if abs(duration * brief["fps"] - round(duration * brief["fps"])) > 1e-6:
         raise ValueError("brief duration must resolve to whole frames")
+    reused_records = {}
+    if materials_from is not None:
+        if revision_of is not None:
+            raise ValueError("materials-from and revision-of are mutually exclusive")
+        from app.services.creative.motion import verify_render
+        result = json.loads((materials_from / "result.json").read_text())
+        prior_video = managed_file(materials_from, result["video"])
+        if not verify_render(prior_video.parent)["technical_pass"]:
+            raise ValueError("material comparison requires a technically valid baseline")
+        prior_path = prior_video.parent / "project/project.json"
+        prior = validate_project(prior_path)
+        if prior["user_constraints"] != brief:
+            raise ValueError("material comparison requires the identical brief")
+        descriptions = catalog
+        catalog = {}
+        for aid, filename in prior["assets"].items():
+            if "allowed_assets" in brief and aid not in brief["allowed_assets"]:
+                continue
+            asset = managed_file(prior_path.parent, filename)
+            original = materials_from / "materials" / f"{aid}.provenance.json"
+            record = json.loads(original.read_text()) if original.exists() else {}
+            if record.get("sha256", sha256(asset)) != sha256(asset):
+                raise ValueError("reused material provenance hash mismatch")
+            reused_records[aid] = {**record, "sha256": sha256(asset),
+                                  "reused_from_video_sha256": sha256(prior_video)}
+            catalog[aid] = {**descriptions.get(aid, {}), "path": str(asset),
+                            "material_provenance": reused_records[aid]}
+        if not set(brief.get("required_assets", [])).issubset(catalog):
+            raise ValueError("required asset missing from reused material pool")
+        tools = {}  # Compare authors with the exact existing pool, no acquisition.
+        if hasattr(author, "set_assets"):
+            author.set_assets({aid: Path(entry["path"]) for aid, entry in catalog.items()})
     seed = None
     if revision_of is not None:
         previous_result = json.loads((revision_of / "result.json").read_text())
@@ -155,6 +188,7 @@ def run_agent(brief: dict, catalog: dict, output: Path, *, author, tools: dict,
                    for aid, filename in prior_contract["assets"].items()}
     elif feedback is not None:
         raise ValueError("feedback requires an existing rendered project")
+    identity = getattr(author, "identity", None)
     if resume:
         if json.loads((output / "brief.json").read_text()) != brief or (output / "result.json").exists():
             raise ValueError("resume requires an incomplete run with an unchanged brief")
@@ -164,7 +198,15 @@ def run_agent(brief: dict, catalog: dict, output: Path, *, author, tools: dict,
             evidence = marker.with_name(marker.name.replace(".submitted.json", ".provider.json"))
             if not evidence.exists():
                 raise ValueError("ambiguous author submission requires reconciliation before resume")
+        identity_path = output / "author.json"
+        if identity_path.exists():
+            if json.loads(identity_path.read_text()) != identity:
+                raise ValueError("resume cannot change author identity; start an explicit new run")
+        elif identity and identity.get("provider") != "gemini":
+            raise ValueError("legacy run has no Astra identity; start an explicit new run")
     output.mkdir(parents=True, exist_ok=resume)
+    if identity:
+        write_json(output / "author.json", identity)
     public_catalog = {aid: {k: v for k, v in asset.items() if k != "path"}
                       for aid, asset in catalog.items()}
     write_json(output / "brief.json", brief)
@@ -207,6 +249,8 @@ def run_agent(brief: dict, catalog: dict, output: Path, *, author, tools: dict,
             else:
                 shutil.copyfile(source, target)
             assets[aid] = target
+            if aid in reused_records:
+                write_json(material_dir / f"{aid}.provenance.json", reused_records[aid])
         for request in ([] if seed else plan.get("materials", [])):
             tool = request.get("tool")
             if tool not in tools:
@@ -305,6 +349,8 @@ class GeminiAuthor:
         if model != "gemini-3.6-flash":
             raise ValueError("configure verified pricing before enabling another author model")
         self.key, self.ledger, self.prefix, self.catalog, self.model = key, ledger, operation_prefix, catalog, model
+        self.identity = {"provider": "gemini", "model": model, "max_output_tokens": 16384,
+                         "temperature": 0.65, "transport_version": "1.0"}
 
     def set_assets(self, assets: dict) -> None:
         self.catalog = {aid: {"path": str(path)} for aid, path in assets.items()}
@@ -407,6 +453,7 @@ def rerender_run(output: Path) -> dict:
 
 
 def main():
+    from app.services.creative.motion_authors import create_author
     from app.services.creative.motion_tools import build_tools
     parser = argparse.ArgumentParser()
     parser.add_argument("brief", type=Path)
@@ -418,6 +465,10 @@ def main():
     parser.add_argument("--feedback", type=Path)
     parser.add_argument("--review", action="store_true", help="Run the existing budgeted diagnostic video judge")
     parser.add_argument("--resume", action="store_true", help="Continue a failed author/render attempt, reusing verified materials")
+    parser.add_argument("--author-provider", choices=["astra", "gemini"])
+    parser.add_argument("--author-model")
+    parser.add_argument("--author-reasoning", choices=["low", "medium", "high", "xhigh", "max"])
+    parser.add_argument("--materials-from", type=Path, help="Reuse a verified run's materials; replan without new acquisition")
     parser.add_argument("--rerender", action="store_true", help="Render the last completed source without author/material calls")
     args = parser.parse_args()
     if args.rerender:
@@ -436,11 +487,13 @@ def main():
     ledger = IterationBudgetLedger(REPO / "feedback-loop/video-quality/.state/mixed-media-iteration-001.sqlite3",
         scope_id="mixed-media-iteration-001", cap_microusd=10_000_000)
     tools = build_tools(config, ledger, args.output.name)
-    author = GeminiAuthor(config["gemini_api_key"], ledger, args.output.name, catalog)
+    author = create_author(config, ledger, args.output.name, catalog,
+                           provider=args.author_provider, model=args.author_model,
+                           reasoning=args.author_reasoning)
     feedback = json.loads(args.feedback.read_text()) if args.feedback else None
     result = run_agent(brief, catalog, args.output, author=author, tools=tools,
                        max_attempts=args.max_attempts, feedback=feedback, revision_of=args.revision_of,
-                       resume=args.resume)
+                       resume=args.resume, materials_from=args.materials_from)
     if args.review:
         result = review_run(args.output)
     print(json.dumps(result, indent=2))

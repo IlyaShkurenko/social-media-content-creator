@@ -51,3 +51,22 @@ request-specific diagnostic judge provide pilot evidence; user review decides ta
 
 References: https://www.remotion.dev/docs/renderer/render-media,
 https://www.remotion.dev/license
+
+## Addendum: independent author and evaluator (2026-09-11)
+
+User-approved: use GPT-6 Astra as the default motion director/source author;
+retain explicit Gemini authorship for comparison and the existing Gemini video
+judge. This extends the injected author boundary, not the renderer architecture.
+Use OpenAI Responses with text/image references and no unsupported sampling
+parameters. Credentials stay in untracked configuration or OPENAI_API_KEY.
+Do not reuse a custom Chat Completions endpoint for this separate integration.
+
+Persist provider/model/reasoning identity and reject silent provider changes on
+resume. Check counted input plus bounded output cost against the shared ledger
+without reservations. No retry/fallback after an ambiguous paid submission.
+Public responses and usage are retained; hidden reasoning and credentials are not.
+Compare against experiment 020 using its exact brief and resolved materials, but
+allow a new plan/source. Rendering success is not proof Astra is creatively better.
+
+References: https://developers.openai.com/api/docs/models/gpt-6-astra,
+https://developers.openai.com/api/docs/guides/token-counting
