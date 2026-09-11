@@ -1,8 +1,8 @@
 {
-  "status": "planning_checkpoint_not_video_evaluation",
-  "candidate_video": null,
+  "status": "rendered_diagnostic_pending_user_review",
+  "candidate_video": "artifacts/video.mp4",
   "creative_acceptance": null,
-  "unavailable_reason": "No material generation or candidate render has occurred; director plan awaits user review.",
+  "unavailable_reason": "No artifact-bound user acceptance or calibrated comparative creative score. Source choreography deviates from the reviewed treatment.",
   "baseline_hash_replay": "passed",
   "repository_tests": {
     "passed": 765,
@@ -16,8 +16,156 @@
     "scope_id": "mixed-media-iteration-001",
     "cap_microusd": 20000000,
     "reserved_microusd": 0,
-    "charged_microusd": 9937930,
-    "remaining_microusd": 10062070
+    "charged_microusd": 13554059,
+    "remaining_microusd": 6445941
   },
-  "proposed_runway_cost_microusd": 1200000
+  "proposed_runway_cost_microusd": 1200000,
+  "candidate_video_sha256": "8af34b1fdd26e3183a6a1e14e239aadf4e63a627c35be07146589514cde29e08",
+  "technical": {
+    "checks": {
+      "duration": true,
+      "geometry": true,
+      "audio_stream": true,
+      "full_decode": true,
+      "audible_signal": true
+    },
+    "technical_pass": true,
+    "duration_seconds": 20.0,
+    "video_sha256": "8af34b1fdd26e3183a6a1e14e239aadf4e63a627c35be07146589514cde29e08",
+    "creative_quality": null,
+    "unavailable_reason": "requires request-specific assessment",
+    "black_segments": [],
+    "no_sustained_black": true,
+    "audio_levels_db": {
+      "mean_volume": "-28.5",
+      "max_volume": "-13.3"
+    },
+    "frame_evidence": [
+      {
+        "seconds": 0,
+        "path": "final-frames/00.0.jpg",
+        "sha256": "2ddb3b08183021fbb90645565a6ce99b4591d0114837328bf1ef768d076855f1"
+      },
+      {
+        "seconds": 2,
+        "path": "final-frames/02.0.jpg",
+        "sha256": "4340fd0fd774910bef8a41ffdfbc9b869c1cf8978b1094c5d8aecfba8899ea1b"
+      },
+      {
+        "seconds": 3.9,
+        "path": "final-frames/03.9.jpg",
+        "sha256": "3332e5197efe95ddf4e52d49a6f85705832a0e8ed762f6d965ff4ac3e44886b9"
+      },
+      {
+        "seconds": 4.9,
+        "path": "final-frames/04.9.jpg",
+        "sha256": "aabc06616b3c3ff8d97c189b23f5fd20e1cf9a48970a700e1acfcac3d587125f"
+      },
+      {
+        "seconds": 5,
+        "path": "final-frames/05.0.jpg",
+        "sha256": "8e6fb2b4c435aa8fbde191990ef4e4e08b77d922f9c156e9ba6717417cce39f2"
+      },
+      {
+        "seconds": 5.8,
+        "path": "final-frames/05.8.jpg",
+        "sha256": "f854fbc7201683c7300d79fbba65d6f4b91f2508fff688a7fb43340e5c737265"
+      },
+      {
+        "seconds": 6.5,
+        "path": "final-frames/06.5.jpg",
+        "sha256": "e821f9d397f671f7c3e0dff71b6afab9315c8364f123348b5f21e415d79f3291"
+      },
+      {
+        "seconds": 9.9,
+        "path": "final-frames/09.9.jpg",
+        "sha256": "14789664ec7d2fa2c510f1137d3c7885d694e250fa3ad8e71300c1798044e896"
+      },
+      {
+        "seconds": 10,
+        "path": "final-frames/10.0.jpg",
+        "sha256": "7c506daeb8c0770219aea7a9048b03003520a4e08a7790d9115bc230a6c24f85"
+      },
+      {
+        "seconds": 11,
+        "path": "final-frames/11.0.jpg",
+        "sha256": "eed4e89ba616e7fd913edabf09c0c5596c94deec3bf01a9bb45c21b6e0912deb"
+      },
+      {
+        "seconds": 14.9,
+        "path": "final-frames/14.9.jpg",
+        "sha256": "0e662077180b26aab1f274f160aa3c25e5e603751bdbf73c5dcd29ab043246e5"
+      },
+      {
+        "seconds": 15,
+        "path": "final-frames/15.0.jpg",
+        "sha256": "7d83e5140b9fbd07004e686ac5613609b1e4b3b1ca1037950fbcd87d90f47296"
+      },
+      {
+        "seconds": 17,
+        "path": "final-frames/17.0.jpg",
+        "sha256": "f5faaeb5e8fd6a72bffe449fcf53219195dda30bd4ea8f242a56e979e3f4c030"
+      },
+      {
+        "seconds": 19.9,
+        "path": "final-frames/19.9.jpg",
+        "sha256": "f5faaeb5e8fd6a72bffe449fcf53219195dda30bd4ea8f242a56e979e3f4c030"
+      }
+    ]
+  },
+  "uniform_background_samples_before": 20,
+  "uniform_background_samples_after": 0,
+  "sample_count": 200,
+  "final_judge": {
+    "status": "complete",
+    "evaluator_version": "1.2.0",
+    "agentic_verified": true,
+    "acceptance_authority": false,
+    "raw_high_issues": 1,
+    "confirmed_audio_false_positives": 1
+  },
+  "current_validation": {
+    "targeted_tests_passed": 64,
+    "targeted_tests_skipped": 1,
+    "evaluator_tests_passed": 104
+  },
+  "source_full_take_passes": 0,
+  "source_takes": 2,
+  "source_defect_interval_excluded": true,
+  "production_continuation_cost_microusd": 3616129,
+  "whole_experiment_cost_microusd": 5030567,
+  "unavailable_metrics": {
+    "visual_judge_win_rate": {
+      "value": null,
+      "reason": "No valid pairwise comparison for this distinct concept."
+    },
+    "timeline_alignment_f1": {
+      "value": null,
+      "reason": "The fixed airport tag vocabulary does not apply; final request-specific review is qualitative and the original choreography is not fully achieved."
+    },
+    "temporal_consistency_pass": {
+      "value": null,
+      "reason": "Full sources fail. Final edit excludes the known event, but complete temporal acceptance has not been independently established."
+    },
+    "audiovisual_correctness": {
+      "value": null,
+      "reason": "Music-only provenance was verified; that does not measure subjective audiovisual quality."
+    },
+    "product_brand_fidelity": {
+      "value": null,
+      "reason": "Exact source hashes and representative rendered frames were inspected; no calibrated numeric fidelity measurement."
+    },
+    "cost_per_accepted_video_usd": {
+      "value": null,
+      "reason": "No accepted candidate yet."
+    },
+    "voiceover_wer": {
+      "value": null,
+      "reason": "Music-only output; no narration."
+    },
+    "word_timing_mae_ms": {
+      "value": null,
+      "reason": "Music-only output; no narration."
+    }
+  }
 }

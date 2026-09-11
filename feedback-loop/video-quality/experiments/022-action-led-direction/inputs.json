@@ -1,6 +1,6 @@
 {
   "kind": "motion_direction_experiment",
-  "status": "awaiting_user_plan_review",
+  "status": "rendered_diagnostic_pending_user_review",
   "starting_revision": "2d02400",
   "budget_implementation_revision": "2f22f94",
   "baseline_video_sha256": "73546ad4f879e8644565aa07193db64cacac7456eb60d9b90dbe801c4afad303",
@@ -165,5 +165,699 @@
     }
   ],
   "revised_plan_validation": "passed",
-  "material_calls": 0
+  "material_calls": 3,
+  "plan_approval": {
+    "reviewer": "user",
+    "answer": "Go ahead",
+    "plan_sha256": "497019e1bcde4d5a1097a46896accfeeeab939740c244c654a760766d44d4a8d",
+    "video_acceptance": null
+  },
+  "material_call_breakdown": {
+    "runway": 2,
+    "local_procedural_music": 1
+  },
+  "sources": {
+    "01": {
+      "manifest": {
+        "view_waiting": {
+          "path": "source-materials/view_waiting/07e0e28c-4a19-4d94-8413-ece93846b3bb-0.mp4",
+          "sha256": "dce8cb362cc4749d9732d332b38330a969f8fb428e172abf2e8449c7f751e553",
+          "request": {
+            "id": "view_waiting",
+            "tool": "runway",
+            "prompt_text": "Ten-second cinematic live-action continuous medium two-shot, vertical 9:16. Two adult friends at an outdoor cafe beside Dubai Creek; sunlit water and creekside architecture behind them. Seated eye-level camera, gentle push forward, warm natural light, understated clothes. First half: one friend leans forward ready to leave; the seated planner raises a gentle 'one moment' finger, looks between an open travel guidebook and two loose notes, then checks a phone held with its screen facing away from camera. Second half: the planner lowers the phone, closes the guidebook over the notes and looks up with a small relieved smile. The companion smiles back; both turn their attention toward the waterfront. Affectionate impatience becoming anticipation, not an argument. Few props, natural hands, no dramatic wind. Keep both faces and gestures visible. No cuts, dialogue, readable lettering, visible screen content, logos, captions or graphics.",
+            "duration_seconds": 10
+          }
+        },
+        "creek_pulse": {
+          "path": "source-materials/creek_pulse.wav",
+          "sha256": "eea912ff9a5155d0ff9736d6dc729d6b8546a19f3a807c274ee13e404855f964",
+          "request": {
+            "id": "creek_pulse",
+            "tool": "music",
+            "bpm": 96,
+            "notes": [
+              60,
+              64,
+              67,
+              69,
+              67,
+              64,
+              62,
+              67
+            ],
+            "mood": "Warm, lightly propulsive instrumental anticipation. Restrained and spacious rather than triumphant; a simple repeating pulse that supports natural human action and leaves room to read the app. No vocals."
+          }
+        }
+      },
+      "temporal_judge": {
+        "schema_version": 1,
+        "evaluator_version": "0.6.0",
+        "observation_mode": "gemini_temporal_strips_v1",
+        "status": "complete",
+        "video_sha256": "dce8cb362cc4749d9732d332b38330a969f8fb428e172abf2e8449c7f751e553",
+        "scene_id": "human_take",
+        "scene_range_seconds": [
+          0.0,
+          10.0
+        ],
+        "sample_fps": 10,
+        "sampled_frame_count": 100,
+        "strip_hashes": [
+          "860f97faa42e0ab3734aeb86b60a35d51707501323ff2a8f6a477cff9f2b15a8",
+          "c516738dbbdd6c497e66fb408c98279412f7684965839eebd5c4a21a47cf44c5",
+          "8aa7265175f2ecc213cde243bfb5cafaf72ddb8a6a0fd174b33f64e79ab25cbf",
+          "6d107aedff2c2c6464cdeb9f9ebfa7ab07a559fdae53f64d3d5ada6360ea6460",
+          "ae5068b6011832264754f508e753ecabe7f961be5f437cc3af5dc7c0b5719dde",
+          "d7e2fa654c83a223dfbcce4f015bce0088610fd497495a3ffd6bf3ed9813fa65",
+          "73d8da7161ec11536601e6f43aa5c333dfc577e54df55a7a07ecbc795c995f39",
+          "3027e51867eef12c431fb2af7687c28cb924af5e25e97c486fe8df644a61b270",
+          "58efc19ed80fc9b588584e3cd413941d7c80ed0a5ee48d5ef4d3e9c9f7518e25",
+          "69e8a321e8a6ed352cc3e90e526050a4773325146383ace011e5289d77a6faad",
+          "b3f53fa76494ec2021d5ed1c3d552d9a393405faf85879900ce05a283b82df5d",
+          "5638dd1ba17c41cefc4bd13fc893078e68c04518c8de87404c70808a0f8d14c8",
+          "24d99ab820cdba61d9edbbcbf6ae5e68cf93b4851b3bd3470d74ab8f13cfc428",
+          "515d66274a1c17e3577d4348c5a3f184f393258a5a482a844bc77508a4250448",
+          "1cc61ea72061eeab65cc160f5275170c2c67edd6e1ffd2332ae37437b5804ae8",
+          "b8736d7c328ef6eb4782a043dd7ba122fdbd129be62223c7b361ff202079533f",
+          "35b08bc72614c2af2044626593050a412d10806ba38c05f9457e166778b43b3d",
+          "d0f40a4917ab8d7abf00fec21b365e529199faffc3b65950ba1ec8aa49505a60",
+          "9558e1e20373ab41ab311f3437dfd8223a02e2570e2f9f869f63d8e79d144ad0",
+          "9e582ae3c099c45e66868a7f04ee25a2ba92b0684c4dd095c0d5554e5a882d85"
+        ],
+        "prompt_sha256": "76cd7ccaf93b6dccad74124df5400e2e23dc0eebbf353e242cf46e5d9eaca657",
+        "requested_model": "gemini-3.6-flash",
+        "model_version": "gemini-3.6-flash",
+        "response": {
+          "summary": "The 100-frame video sequence contains two major object disappearance errors involving the smartphone. Between F21 (2.1s) and F22 (2.2s), the smartphone resting on the open guidebook abruptly disappears. Between F57 (5.7s) and F58 (5.8s), the smartphone suddenly reappears on top of the open guidebook page without being handled or placed by either person.",
+          "inspected_frame_count": 100,
+          "events": [
+            {
+              "event_type": "object_disappearance",
+              "severity": "high",
+              "start_seconds": 2.1,
+              "end_seconds": 2.2,
+              "frame_indices": [
+                21,
+                22
+              ],
+              "affected_object": "smartphone",
+              "reason": "The smartphone resting on the left page of the open guidebook in F21 abruptly vanishes in F22 without being picked up."
+            },
+            {
+              "event_type": "object_disappearance",
+              "severity": "high",
+              "start_seconds": 5.7,
+              "end_seconds": 5.8,
+              "frame_indices": [
+                57,
+                58
+              ],
+              "affected_object": "smartphone",
+              "reason": "The smartphone suddenly reappears resting on the open guidebook page in F58 after being absent in F57."
+            }
+          ]
+        },
+        "events": [
+          {
+            "event_type": "object_disappearance",
+            "severity": "high",
+            "start_seconds": 2.1,
+            "end_seconds": 2.2,
+            "frame_indices": [
+              21,
+              22
+            ],
+            "affected_object": "smartphone",
+            "reason": "The smartphone resting on the left page of the open guidebook in F21 abruptly vanishes in F22 without being picked up."
+          },
+          {
+            "event_type": "object_disappearance",
+            "severity": "high",
+            "start_seconds": 5.7,
+            "end_seconds": 5.8,
+            "frame_indices": [
+              57,
+              58
+            ],
+            "affected_object": "smartphone",
+            "reason": "The smartphone suddenly reappears resting on the open guidebook page in F58 after being absent in F57."
+          }
+        ],
+        "provider": {
+          "response_id": "hVekao_gBMWWkdUP8OyK6As",
+          "usage": {
+            "prompt_tokens": 22160,
+            "output_tokens": 252,
+            "thinking_tokens": 3292,
+            "total_tokens": 25704
+          },
+          "estimated_actual_cost_microusd": 35130
+        },
+        "budget": {
+          "operation_id": "experiment-022-source-temporal",
+          "preflight_maximum_microusd": 50000,
+          "charged_microusd": 35130,
+          "remaining_scope_microusd": 8826940
+        }
+      },
+      "review": {
+        "reviewer": "coding_agent",
+        "video_sha256": "dce8cb362cc4749d9732d332b38330a969f8fb428e172abf2e8449c7f751e553",
+        "assembly_allowed": false,
+        "review_method": "Inspected all 100 sampled frames via 20 timestamped strips, then native-resolution frames around the reported events.",
+        "judge_resolution": [
+          {
+            "event_index": 0,
+            "status": "literal_disappearance_not_confirmed",
+            "reason": "At 2.1–2.2 seconds the man is picking up/handling the dark object; the claim that nothing handles it is incorrect. This does not clear the separate geometry defect."
+          },
+          {
+            "event_index": 1,
+            "status": "not_independently_confirmed",
+            "reason": "At 5.7–5.8 seconds an opening cover reveals objects behind it. A single reveal does not by itself prove teleportation; continuity of the device identity through the longer sequence is the real concern."
+          }
+        ],
+        "confirmed_findings": [
+          {
+            "type": "geometry_deformation",
+            "severity": "high",
+            "start_seconds": 2.2,
+            "end_seconds": 2.8,
+            "reason": "The handled dark phone-like object becomes a wide bending black cover/page surface against the guidebook. It does not retain the rigid handset identity established at the beginning.",
+            "evidence": [
+              "source-frames/frame-0023.jpg",
+              "source-frames/frame-0027.jpg",
+              "source-strips/strip-06.jpg"
+            ]
+          },
+          {
+            "type": "action_timing_mismatch",
+            "severity": "medium",
+            "start_seconds": 3.5,
+            "end_seconds": 5.0,
+            "reason": "Both people relax and smile before the planned product insert. The planned downward phone eyeline at the midpoint is absent; the book is never cleanly closed."
+          }
+        ],
+        "decision": "Retain as failed take; do not silently crop away or accept its confirmed geometry defect. Test one explicit prop-choreography revision within experiment 022."
+      }
+    },
+    "02": {
+      "manifest": {
+        "view_waiting": {
+          "path": "source-materials-02/view_waiting/2d687ed8-702d-4a32-8a34-8344be99492f-0.mp4",
+          "sha256": "f0218f9deaecbf63d1a2ae84174edab7398ecbced724c9bd36d84061c603fe09",
+          "request": {
+            "id": "view_waiting",
+            "tool": "runway",
+            "prompt_text": "One continuous ten-second medium two-shot, vertical 9:16, warm realistic travel commercial. Two adult friends at a waterfront cafe beside Dubai Creek. Open guidebook and two notes lie motionless on the table. The seated man holds one rigid smartphone vertically in his left hand throughout the entire shot, back toward camera, screen never visible. First five seconds: his friend leans forward ready to leave; he raises his right index finger to ask her to wait, looks at the guidebook, then concentrates on his phone. They are not smiling yet. After five seconds: he looks up from the phone and gives her a relieved smile; she smiles back, both look toward the water. His left hand and phone stay still. Right hand rests on the table. No page turning, no book closing, no moving papers, no putting down or rotating the phone. Gentle camera push, natural faces and hands. No cuts, dialogue, titles, readable signs, logos or graphics.",
+            "duration_seconds": 10
+          },
+          "original_plan_request": {
+            "id": "view_waiting",
+            "tool": "runway",
+            "prompt_text": "Ten-second cinematic live-action continuous medium two-shot, vertical 9:16. Two adult friends at an outdoor cafe beside Dubai Creek; sunlit water and creekside architecture behind them. Seated eye-level camera, gentle push forward, warm natural light, understated clothes. First half: one friend leans forward ready to leave; the seated planner raises a gentle 'one moment' finger, looks between an open travel guidebook and two loose notes, then checks a phone held with its screen facing away from camera. Second half: the planner lowers the phone, closes the guidebook over the notes and looks up with a small relieved smile. The companion smiles back; both turn their attention toward the waterfront. Affectionate impatience becoming anticipation, not an argument. Few props, natural hands, no dramatic wind. Keep both faces and gestures visible. No cuts, dialogue, readable lettering, visible screen content, logos, captions or graphics.",
+            "duration_seconds": 10
+          }
+        },
+        "creek_pulse": {
+          "path": "source-materials/creek_pulse.wav",
+          "sha256": "eea912ff9a5155d0ff9736d6dc729d6b8546a19f3a807c274ee13e404855f964",
+          "request": {
+            "id": "creek_pulse",
+            "tool": "music",
+            "bpm": 96,
+            "notes": [
+              60,
+              64,
+              67,
+              69,
+              67,
+              64,
+              62,
+              67
+            ],
+            "mood": "Warm, lightly propulsive instrumental anticipation. Restrained and spacious rather than triumphant; a simple repeating pulse that supports natural human action and leaves room to read the app. No vocals."
+          }
+        }
+      },
+      "temporal_judge": {
+        "schema_version": 1,
+        "evaluator_version": "0.6.0",
+        "observation_mode": "gemini_temporal_strips_v1",
+        "status": "complete",
+        "video_sha256": "f0218f9deaecbf63d1a2ae84174edab7398ecbced724c9bd36d84061c603fe09",
+        "scene_id": "human_take",
+        "scene_range_seconds": [
+          0.0,
+          10.0
+        ],
+        "sample_fps": 10,
+        "sampled_frame_count": 100,
+        "strip_hashes": [
+          "76b3c5c1c22d7ef0d9a7d7f483bb018788db7869367a353059a2e7c40f5734fd",
+          "97a8b0ef496d885810b1b2b22894062e642def41312b135c23ca4b8fa81f564c",
+          "fa014eef23f68f654f2879131e26eaf2a825e05babd8a629c487eeb64f81c91f",
+          "b4b1263a45177d0d420c038a27ce81503d0448eb2b6eeb677b4fa138e3370821",
+          "879df72587f1b25a949f11f8cc2455e031b6c68e6d564b9362fcdbed00a58e52",
+          "312c815efae609e362ee72b3f8c8ca45d3f39f17f097679d730988113c5b969c",
+          "d12f325fc6270c9613f970bb22e00898e067da42a464aa4ce8474c80ac13904c",
+          "8eac0172c21001c1840af4fe3bb4516fa011461811c291209607423b271b3078",
+          "9585acc1b8ffc370025d16a2324cf84b99bf626acf7e733f9f64ad002d017012",
+          "1f2e1a1ca5aa92586ba0c8d3bbf760b6b235e7cb42e238018f0c35efe609b22c",
+          "ec3f84086276997f2baaacce77116432b1896006883d1bbe3a8a12c2e440d88e",
+          "22422417ac1050e8575c93a51c453a3bdfdf644e4a89660ddcf321c5c7730c28",
+          "47e37a0f44b17116f425477dbb29a601cb62b3c398a080a8d7eba101e474a861",
+          "f1d54d3870921c5d04a5e51876b632a67125a0ec61dd429e3ff106a3f0b56fc5",
+          "e96adaba1f5cd1cd01b4c4119685cfc0409c7dcb981d4dce7ae7e21843cf6104",
+          "10c5e8403625df5f78c593e88c93d9273955f47e910747bde8d417f064396f74",
+          "0779e8e760cd0ffeaf02540e14202c89fbdd1905417c77918b7b52dd66a4c5fd",
+          "3ca77ae55ed010d75e57239fcdec4c819073c1e0efa82c254eed81e8a5427ec2",
+          "bbe57f9dde6d6f30147c010b0d07067e09815c07181f4e56b7652d503f868fb3",
+          "c4ef2d1aa7c80d2c859e83ef8807c35017fe31f0b3f8aebb96ed580411364f54"
+        ],
+        "prompt_sha256": "ac4e25d278f2f8edb732ac9a6f981066b5f7418f261fd43b6340e3e4d8039915",
+        "requested_model": "gemini-3.6-flash",
+        "model_version": "gemini-3.6-flash",
+        "response": {
+          "summary": "The smartphone held by the man suddenly disappears from his hand between frame 53 (5.3s) and frame 54 (5.4s) without any stowing or placing motion, remaining absent for the rest of the video.",
+          "inspected_frame_count": 100,
+          "events": [
+            {
+              "event_type": "object_disappearance",
+              "severity": "high",
+              "start_seconds": 5.3,
+              "end_seconds": 5.5,
+              "frame_indices": [
+                53,
+                54,
+                55
+              ],
+              "affected_object": "smartphone",
+              "reason": "The smartphone held in the man's hand vanishes abruptly between frame 53 (5.3s) and frame 54 (5.4s) and stays missing through frame 55 (5.5s) and subsequent frames."
+            }
+          ]
+        },
+        "events": [
+          {
+            "event_type": "object_disappearance",
+            "severity": "high",
+            "start_seconds": 5.3,
+            "end_seconds": 5.5,
+            "frame_indices": [
+              53,
+              54,
+              55
+            ],
+            "affected_object": "smartphone",
+            "reason": "The smartphone held in the man's hand vanishes abruptly between frame 53 (5.3s) and frame 54 (5.4s) and stays missing through frame 55 (5.5s) and subsequent frames."
+          }
+        ],
+        "provider": {
+          "response_id": "rlmkavfKNsCY3boPkOfNuQ8",
+          "usage": {
+            "prompt_tokens": 22166,
+            "output_tokens": 220,
+            "thinking_tokens": 2617,
+            "total_tokens": 25003
+          },
+          "estimated_actual_cost_microusd": 34899
+        },
+        "budget": {
+          "operation_id": "experiment-022-source-temporal-02",
+          "preflight_maximum_microusd": 50000,
+          "charged_microusd": 34899,
+          "remaining_scope_microusd": 7592041
+        }
+      },
+      "review": {
+        "video_sha256": "f0218f9deaecbf63d1a2ae84174edab7398ecbced724c9bd36d84061c603fe09",
+        "assembly_allowed": true,
+        "assembly_scope": "Diagnostic editorial salvage using only the approved excerpt ranges below. The complete source is rejected, not production-approved. Final render requires a separate review.",
+        "reviewer": "coding_agent_frame_inspection",
+        "source_quality": "rejected_full_take",
+        "confirmed_event": {
+          "type": "object_disappearance",
+          "time_seconds": [
+            5.3,
+            5.5
+          ],
+          "evidence": "At 5.0 the complete phone lies on the palm; at 5.3 it has a shortened triangular silhouette; by 5.4 the hand is open and empty with no placement or stowing motion. Native frames 0051, 0054, 0055 and 0056 confirm the Gemini finding."
+        },
+        "editorial_salvage_hypothesis": "An explicit five-second product insert can bridge two usable excerpts while excluding the defective object transition entirely. This preserves the cast and location but is not a repair of the generated source.",
+        "mandatory_source_edit": {
+          "opening": {
+            "output_seconds": [
+              0,
+              5
+            ],
+            "source_seconds": [
+              0,
+              4
+            ],
+            "playback_rate": 0.8
+          },
+          "return": {
+            "output_seconds": [
+              10,
+              15
+            ],
+            "source_seconds": [
+              6,
+              10
+            ],
+            "playback_rate": 0.8
+          },
+          "excluded_source_seconds": [
+            4,
+            6
+          ],
+          "implementation": "At composition fps=30 use two muted OffthreadVideo instances: opening startFrom=0, endAt=120, playbackRate=0.8 inside a 150-frame Sequence; return startFrom=180, endAt=300, playbackRate=0.8 inside a 150-frame Sequence beginning at frame 300. Check the installed Remotion API semantics. Never play the complete take or include any excluded source frame. Keep the original four output beat boundaries."
+        },
+        "observed_action": "The woman gestures toward her companion's phone while he is occupied with it. A guidebook and money-like loose papers lie on the cafe table. After the excluded transition both smile and look toward the waterfront. No guidebook closure occurs.",
+        "plan_deviations": [
+          "The woman, not the male planner, makes the initial finger gesture.",
+          "No guidebook closure or on-camera putting-away action is available. Do not claim or fabricate either action.",
+          "Source seconds 4 through 6 are omitted; remaining passages are slowed to 0.8x to keep the approved 20-second output duration.",
+          "The waiting-versus-anticipation performance is less explicit than requested and remains a creative review concern."
+        ],
+        "creative_acceptance": null,
+        "uncertainty": "Sampled frame review does not prove absence of all motion artifacts. An editorial time ellipsis is acceptable to test, but the causal link and emotional strength remain unverified."
+      }
+    }
+  },
+  "render_author": {
+    "provider": "astra",
+    "model": "gpt-6-astra",
+    "reasoning": "high",
+    "max_output_tokens": 16384,
+    "transport_version": "1.0",
+    "response_id": "resp_04c9852a2ffaa05b016aa45acec21887d2be367292fdfd8c54",
+    "response_model": "gpt-6-astra",
+    "status": "completed",
+    "refused": false,
+    "usage": {
+      "input_tokens": 62130,
+      "input_tokens_details": {
+        "cache_write_tokens": 62127,
+        "cached_tokens": 0
+      },
+      "output_tokens": 5936,
+      "output_tokens_details": {
+        "reasoning_tokens": 3620
+      },
+      "total_tokens": 68066
+    },
+    "estimated_microusd": 1073425,
+    "elapsed_seconds": 123.65843345799658
+  },
+  "render_result": {
+    "status": "pending_review",
+    "attempts": [
+      {
+        "attempt": 1,
+        "status": "rendered",
+        "metrics": {
+          "checks": {
+            "duration": true,
+            "geometry": true,
+            "audio_stream": true,
+            "full_decode": true,
+            "audible_signal": true
+          },
+          "technical_pass": true,
+          "duration_seconds": 20.0,
+          "video_sha256": "9392dca35531532cfe04520a05bfc86538428a3beeef4bdce1f82923fda2281e",
+          "creative_quality": null,
+          "unavailable_reason": "requires request-specific assessment"
+        }
+      },
+      {
+        "attempt": "local-trim-fix",
+        "status": "rendered",
+        "metrics": {
+          "checks": {
+            "duration": true,
+            "geometry": true,
+            "audio_stream": true,
+            "full_decode": true,
+            "audible_signal": true
+          },
+          "technical_pass": true,
+          "duration_seconds": 20.0,
+          "video_sha256": "8af34b1fdd26e3183a6a1e14e239aadf4e63a627c35be07146589514cde29e08",
+          "creative_quality": null,
+          "unavailable_reason": "requires request-specific assessment"
+        }
+      }
+    ],
+    "video": "trim-corrected-render/video.mp4",
+    "project": "trim-corrected-render/project/project.json",
+    "authorship": "runtime_model_generated_react_with_local_technical_trim_fix",
+    "creative_quality": null,
+    "original_result": "first-result.json",
+    "local_fix": "Removed endAt props; the outer 150-frame sequences bound each 0.8x excerpt. Installed Remotion applies endAt to the internal sequence duration, not the desired slowed source endpoint. The original hint and model output both used this incorrectly."
+  },
+  "render_provenance": {
+    "source_sha256": "ccc53c3293931738ddb8789c8e42eab7520bc605003f93532de68814d54d9529",
+    "contract_sha256": "0fe4bfda57496c09a52bfb1de2250ab79f98788de93ee3ff55f895b062c9889a",
+    "lock_sha256": "52aab6fca45b5b096c15e97130b07740f732c6a673059b9958dc42bc894e929b",
+    "worker_sha256": "f1a5e5742c9cf68c53f72ebccc675bfa6f9ac58a4fdcb00c332dda0013ff9e71",
+    "executor_sha256": "8cb3da98e7517465ac9d2cbfcb397634352f5b1c2239c7dad2991fa13a53198f",
+    "assets": {
+      "logo": "9960bdeb0754e12f0ccf4712302c5caa9a0df9169e35df4d6522d1d59269b739",
+      "mascot": "8606094311ff2d47ca0aacbfc6b51c6812c3e87f63997925c51ff9c6a5593e64",
+      "trip_plan": "15043b3fe9bf8c76bc4949a6412740dce8afecc37d3f2e54bfb4e972a227189d",
+      "assistant": "bf6da6714a290c3e9a6b234be8fa7e578deb5c9a6c853fa5db4322836c0b2abd",
+      "assistant_large": "7348ada441e2d3b121d9ac173f3d6b4fa5ab5556311079762696206927209347",
+      "home": "81415de3d7609431821d264e2cf77f3325cf5a78b1bc6869f6d20bc1d92ab8f6",
+      "plan_by_days": "29f0286f4947c72b038e883cd4770c4fb4d7c6f5e33b85d650f67483e48f79e4",
+      "mascot_2": "b0bce278220839e260984dee99113e631ff2574c592b274bf8396748dfb20308",
+      "logo_vector": "76af8873814c0fc9d7c5a04a58150fa08affcfb7992a74d6dd37e7451112a450",
+      "logo_source": "ce697b6c249737156dfca8ef8dad066bc064d56fe8aacd089faa9d94c0e6d382",
+      "mascot_vector": "0043e26f9c29dd144c6351675705be5224e1c181154d6b09ce834ef78422be8c",
+      "persona_1": "8f27c29b8c95f495837b57c37a836b94462991e21a4ea92f771be2c91c346797",
+      "persona_2": "89bfb392ed662f236a12be5568095262eb075e6f1a15714af52c01fb6daf1aaa",
+      "persona_2_2": "bcc4edfee1d826ae49b80e0f6ff31cd6aa6dfa9b6626668957116ca622f1c1ab",
+      "persona_3_2": "2513ff19ef139ff48b7862e0106361dca37366c3795a59725164618fa6b2dfe6",
+      "persona_10_1": "98afae28be367958b27e8b63572286a2e14c905ad16352fcd42d5e656f9d948b",
+      "persona_15_2": "958fe637b05e2ac67fc0d10060cc6c9cc803cffcad3a51ed151659b319566a08",
+      "persona_15_3": "1f1b25557bc249f82081e282fa2209bda3a995e13743991f31f15035da30e325",
+      "view_waiting": "f0218f9deaecbf63d1a2ae84174edab7398ecbced724c9bd36d84061c603fe09",
+      "creek_pulse": "eea912ff9a5155d0ff9736d6dc729d6b8546a19f3a807c274ee13e404855f964"
+    },
+    "isolation": "macos-seatbelt-loopback-only"
+  },
+  "final_judge": {
+    "status": "complete",
+    "binding": {
+      "evaluator_version": "1.2.0",
+      "video_sha256": "8af34b1fdd26e3183a6a1e14e239aadf4e63a627c35be07146589514cde29e08",
+      "duration_ms": 20000,
+      "contract_sha256": "3cca5b9e74eb57cd6be8c3cc8dba7bdff9b5c97d5b2196e3a995a67f4870fc4f",
+      "prompt_sha256": "ca345648cfdaddefcdf9e608cc56f85c4253831fe82d1b3bb23f7cdf3f5f834d",
+      "schema_sha256": "0b513f0cb936580687127d31b4548749385e6f6a0502bd92a2a15f5b195c7659",
+      "generation_config_sha256": "823010b155e208c5e32992a9e30ec5655d417961e01d5872b34852eba14489e9",
+      "model": "gemini-3.6-flash",
+      "mode": "agentic",
+      "operation_id": "experiment-022-final-salvage-agentic"
+    },
+    "previous_attempts": [],
+    "acceptance_authority": false,
+    "assessment": {
+      "summary": "The video follows the 20-second four-beat structure using an editorial salvage approach to bridge two live-action passages with a 5-second product insert and a final call-to-action end card. However, the soundtrack includes spoken dialogue referencing Paris, which violates the music-only audio contract and introduces a location contradiction with the Dubai visuals.",
+      "observations": [
+        {
+          "start_ms": 0,
+          "end_ms": 5000,
+          "description": "Opening human two-shot at an outdoor cafe beside Dubai Creek. A man holds a smartphone with its back facing the camera while looking down. A woman seated across gestures toward his phone/hand. An open travel guidebook and paper notes lie on the table. Spoken audio is heard: 'I think we should take the train to go to Paris. That is a great idea.'"
+        },
+        {
+          "start_ms": 5000,
+          "end_ms": 10000,
+          "description": "Editorial cut to a product insert screen on a cream background (#FFFCEE). The top area shows the 'tict' logo and the text 'Demo interface · data not real'. Below, a smartphone display displays the 'UAE, Dubai' trip overview with category rows (Stays, Flights, Activities, Car Rentals). Between 5800ms and 6400ms, the device composition pushes closer and holds until 10000ms."
+        },
+        {
+          "start_ms": 10000,
+          "end_ms": 15000,
+          "description": "Cut back to the live-action scene at the Dubai Creek cafe. Both travelers are smiling and looking toward the waterfront. The smartphone is no longer held in the man's hand. The guidebook remains open on the table without being closed."
+        },
+        {
+          "start_ms": 15000,
+          "end_ms": 20000,
+          "description": "Cut to a static end card on a cream background (#FFFCEE) featuring the 'tict' logo centered near the top, the yellow location-pin mascot with outstretched arms in the center, and dark text 'Create your trip.' near the bottom."
+        }
+      ],
+      "checks": [
+        {
+          "requirement": "Audio mode must be instrumental music ('creek_pulse') with no spoken dialogue or vocals.",
+          "status": "not_met",
+          "observation_indices": [
+            0
+          ],
+          "reason": "Spoken dialogue ('I think we should take the train to go to Paris. That is a great idea.') is present on the soundtrack instead of the required instrumental-only music track 'creek_pulse'."
+        },
+        {
+          "requirement": "Beat 1 ('one_moment', 0–5s): Open directly on the Dubai waterfront café scene with planner checking phone, companion, and guidebook on table.",
+          "status": "met",
+          "observation_indices": [
+            0
+          ],
+          "reason": "The video opens directly on the two travelers at the Dubai Creek cafe table with guidebook, notes, and phone from 0 to 5000ms."
+        },
+        {
+          "requirement": "Beat 2 ('one_readable_trip', 5–10s): Display grounded handset product insert with tict logo, demo disclaimer, and readable UAE Dubai overview with camera push from 5.8s to 6.4s.",
+          "status": "met",
+          "observation_indices": [
+            1
+          ],
+          "reason": "The product insert displays all required branding, disclaimer, readable trip overview, and performs the device push between 5800ms and 6400ms."
+        },
+        {
+          "requirement": "Beat 3 ('the_look_up', 10–15s): Return to human scene salvage showing travelers smiling toward waterfront without claiming guidebook closure.",
+          "status": "met",
+          "observation_indices": [
+            2
+          ],
+          "reason": "The edit resumes the human scene from 10000ms to 15000ms with both travelers smiling toward the waterfront, omitting the defective source object transition."
+        },
+        {
+          "requirement": "Beat 4 ('create_your_trip', 15–20s): Complete end composition on cream background (#FFFCEE) with logo, mascot, and 'Create your trip.' text.",
+          "status": "met",
+          "observation_indices": [
+            3
+          ],
+          "reason": "A clean 5-second end screen is present with the exact logo, yellow mascot, and 'Create your trip.' dark copy."
+        }
+      ],
+      "issues": [
+        {
+          "category": "contract_mismatch",
+          "severity": "high",
+          "observation_indices": [
+            0
+          ],
+          "description": "The audio track contains spoken English dialogue about taking a train to Paris ('I think we should take the train to go to Paris. That is a great idea.'). This violates the audio contract specification (music mode using 'creek_pulse' with no dialogue) and creates a narrative conflict with the Dubai visual setting.",
+          "intended_effect_considered": "The dialogue was likely included to simulate conversation between the travelers, but it directly violates the contractual audio mode policy and geographical context."
+        }
+      ]
+    },
+    "processing": {
+      "verified": true,
+      "steps": [
+        {
+          "type": "processing_call",
+          "id": "call_894376"
+        },
+        {
+          "type": "processing_result",
+          "call_id": "call_894376"
+        },
+        {
+          "type": "processing_call",
+          "id": "call_894428"
+        },
+        {
+          "type": "processing_result",
+          "call_id": "call_894428"
+        }
+      ]
+    },
+    "agentic_verified": true,
+    "provider_response_id": null,
+    "model_version": "gemini-3.6-flash",
+    "usage": {
+      "total_tokens": 25990,
+      "total_input_tokens": 5459,
+      "total_cached_tokens": 0,
+      "total_output_tokens": 1278,
+      "total_tool_use_tokens": 14916,
+      "total_thought_tokens": 4337
+    },
+    "estimated_cost_microusd": 72675,
+    "charged_microusd": 72675,
+    "preflight_allowance_microusd": 150000,
+    "latency_seconds": 43.738,
+    "evidence_sha256": "b3cf1903e83b05905277f5d4f03f511ba72a5e2eb63fd30f95473c51928f8e52"
+  },
+  "final_judge_contract": {
+    "path": "artifacts/final-review-contract.json",
+    "binding": "3cca5b9e74eb57cd6be8c3cc8dba7bdff9b5c97d5b2196e3a995a67f4870fc4f"
+  },
+  "audio_claim_verification": {
+    "video_sha256": "8af34b1fdd26e3183a6a1e14e239aadf4e63a627c35be07146589514cde29e08",
+    "music_sha256": "eea912ff9a5155d0ff9736d6dc729d6b8546a19f3a807c274ee13e404855f964",
+    "method": "Decode final MP4 and original procedural WAV to mono 44100 Hz float PCM; find the codec offset by FFT correlation within +/-4096 samples, fit one scalar gain and compare aligned waveforms, including the alleged first-five-second dialogue window. No ASR or another model call. Raw unaligned correlation was only 0.087; offset correction is necessary for AAC delay.",
+    "windows": [
+      {
+        "seconds": [
+          0,
+          5
+        ],
+        "correlation": 0.9995907323915845,
+        "fitted_gain": 0.9979253588013027,
+        "residual_rms": 0.0015150250259824997,
+        "signal_to_residual_db": 30.87053224718837
+      },
+      {
+        "seconds": [
+          0,
+          20
+        ],
+        "correlation": 0.9996064683265528,
+        "fitted_gain": 0.9977657573799099,
+        "residual_rms": 0.001491826959225185,
+        "signal_to_residual_db": 31.040786715501593
+      }
+    ],
+    "codec_alignment_lag_samples": 1882,
+    "source_video_audio_streams": 0,
+    "original_judge_claim": "Spoken dialogue about taking the train to Paris during 0–5 seconds.",
+    "adjudication": "The specific spoken-Paris-dialogue allegation is not supported: correlation exceeds 0.9995 in both windows after a 1882-sample codec offset correction; source video has no audio and the only rendered audio asset is the hash-matching procedural oscillator WAV. Treat this as a confirmed judge false positive, not a creative-quality pass."
+  },
+  "uniform_frame_comparison": {
+    "first": {
+      "video_sha256": "9392dca35531532cfe04520a05bfc86538428a3beeef4bdce1f82923fda2281e",
+      "sample_fps": 10,
+      "sample_count": 200,
+      "uniform_frame_times": [
+        4.0,
+        4.1,
+        4.2,
+        4.3,
+        4.4,
+        4.5,
+        4.6,
+        4.7,
+        4.8,
+        4.9,
+        14.0,
+        14.1,
+        14.2,
+        14.3,
+        14.4,
+        14.5,
+        14.6,
+        14.7,
+        14.8,
+        14.9
+      ],
+      "criterion": "Grayscale standard deviation below 1 on downsampled frames; diagnostic for unintended uniform background, not a general aesthetic metric."
+    },
+    "final": {
+      "video_sha256": "8af34b1fdd26e3183a6a1e14e239aadf4e63a627c35be07146589514cde29e08",
+      "sample_fps": 10,
+      "sample_count": 200,
+      "uniform_frame_times": [],
+      "criterion": "Grayscale standard deviation below 1 on downsampled frames; diagnostic for unintended uniform background, not a general aesthetic metric."
+    }
+  },
+  "final_video": "artifacts/video.mp4",
+  "final_video_sha256": "8af34b1fdd26e3183a6a1e14e239aadf4e63a627c35be07146589514cde29e08",
+  "disposition": {
+    "decision": "pending_user_review",
+    "production_code_changed": false,
+    "creative_keep": false,
+    "reason": "Diagnostic montage retained; original direction only partially achieved, both full source takes rejected, final audio allegation independently refuted. No automatic creative-quality acceptance."
+  }
 }
